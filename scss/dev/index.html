@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>샤니송 픽업 확률 계산기</title>
+    <!-- Chart.js Core -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Chart.js Datalabels Plugin -->
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+    <style>
+        :root {
+            --primary-color: #283c86;
+            --accent-color: #45a247;
+            --info-color: #283c86; /* 상세 설명용 파란색 */
+            --card-bg: #ffffff;
+            --text-color: #333;
+        }
+
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #dcdcdc; 
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--text-color);
+        }
+
+        .container {
+            background-color: var(--card-bg);
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            width: 100%;
+            max-width: 850px;
+            padding: 30px;
+            box-sizing: border-box;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            color: var(--primary-color);
+        }
+
+        .input-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .input-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .input-item label {
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+
+        .input-item input {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        .input-item input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 5px rgba(40, 60, 134, 0.3);
+        }
+
+        .section-title {
+            grid-column: 1 / -1;
+            font-size: 1.1rem;
+            color: var(--primary-color);
+            border-bottom: 2px solid #eee;
+            padding-bottom: 5px;
+            margin-top: 10px;
+        }
+
+        .result-area {
+            margin-top: 30px;
+            display: block;
+        }
+
+        .chart-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        .chart-container {
+            flex: 1 1 300px;
+            position: relative;
+            height: 350px;
+        }
+
+        .legend-container {
+            flex: 1 1 200px;
+            background-color: #fafafa;
+            border: 1px solid #eee;
+            border-radius: 10px;
+            padding: 15px;
+            max-height: 350px;
+            overflow-y: auto;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            padding-bottom: 8px;
+            border-bottom: 1px dashed #eee;
+            font-size: 0.95rem;
+        }
+        
+        .legend-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .legend-label {
+            display: flex;
+            align-items: center;
+        }
+
+        .color-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 3px;
+            margin-right: 8px;
+            display: inline-block;
+        }
+
+        .legend-value {
+            font-weight: bold;
+            color: #333;
+        }
+
+        /* 결과 요약 텍스트 스타일 */
+        .summary {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 5px solid var(--accent-color);
+            line-height: 1.8;
+            font-size: 1.05rem;
+            margin-bottom: 20px; /* 아래쪽 여백 추가 */
+        }
+
+        /* 상세 로직 설명 스타일 (summary와 비슷하지만 색상 다름) */
+        .logic-detail {
+            background-color: #f0f4f8; /* 약간 푸른빛 도는 회색 */
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 5px solid var(--info-color); /* 파란색 테두리 */
+            line-height: 1.6;
+            font-size: 0.95rem;
+            color: #444;
+        }
+        
+        .logic-title {
+            font-weight: bold;
+            color: var(--info-color);
+            margin-bottom: 8px;
+            border-bottom: 1px solid #dde1e6;
+            padding-bottom: 5px;
+            display: block;
+        }
+
+        .logic-list {
+            margin: 0;
+            padding-left: 20px;
+        }
+        
+        .logic-list li {
+            margin-bottom: 5px;
+        }
+
+        @media (max-width: 650px) {
+            .input-group {
+                grid-template-columns: 1fr;
+            }
+            .chart-row {
+                flex-direction: column;
+            }
+            .chart-container, .legend-container {
+                width: 100%;
+                flex: none;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>샤니송 픽업 확률 계산기</h1>
+
+    <div class="input-group">
+        <div class="section-title">기본 설정</div>
+        
+        <div class="input-item">
+            <label for="pickupCount">픽업 개수</label>
+            <input type="number" id="pickupCount" value="2" min="1">
+        </div>
+        <div class="input-item">
+            <label for="pickupRate">개별 픽업 확률 (%)</label>
+            <input type="number" id="pickupRate" value="1" step="0.01">
+        </div>
+
+        <div class="section-title">스탭업 설정</div>
+
+        <div class="input-item">
+            <label for="step4Rate">Step4 픽업 확률 (%)</label>
+            <input type="number" id="step4Rate" value="80" step="0.1" min="0" max="100">
+        </div>
+
+        <div class="section-title">가챠 횟수</div>
+
+        <div class="input-item">
+            <label for="normalPulls">일반 가챠 횟수</label>
+            <input type="number" id="normalPulls" value="0" min="0">
+        </div>
+        <div class="input-item">
+            <label for="stepPulls">스탭업 가챠 횟수 (Max 120)</label>
+            <input type="number" id="stepPulls" value="0" min="0" max="120">
+        </div>
+    </div>
+    
+    <div class="result-area" id="resultArea">
+        <div class="chart-row">
+            <div class="chart-container">
+                <canvas id="resultChart"></canvas>
+            </div>
+            <div class="legend-container" id="legendList">
+                <!-- JS로 리스트 아이템이 추가됨 -->
+            </div>
+        </div>
+
+        <div class="summary" id="summaryText">
+            값을 입력하고 엔터 또는 포커스를 해제하면 결과가 나타납니다.
+        </div>
+
+        <!-- 상세 계산 로직 div 추가 -->
+        <div class="logic-detail" id="logicDetailText" style="display:none;">
+            <!-- JS로 내용이 채워짐 -->
+        </div>
+    </div>
+</div>
+
+<script>
+    Chart.register(ChartDataLabels);
+    let myChart = null;
+
+    window.onload = function() {
+        const inputs = document.querySelectorAll('input');
+        
+        inputs.forEach(input => {
+            input.addEventListener('keydown', function(event) {
+                if (event.key === 'Enter') {
+                    this.blur(); 
+                }
+            });
+
+            input.addEventListener('blur', function() {
+                if (this.id === 'stepPulls' && parseInt(this.value) > 120) {
+                    this.value = 120;
+                }
+                if (this.id === 'step4Rate' && parseFloat(this.value) > 100) {
+                    this.value = 100;
+                }
+                calculate();
+            });
+        });
+
+        calculate();
+    };
+
+    function calculate() {
+        const N = parseInt(document.getElementById('pickupCount').value) || 0;
+        const p_indiv_percent = parseFloat(document.getElementById('pickupRate').value) || 0;
+        let p_step4_total_percent = parseFloat(document.getElementById('step4Rate').value) || 0;
+        const normalPulls = parseInt(document.getElementById('normalPulls').value) || 0;
+        let stepPulls = parseInt(document.getElementById('stepPulls').value) || 0;
+
+        if (N <= 0) return;
+        if (stepPulls > 120) stepPulls = 120;
+        if (p_step4_total_percent > 100) p_step4_total_percent = 100;
+
+        const p_normal_one = p_indiv_percent / 100;
+        const p_step4_one = (p_step4_total_percent / 100) / N;
+
+        // --- 계산 로직용 변수 ---
+        let countStep4 = 0; // Step4 확률 적용 횟수
+        let countNormal = normalPulls; // 일반 확률 적용 횟수
+
+        // 교환 횟수 계산
+        let totalPulls = normalPulls + stepPulls;
+        let randomExchangeCount = (stepPulls >= 80) ? 1 : 0;
+        let stepCeiling = (stepPulls >= 120) ? 1 : 0;
+        let normalCeiling = Math.floor(totalPulls / 200);
+        let totalCeilingCount = stepCeiling + normalCeiling;
+
+        // DP 초기화
+        let dp = new Array(N + 1).fill(0);
+        dp[0] = 1.0;
+
+        // DP 함수들
+        function runGacha(currentDP, probPerCard) {
+            let nextDP = new Array(N + 1).fill(0);
+            for (let k = 0; k <= N; k++) {
+                if (currentDP[k] === 0) continue;
+                if (k === N) {
+                    nextDP[k] += currentDP[k];
+                } else {
+                    let p_new = (N - k) * probPerCard;
+                    let p_stay = 1.0 - p_new;
+                    nextDP[k] += currentDP[k] * p_stay;
+                    nextDP[k+1] += currentDP[k] * p_new;
+                }
+            }
+            return nextDP;
+        }
+
+        function runSelectTicket(currentDP) {
+            let nextDP = new Array(N + 1).fill(0);
+            for (let k = 0; k <= N; k++) {
+                if (currentDP[k] === 0) continue;
+                if (k < N) nextDP[k+1] += currentDP[k];
+                else nextDP[N] += currentDP[k];
+            }
+            return nextDP;
+        }
+
+        function runRandomPickup(currentDP) {
+            let nextDP = new Array(N + 1).fill(0);
+            for (let k = 0; k <= N; k++) {
+                if (currentDP[k] === 0) continue;
+                if (k === N) {
+                    nextDP[N] += currentDP[k];
+                } else {
+                    let p_new = (N - k) / N;
+                    let p_dupe = k / N;
+                    nextDP[k] += currentDP[k] * p_dupe;
+                    nextDP[k+1] += currentDP[k] * p_new;
+                }
+            }
+            return nextDP;
+        }
+
+        // 1. 일반 가챠
+        for (let i = 0; i < normalPulls; i++) dp = runGacha(dp, p_normal_one);
+
+        // 2. 스탭업 가챠
+        for (let i = 1; i <= stepPulls; i++) {
+            let isStep4 = (i === 40 || i === 80 || i === 120);
+            
+            if (isStep4) countStep4++;
+            else countNormal++;
+
+            let currentProb = isStep4 ? p_step4_one : p_normal_one;
+            dp = runGacha(dp, currentProb);
+            
+            if (i === 80) dp = runRandomPickup(dp);
+            if (i === 120) dp = runSelectTicket(dp);
+        }
+
+        // 3. 천장
+        for (let i = 0; i < normalCeiling; i++) dp = runSelectTicket(dp);
+
+        // --- 결과 렌더링 ---
+        let labels = [];
+        let data = [];
+        let backgroundColors = [];
+
+        for (let k = 0; k <= N; k++) {
+            labels.push(`${k}픽업`);
+            let percent = (dp[k] * 100).toFixed(2);
+            data.push(percent);
+            
+            if (k === N) backgroundColors.push('#45a247');
+            else {
+                let opacity = 0.3 + (0.7 * (k / N));
+                backgroundColors.push(`rgba(40, 60, 134, ${opacity})`);
+            }
+        }
+
+        const allCollectedProb = (dp[N] * 100).toFixed(2);
+
+        // 결과 요약
+        document.getElementById('summaryText').innerHTML = `
+            <strong>분석 결과</strong><br>
+            가챠 횟수 : ${totalPulls}회<br>
+            랜덤 교환 : ${randomExchangeCount}회<br>
+            천장 교환 : ${totalCeilingCount}회<br>
+            <strong>올컴플릿 확률 : ${allCollectedProb}%</strong>
+        `;
+
+        updateLegend(labels, data, backgroundColors);
+        renderChart(labels, data, backgroundColors);
+
+        // --- 상세 로직 설명 작성 ---
+        const logicDiv = document.getElementById('logicDetailText');
+        logicDiv.style.display = 'block';
+        
+        // 0픽업 설명 텍스트
+        let zeroPickupDesc = "";
+        if (randomExchangeCount > 0 || totalCeilingCount > 0) {
+            zeroPickupDesc = "확정 보상(랜덤/선택 교환)으로 인해 0픽업은 불가능(0%)합니다.";
+        } else {
+            zeroPickupDesc = `총 ${totalPulls}회의 가챠가 모두 픽업 확률을 빗나갈 확률입니다.`;
+        }
+
+        // 중간 설명 (랜덤 교환)
+        let randomDesc = "";
+        if (randomExchangeCount > 0) {
+            randomDesc = `<li><strong>랜덤 교환(${randomExchangeCount}회):</strong> 보유 중인 픽업이 나올 경우(중복) 수집 개수가 늘어나지 않고, 없는 픽업이 나올 경우에만 수집 개수가 +1 됩니다. (현재 보유 수에 따라 확률 변동)</li>`;
+        }
+
+        // 중간 설명 (선택 교환)
+        let selectDesc = "";
+        if (totalCeilingCount > 0) {
+            selectDesc = `<li><strong>선택 교환(${totalCeilingCount}회):</strong> 보유하지 않은 픽업을 확정적으로 가져오므로, 수집 개수가 무조건 +1 증가합니다. (이미 올컴플릿이면 유지)</li>`;
+        }
+
+        // 확률 적용 설명
+        let rateDesc = `<li><strong>확률 적용:</strong> 총 ${totalPulls}회 중 <span style="color:#e65100">${countNormal}회</span>는 기본 확률(${p_indiv_percent}%)이 적용되었고, <span style="color:#e65100">${countStep4}회</span>는 Step4 확률(개별 ${(p_step4_total_percent/N).toFixed(2)}%)이 적용되었습니다.</li>`;
+
+        logicDiv.innerHTML = `
+            <span class="logic-title">상세 계산 근거 (Calculation Logic)</span>
+            <ul class="logic-list">
+                ${rateDesc}
+                ${randomDesc}
+                ${selectDesc}
+                <li><strong>0픽업 확률:</strong> ${zeroPickupDesc}</li>
+                <li><strong>N픽업 확률:</strong> 이미 획득한 픽업(중복)이 나올 확률을 고려하여, 새로운 픽업을 뽑을 확률이 점차 낮아지는 <em>쿠폰 수집가 문제(Coupon Collector)</em> 모델을 적용하여 계산되었습니다.</li>
+            </ul>
+        `;
+    }
+
+    function updateLegend(labels, data, colors) {
+        const listContainer = document.getElementById('legendList');
+        listContainer.innerHTML = '';
+        labels.forEach((label, index) => {
+            const percent = data[index];
+            const color = colors[index];
+            const item = document.createElement('div');
+            item.className = 'legend-item';
+            item.innerHTML = `
+                <div class="legend-label">
+                    <span class="color-dot" style="background-color: ${color};"></span>
+                    <span>${label}</span>
+                </div>
+                <div class="legend-value">${percent}%</div>
+            `;
+            listContainer.appendChild(item);
+        });
+    }
+
+    function renderChart(labels, data, colors) {
+        const ctx = document.getElementById('resultChart').getContext('2d');
+        if (myChart) myChart.destroy();
+        myChart = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: data,
+                    backgroundColor: colors,
+                    borderColor: '#fff',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                layout: { padding: 10 },
+                plugins: {
+                    title: { display: false },
+                    legend: { display: false },
+                    datalabels: {
+                        color: '#fff',
+                        font: { weight: 'bold', size: 14 },
+                        formatter: (value, context) => {
+                            if (value < 5) return null;
+                            const label = context.chart.data.labels[context.dataIndex];
+                            return `${label}\n${value}%`;
+                        },
+                        textAlign: 'center',
+                        textShadowBlur: 4,
+                        textShadowColor: 'rgba(0,0,0,0.5)'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return ` ${context.label}: ${context.raw}%`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+</script>
+
+</body>
+</html>
