@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>샤니송 픽업 확률 계산기</title>
+    <title>샤니송 픽업 확률 계산기 (Final)</title>
     <!-- Chart.js Core -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- Chart.js Datalabels Plugin -->
@@ -12,9 +12,10 @@
         :root {
             --primary-color: #283c86;
             --accent-color: #45a247;
-            --info-color: #283c86; /* 상세 설명용 파란색 */
+            --info-color: #283c86;
             --card-bg: #ffffff;
             --text-color: #333;
+            --input-bg: #f9f9f9;
         }
 
         body {
@@ -41,7 +42,7 @@
 
         h1 {
             text-align: center;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
             font-size: 1.5rem;
             color: var(--primary-color);
         }
@@ -49,34 +50,84 @@
         .input-group {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 15px;
+            gap: 20px; /* 간격 약간 넓힘 */
             margin-bottom: 20px;
         }
 
+        /* 4. 라벨과 인풋을 한 줄에 배치 */
         .input-item {
             display: flex;
-            flex-direction: column;
+            flex-direction: row; /* 가로 배치 */
+            align-items: center;
+            justify-content: space-between;
         }
 
         .input-item label {
-            font-size: 0.9rem;
-            margin-bottom: 5px;
+            font-size: 0.95rem;
             font-weight: bold;
             color: #555;
+            margin-bottom: 0; /* 아래 여백 제거 */
+            margin-right: 10px; /* 오른쪽 여백 추가 */
+            flex: 1; /* 라벨이 남은 공간 차지 */
+            word-break: keep-all; /* 단어 쪼개짐 방지 */
         }
 
-        .input-item input {
-            padding: 10px;
+        .input-item input, .input-item select {
+            width: 120px; /* 고정 너비 혹은 flex 조절 */
+            padding: 8px;
             border: 1px solid #ddd;
             border-radius: 5px;
             font-size: 1rem;
-            transition: border-color 0.3s;
+            text-align: right; /* 숫자 입력 편의상 우측 정렬 */
+            background-color: var(--input-bg);
+            transition: all 0.3s;
         }
 
-        .input-item input:focus {
+        .input-item input:focus, .input-item select:focus {
             outline: none;
             border-color: var(--primary-color);
-            box-shadow: 0 0 5px rgba(40, 60, 134, 0.3);
+            background-color: #fff;
+            box-shadow: 0 0 5px rgba(40, 60, 134, 0.2);
+        }
+
+        /* 1. loop-rewards-container 적절한 CSS 추가 */
+        .loop-rewards-container {
+            grid-column: 1 / -1;
+            background-color: #f0f4f8;
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid #dde1e6;
+            display: grid;
+            grid-template-columns: 1fr 1fr; /* 2열 배치 */
+            gap: 15px;
+            margin-bottom: 10px;
+        }
+        
+        .loop-reward-item {
+            display: flex;
+            flex-direction: row; /* 내부 아이템도 가로 배치 */
+            align-items: center;
+            justify-content: space-between;
+            background-color: #fff;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #eee;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+        }
+        
+        .loop-reward-item label {
+            font-size: 0.9rem;
+            color: #444;
+            margin: 0;
+            font-weight: 600;
+        }
+
+        .loop-reward-select {
+            width: 140px; /* 선택박스 너비 */
+            padding: 6px;
+            font-size: 0.9rem;
+            border: 1px solid #ccc;
+            border-radius: 4px;
         }
 
         .section-title {
@@ -84,8 +135,9 @@
             font-size: 1.1rem;
             color: var(--primary-color);
             border-bottom: 2px solid #eee;
-            padding-bottom: 5px;
+            padding-bottom: 8px;
             margin-top: 10px;
+            margin-bottom: 5px;
         }
 
         .result-area {
@@ -152,7 +204,6 @@
             color: #333;
         }
 
-        /* 결과 요약 텍스트 스타일 */
         .summary {
             background-color: #f8f9fa;
             padding: 15px;
@@ -160,15 +211,14 @@
             border-left: 5px solid var(--accent-color);
             line-height: 1.8;
             font-size: 1.05rem;
-            margin-bottom: 20px; /* 아래쪽 여백 추가 */
+            margin-bottom: 20px;
         }
 
-        /* 상세 로직 설명 스타일 (summary와 비슷하지만 색상 다름) */
         .logic-detail {
-            background-color: #f0f4f8; /* 약간 푸른빛 도는 회색 */
+            background-color: #f0f4f8;
             padding: 15px;
             border-radius: 8px;
-            border-left: 5px solid var(--info-color); /* 파란색 테두리 */
+            border-left: 5px solid var(--info-color);
             line-height: 1.6;
             font-size: 0.95rem;
             color: #444;
@@ -192,8 +242,12 @@
             margin-bottom: 5px;
         }
 
+        /* 모바일 대응: 화면이 좁을 땐 다시 세로 배치하거나 폭 조정 */
         @media (max-width: 650px) {
             .input-group {
+                grid-template-columns: 1fr;
+            }
+            .loop-rewards-container {
                 grid-template-columns: 1fr;
             }
             .chart-row {
@@ -202,6 +256,24 @@
             .chart-container, .legend-container {
                 width: 100%;
                 flex: none;
+            }
+            /* 모바일에서는 라벨과 인풋이 너무 좁으면 줄바꿈 허용 */
+            .input-item {
+                flex-wrap: wrap; 
+            }
+            .input-item label {
+                width: 100%;
+                margin-bottom: 5px;
+            }
+            .input-item input, .input-item select {
+                width: 100%;
+            }
+            .loop-reward-item {
+                flex-wrap: wrap;
+            }
+            .loop-reward-select {
+                width: 100%;
+                margin-top: 5px;
             }
         }
     </style>
@@ -226,8 +298,18 @@
         <div class="section-title">스탭업 설정</div>
 
         <div class="input-item">
+            <!-- 2. 명칭 변경 -->
+            <label for="maxLoops">최대 주회(周回) 수</label>
+            <input type="number" id="maxLoops" value="3" min="1" max="10">
+        </div>
+        <div class="input-item">
             <label for="step4Rate">Step4 픽업 확률 (%)</label>
             <input type="number" id="step4Rate" value="80" step="0.1" min="0" max="100">
+        </div>
+
+        <!-- 동적 주회 보상 설정 영역 -->
+        <div class="loop-rewards-container" id="loopRewardsArea">
+            <!-- JS로 생성됨 -->
         </div>
 
         <div class="section-title">가챠 횟수</div>
@@ -237,8 +319,8 @@
             <input type="number" id="normalPulls" value="0" min="0">
         </div>
         <div class="input-item">
-            <label for="stepPulls">스탭업 가챠 횟수 (Max 120)</label>
-            <input type="number" id="stepPulls" value="0" min="0" max="120">
+            <label for="stepPulls">스탭업 가챠 횟수 (Max 자동)</label>
+            <input type="number" id="stepPulls" value="0" min="0">
         </div>
     </div>
     
@@ -248,7 +330,6 @@
                 <canvas id="resultChart"></canvas>
             </div>
             <div class="legend-container" id="legendList">
-                <!-- JS로 리스트 아이템이 추가됨 -->
             </div>
         </div>
 
@@ -256,9 +337,7 @@
             값을 입력하고 엔터 또는 포커스를 해제하면 결과가 나타납니다.
         </div>
 
-        <!-- 상세 계산 로직 div 추가 -->
         <div class="logic-detail" id="logicDetailText" style="display:none;">
-            <!-- JS로 내용이 채워짐 -->
         </div>
     </div>
 </div>
@@ -272,55 +351,134 @@
         
         inputs.forEach(input => {
             input.addEventListener('keydown', function(event) {
-                if (event.key === 'Enter') {
-                    this.blur(); 
-                }
+                if (event.key === 'Enter') this.blur(); 
             });
-
+            
             input.addEventListener('blur', function() {
-                if (this.id === 'stepPulls' && parseInt(this.value) > 120) {
-                    this.value = 120;
+                if (this.id === 'maxLoops') {
+                    updateLoopSettings(); 
+                } else if (this.id === 'stepPulls') {
+                    validateStepPulls(); 
+                    calculate();
+                } else if (this.id === 'step4Rate') {
+                    if (parseFloat(this.value) > 100) this.value = 100;
+                    calculate();
+                } else {
+                    calculate();
                 }
-                if (this.id === 'step4Rate' && parseFloat(this.value) > 100) {
-                    this.value = 100;
-                }
-                calculate();
             });
         });
 
+        updateLoopSettings(); 
         calculate();
     };
+
+    function updateLoopSettings() {
+        const maxLoops = parseInt(document.getElementById('maxLoops').value) || 1;
+        const container = document.getElementById('loopRewardsArea');
+        
+        // 기존 선택값 저장 (재생성 시 값 유지)
+        let savedRewards = {};
+        for (let i = 1; i <= 20; i++) { // 넉넉하게 체크
+            const el = document.getElementById(`rewardLoop${i}`);
+            if (el) savedRewards[i] = el.value;
+        }
+
+        container.innerHTML = '';
+
+        for (let i = 1; i <= maxLoops; i++) {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'loop-reward-item';
+            
+            const label = document.createElement('label');
+            // 3. 명칭 변경: 1주 보상
+            label.textContent = `${i}주 보상`;
+            
+            const select = document.createElement('select');
+            select.id = `rewardLoop${i}`;
+            select.className = 'loop-reward-select';
+            select.onchange = calculate;
+
+            const opts = [
+                { val: 'none', text: '없음' },
+                { val: 'random', text: '랜덤 교환(1회)' },
+                { val: 'select', text: '천장 교환(선택 1회)' }
+            ];
+
+            opts.forEach(opt => {
+                const option = document.createElement('option');
+                option.value = opt.val;
+                option.textContent = opt.text;
+                select.appendChild(option);
+            });
+
+            // 값 복원 (없으면 none)
+            if (savedRewards[i]) {
+                select.value = savedRewards[i];
+            } else {
+                select.value = 'none';
+            }
+            
+            wrapper.appendChild(label);
+            wrapper.appendChild(select);
+            container.appendChild(wrapper);
+        }
+
+        // 스탭업 Max 갱신
+        const maxPulls = maxLoops * 40;
+        const stepInput = document.getElementById('stepPulls');
+        stepInput.max = maxPulls;
+        
+        if (parseInt(stepInput.value) > maxPulls) {
+            stepInput.value = maxPulls;
+        }
+        
+        // 라벨 텍스트 업데이트
+        document.querySelector('label[for="stepPulls"]').textContent = `스탭업 가챠 횟수 (Max ${maxPulls})`;
+        
+        calculate();
+    }
+
+    function validateStepPulls() {
+        const maxLoops = parseInt(document.getElementById('maxLoops').value) || 1;
+        const maxPulls = maxLoops * 40;
+        const stepInput = document.getElementById('stepPulls');
+        if (parseInt(stepInput.value) > maxPulls) {
+            stepInput.value = maxPulls;
+        }
+    }
 
     function calculate() {
         const N = parseInt(document.getElementById('pickupCount').value) || 0;
         const p_indiv_percent = parseFloat(document.getElementById('pickupRate').value) || 0;
         let p_step4_total_percent = parseFloat(document.getElementById('step4Rate').value) || 0;
         const normalPulls = parseInt(document.getElementById('normalPulls').value) || 0;
+        
+        const maxLoops = parseInt(document.getElementById('maxLoops').value) || 1;
+        const maxStepPulls = maxLoops * 40;
         let stepPulls = parseInt(document.getElementById('stepPulls').value) || 0;
 
         if (N <= 0) return;
-        if (stepPulls > 120) stepPulls = 120;
+        if (stepPulls > maxStepPulls) stepPulls = maxStepPulls;
         if (p_step4_total_percent > 100) p_step4_total_percent = 100;
 
         const p_normal_one = p_indiv_percent / 100;
         const p_step4_one = (p_step4_total_percent / 100) / N;
 
-        // --- 계산 로직용 변수 ---
-        let countStep4 = 0; // Step4 확률 적용 횟수
-        let countNormal = normalPulls; // 일반 확률 적용 횟수
+        let countStep4 = 0; 
+        let countNormal = normalPulls;
+        let randomRewardCount = 0;
+        let selectRewardCount = 0;
+        
+        let loopRewards = {};
+        for (let i = 1; i <= maxLoops; i++) {
+            const sel = document.getElementById(`rewardLoop${i}`);
+            if (sel) loopRewards[i] = sel.value;
+        }
 
-        // 교환 횟수 계산
-        let totalPulls = normalPulls + stepPulls;
-        let randomExchangeCount = (stepPulls >= 80) ? 1 : 0;
-        let stepCeiling = (stepPulls >= 120) ? 1 : 0;
-        let normalCeiling = Math.floor(totalPulls / 200);
-        let totalCeilingCount = stepCeiling + normalCeiling;
-
-        // DP 초기화
         let dp = new Array(N + 1).fill(0);
         dp[0] = 1.0;
 
-        // DP 함수들
         function runGacha(currentDP, probPerCard) {
             let nextDP = new Array(N + 1).fill(0);
             for (let k = 0; k <= N; k++) {
@@ -363,12 +521,13 @@
             return nextDP;
         }
 
-        // 1. 일반 가챠
+        // 일반 가챠
         for (let i = 0; i < normalPulls; i++) dp = runGacha(dp, p_normal_one);
 
-        // 2. 스탭업 가챠
+        // 스탭업 가챠
         for (let i = 1; i <= stepPulls; i++) {
-            let isStep4 = (i === 40 || i === 80 || i === 120);
+            // 40배수 회차는 Step4 확률 적용
+            let isStep4 = (i % 40 === 0); 
             
             if (isStep4) countStep4++;
             else countNormal++;
@@ -376,14 +535,29 @@
             let currentProb = isStep4 ? p_step4_one : p_normal_one;
             dp = runGacha(dp, currentProb);
             
-            if (i === 80) dp = runRandomPickup(dp);
-            if (i === 120) dp = runSelectTicket(dp);
+            // 주회 완료 보상
+            if (i % 40 === 0) {
+                let currentLoop = i / 40;
+                let rewardType = loopRewards[currentLoop];
+                
+                if (rewardType === 'random') {
+                    dp = runRandomPickup(dp);
+                    randomRewardCount++;
+                } else if (rewardType === 'select') {
+                    dp = runSelectTicket(dp);
+                    selectRewardCount++;
+                }
+            }
         }
 
-        // 3. 천장
+        // 통합 천장
+        let totalPulls = normalPulls + stepPulls;
+        let normalCeiling = Math.floor(totalPulls / 200);
         for (let i = 0; i < normalCeiling; i++) dp = runSelectTicket(dp);
 
-        // --- 결과 렌더링 ---
+        let totalCeilingCount = selectRewardCount + normalCeiling;
+
+        // 결과 렌더링
         let labels = [];
         let data = [];
         let backgroundColors = [];
@@ -402,53 +576,47 @@
 
         const allCollectedProb = (dp[N] * 100).toFixed(2);
 
-        // 결과 요약
         document.getElementById('summaryText').innerHTML = `
             <strong>분석 결과</strong><br>
-            가챠 횟수 : ${totalPulls}회<br>
-            랜덤 교환 : ${randomExchangeCount}회<br>
-            천장 교환 : ${totalCeilingCount}회<br>
+            가챠 횟수 : ${totalPulls}회 (일반 ${normalPulls} + 스탭업 ${stepPulls})<br>
+            랜덤 교환 : ${randomRewardCount}회<br>
+            천장 교환 : ${totalCeilingCount}회 (보상 ${selectRewardCount} + 통합 ${normalCeiling})<br>
             <strong>올컴플릿 확률 : ${allCollectedProb}%</strong>
         `;
 
         updateLegend(labels, data, backgroundColors);
         renderChart(labels, data, backgroundColors);
 
-        // --- 상세 로직 설명 작성 ---
+        // 상세 로직 텍스트
         const logicDiv = document.getElementById('logicDetailText');
         logicDiv.style.display = 'block';
-        
-        // 0픽업 설명 텍스트
+
         let zeroPickupDesc = "";
-        if (randomExchangeCount > 0 || totalCeilingCount > 0) {
-            zeroPickupDesc = "확정 보상(랜덤/선택 교환)으로 인해 0픽업은 불가능(0%)합니다.";
+        if (randomRewardCount > 0 || totalCeilingCount > 0) {
+            zeroPickupDesc = "주회 보상 또는 천장으로 인해 0픽업은 불가능(0%)합니다.";
         } else {
-            zeroPickupDesc = `총 ${totalPulls}회의 가챠가 모두 픽업 확률을 빗나갈 확률입니다.`;
+            zeroPickupDesc = `총 ${totalPulls}회의 가챠가 모두 픽업을 빗나갈 확률입니다.`;
         }
-
-        // 중간 설명 (랜덤 교환)
-        let randomDesc = "";
-        if (randomExchangeCount > 0) {
-            randomDesc = `<li><strong>랜덤 교환(${randomExchangeCount}회):</strong> 보유 중인 픽업이 나올 경우(중복) 수집 개수가 늘어나지 않고, 없는 픽업이 나올 경우에만 수집 개수가 +1 됩니다. (현재 보유 수에 따라 확률 변동)</li>`;
+        
+        let rewardHistoryHtml = "";
+        for(let i=1; i<=maxLoops; i++) {
+            let rType = loopRewards[i];
+            let rText = rType === 'none' ? '없음' : (rType === 'random' ? '랜덤' : '천장(선택)');
+            if (i * 40 <= stepPulls) {
+                rewardHistoryHtml += `[${i}주: ${rText}] `;
+            } else {
+                rewardHistoryHtml += `<span style="color:#aaa;">[${i}주: ${rText}]</span> `;
+            }
         }
-
-        // 중간 설명 (선택 교환)
-        let selectDesc = "";
-        if (totalCeilingCount > 0) {
-            selectDesc = `<li><strong>선택 교환(${totalCeilingCount}회):</strong> 보유하지 않은 픽업을 확정적으로 가져오므로, 수집 개수가 무조건 +1 증가합니다. (이미 올컴플릿이면 유지)</li>`;
-        }
-
-        // 확률 적용 설명
-        let rateDesc = `<li><strong>확률 적용:</strong> 총 ${totalPulls}회 중 <span style="color:#e65100">${countNormal}회</span>는 기본 확률(${p_indiv_percent}%)이 적용되었고, <span style="color:#e65100">${countStep4}회</span>는 Step4 확률(개별 ${(p_step4_total_percent/N).toFixed(2)}%)이 적용되었습니다.</li>`;
 
         logicDiv.innerHTML = `
-            <span class="logic-title">상세 계산 근거 (Calculation Logic)</span>
+            <span class="logic-title">상세 계산 근거</span>
             <ul class="logic-list">
-                ${rateDesc}
-                ${randomDesc}
-                ${selectDesc}
+                <li><strong>확률 적용:</strong> 기본 확률(${p_indiv_percent}%) ${countNormal}회, Step4 확률(${(p_step4_total_percent/N).toFixed(2)}%) ${countStep4}회 적용되었습니다.</li>
+                <li><strong>주회 보상 설정:</strong> ${rewardHistoryHtml}</li>
+                <li><strong>랜덤 교환(${randomRewardCount}회):</strong> 보유 수에 따라 중복(상태유지) 또는 신규획득(수집+1) 확률이 적용됩니다.</li>
+                <li><strong>천장 교환(${totalCeilingCount}회):</strong> 없는 픽업을 확정 획득합니다. (주회 보상 + 통합 200연 천장 포함)</li>
                 <li><strong>0픽업 확률:</strong> ${zeroPickupDesc}</li>
-                <li><strong>N픽업 확률:</strong> 이미 획득한 픽업(중복)이 나올 확률을 고려하여, 새로운 픽업을 뽑을 확률이 점차 낮아지는 <em>쿠폰 수집가 문제(Coupon Collector)</em> 모델을 적용하여 계산되었습니다.</li>
             </ul>
         `;
     }
