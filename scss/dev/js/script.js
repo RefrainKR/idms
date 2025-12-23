@@ -1,69 +1,75 @@
 import { InputNumberElement } from './lib/utils/InputNumberElement.js';
+import { TabManager } from './lib/utils/TabManager.js';
 
 // Chart.js 플러그인 등록
 Chart.register(ChartDataLabels);
 let myChart = null;
-let stepPullsInputInstance = null; // 동적 제어를 위해 인스턴스 저장
+let stepPullsInputInstance = null; 
 
 // 페이지 로드 시 초기화
 window.onload = function() {
+    // 탭 시스템 초기화
+    const tabContainer = document.getElementById('main-tab-system');
+    new TabManager(tabContainer, (activeTabId) => {
+        // 탭이 변경될 때 수행할 로직이 있다면 여기에 작성
+        // 예: 2성 탭을 클릭했을 때 초기화 로직 등
+        console.log(`탭 변경됨: ${activeTabId}`);
+    });
+
     initInputElements();
     updateLoopSettings(); 
     calculate();
 };
 
 function initInputElements() {
-    // 1. 픽업 개수 (Min 1, Max 100, Default 2)
+    // 1. 픽업 개수
     new InputNumberElement(
         document.getElementById('pickupCount'), 
         1, 100, 2, 
         calculate
     );
 
-    // 2. 개별 픽업 확률 (Min 0, Max 100, Default 1)
+    // 2. 개별 픽업 확률
     new InputNumberElement(
         document.getElementById('pickupRate'), 
         0, 100, 1, 
         calculate
     );
 
-    // 3. 최대 주회 수 (Min 1, Max 10, Default 3) -> 변경 시 updateLoopSettings 호출
+    // 3. 최대 주회 수
     new InputNumberElement(
         document.getElementById('maxLoops'), 
         1, 10, 3, 
         () => { updateLoopSettings(); } 
     );
 
-    // 4. Step4 확률 (Min 0, Max 100, Default 20)
+    // 4. Step4 확률
     new InputNumberElement(
         document.getElementById('step4Rate'), 
         0, 100, 20, 
         calculate
     );
 
-    // 5. 일반 가챠 횟수 (Min 0, Max 9999, Default 0)
+    // 5. 일반 가챠 횟수
     new InputNumberElement(
         document.getElementById('normalPulls'), 
         0, 9999, 0, 
         calculate
     );
 
-    // 6. 스탭업 가챠 횟수 (Min 0, Max 가변, Default 0)
-    // 인스턴스를 변수에 저장해두어 나중에 setMax를 호출할 수 있게 함
+    // 6. 스탭업 가챠 횟수
     stepPullsInputInstance = new InputNumberElement(
         document.getElementById('stepPulls'), 
-        0, 120, 0, // 초기 Max는 120이지만 updateLoopSettings에서 바로 갱신됨
+        0, 120, 0, 
         calculate
     );
 }
 
-// 최대 주회 수 변경 시 보상 설정 UI 갱신 및 Max 값 변경
 function updateLoopSettings() {
     const maxLoopsInput = document.getElementById('maxLoops');
     const maxLoops = parseInt(maxLoopsInput.value) || 1;
     const container = document.getElementById('loopRewardsArea');
     
-    // 기존 선택값 저장
     let savedRewards = {};
     for (let i = 1; i <= 20; i++) { 
         const el = document.getElementById(`rewardLoop${i}`);
@@ -108,20 +114,17 @@ function updateLoopSettings() {
         container.appendChild(wrapper);
     }
 
-    // 스탭업 가챠 최대 횟수(Max) 갱신 로직
     const maxPulls = maxLoops * 40;
     
     if (stepPullsInputInstance) {
         stepPullsInputInstance.setMax(maxPulls);
     }
     
-    // 라벨 텍스트 업데이트
     document.querySelector('label[for="stepPulls"]').textContent = `스탭업 가챠 횟수 (Max ${maxPulls})`;
     
     calculate();
 }
 
-// 핵심 계산 로직 (InputNumberElement가 값을 관리하므로 DOM에서 바로 읽어도 안전함)
 function calculate() {
     const N = parseInt(document.getElementById('pickupCount').value) || 0;
     const p_indiv_percent = parseFloat(document.getElementById('pickupRate').value) || 0;
@@ -129,7 +132,6 @@ function calculate() {
     const normalPulls = parseInt(document.getElementById('normalPulls').value) || 0;
     
     const maxLoops = parseInt(document.getElementById('maxLoops').value) || 1;
-    // const maxStepPulls = maxLoops * 40; // InputNumberElement가 처리하므로 불필요
     let stepPulls = parseInt(document.getElementById('stepPulls').value) || 0;
 
     if (N <= 0) return;
@@ -194,10 +196,8 @@ function calculate() {
         return nextDP;
     }
 
-    // 1. 일반 가챠
     for (let i = 0; i < normalPulls; i++) dp = runGacha(dp, p_normal_one);
 
-    // 2. 스탭업 가챠
     for (let i = 1; i <= stepPulls; i++) {
         let isStep4 = (i % 40 === 0); 
         
@@ -221,14 +221,12 @@ function calculate() {
         }
     }
 
-    // 3. 통합 천장
     let totalPulls = normalPulls + stepPulls;
     let normalCeiling = Math.floor(totalPulls / 200);
     for (let i = 0; i < normalCeiling; i++) dp = runSelectTicket(dp);
 
     let totalCeilingCount = selectRewardCount + normalCeiling;
 
-    // 결과 데이터 구성
     let labels = [];
     let data = [];
     let backgroundColors = [];
@@ -258,7 +256,6 @@ function calculate() {
     updateLegend(labels, data, backgroundColors);
     renderChart(labels, data, backgroundColors);
 
-    // 상세 근거 출력
     const logicDiv = document.getElementById('logicDetailText');
     logicDiv.style.display = 'block';
 

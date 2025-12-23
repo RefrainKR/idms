@@ -5,6 +5,8 @@
     --card-bg: #ffffff;
     --text-color: #333;
     --input-bg: #f9f9f9;
+    --tab-inactive-bg: #e0e0e0;
+    --tab-border: #ccc;
 }
 
 body {
@@ -35,6 +37,56 @@ h1 {
     font-size: 1.5rem;
     color: var(--primary-color);
 }
+
+/* --- 탭 시스템 스타일 시작 --- */
+.tab-buttons {
+    display: flex;
+    border-bottom: 2px solid var(--primary-color);
+    margin-bottom: 20px;
+}
+
+.tab-button {
+    flex: 1;
+    padding: 12px 20px;
+    border: none;
+    background-color: var(--tab-inactive-bg);
+    color: #666;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s;
+    border-radius: 10px 10px 0 0; /* 위쪽 둥글게 */
+    margin-right: 5px;
+}
+
+.tab-button:last-child {
+    margin-right: 0;
+}
+
+.tab-button:hover {
+    background-color: #d0d0d0;
+}
+
+.tab-button.active {
+    background-color: var(--primary-color);
+    color: #fff;
+}
+
+.tab-content {
+    display: none; /* 기본적으로 숨김 */
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+.tab-content.active {
+    display: block; /* 활성화 시 보임 */
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+/* --- 탭 시스템 스타일 끝 --- */
+
 
 .input-group {
     display: grid;
