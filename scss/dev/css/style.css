@@ -7,7 +7,7 @@
     --input-bg: #f9f9f9;
     --tab-inactive-bg: #e0e0e0;
     --tab-border: #ccc;
-    --btn-bg: #6c757d; /* 버튼 기본색 (회색) */
+    --btn-bg: #6c757d;
     --btn-hover: #5a6268;
 }
 
@@ -112,7 +112,7 @@ h1 {
     box-shadow: 0 0 5px rgba(40, 60, 134, 0.2);
 }
 
-/* --- 주회 보상 스타일 --- */
+/* --- 3성 주회 보상 스타일 --- */
 .loop-rewards-container {
     grid-column: 1 / -1;
     background-color: #f0f4f8;
@@ -140,6 +140,43 @@ h1 {
 .loop-reward-item label { font-size: 0.9rem; color: #444; margin: 0; font-weight: 600; }
 .loop-reward-select { width: 140px; padding: 6px; font-size: 0.9rem; border: 1px solid #ccc; border-radius: 4px; }
 
+/* --- [NEW] 2성 스탭업 그룹 컨테이너 스타일 --- */
+.stepup-group-container {
+    grid-column: 1 / -1; /* 가로 전체 사용 */
+    background-color: #f0f4f8;
+    padding: 15px 20px;
+    border-radius: 10px;
+    border: 1px solid #dde1e6;
+    margin-bottom: 5px;
+    
+    /* Flexbox로 좌우 배치 */
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+/* 그룹명 타이틀 (왼쪽) */
+.group-title {
+    font-weight: bold;
+    color: var(--primary-color);
+    font-size: 1.1rem;
+    white-space: nowrap; /* 줄바꿈 방지 */
+    min-width: 60px;
+}
+
+/* 입력 필드 영역 (오른쪽) */
+.group-inputs {
+    display: flex;
+    flex: 1; /* 남은 공간 차지 */
+    gap: 30px; /* 인풋 그룹 간 간격 */
+    justify-content: space-between;
+}
+
+.group-inputs .input-item {
+    flex: 1; /* 내부 아이템 균등 분할 */
+}
+
+/* --- 공통 스타일 계속 --- */
 .section-title {
     grid-column: 1 / -1;
     font-size: 1.1rem;
@@ -152,11 +189,10 @@ h1 {
 
 .result-area { margin-top: 30px; display: block; }
 
-/* --- 차트 및 범례 스타일 --- */
 .chart-row {
     display: flex;
     flex-wrap: wrap;
-    align-items: flex-start; /* 상단 정렬 */
+    align-items: flex-start;
     justify-content: space-between;
     gap: 20px;
     margin-bottom: 25px;
@@ -165,7 +201,6 @@ h1 {
 .chart-container {
     flex: 1 1 300px;
     position: relative;
-    /* 버튼 포함을 위해 높이를 auto로, 캔버스 높이는 JS나 인라인 스타일로 제어됨 */
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -182,7 +217,7 @@ h1 {
     border: 1px solid #eee;
     border-radius: 10px;
     padding: 15px;
-    max-height: 400px; /* 높이 약간 증가 */
+    max-height: 400px;
     overflow-y: auto;
 }
 
@@ -200,7 +235,6 @@ h1 {
 .color-dot { width: 12px; height: 12px; border-radius: 3px; margin-right: 8px; display: inline-block; }
 .legend-value { font-weight: bold; color: #333; }
 
-/* --- 버튼 스타일 추가 --- */
 .view-toggle-btn {
     margin-top: 15px;
     padding: 8px 16px;
@@ -214,9 +248,7 @@ h1 {
     box-shadow: 0 2px 5px rgba(0,0,0,0.2);
 }
 
-.view-toggle-btn:hover {
-    background-color: var(--btn-hover);
-}
+.view-toggle-btn:hover { background-color: var(--btn-hover); }
 
 .summary {
     background-color: #f8f9fa;
@@ -250,6 +282,7 @@ h1 {
 .logic-list { margin: 0; padding-left: 20px; }
 .logic-list li { margin-bottom: 5px; }
 
+/* 모바일 대응 업데이트 */
 @media (max-width: 650px) {
     .input-group, .loop-rewards-container { grid-template-columns: 1fr; }
     .chart-row { flex-direction: column; }
@@ -259,4 +292,16 @@ h1 {
     .input-item input, .input-item select { width: 100%; }
     .loop-reward-item { flex-wrap: wrap; }
     .loop-reward-select { width: 100%; margin-top: 5px; }
+    
+    /* 2성 스탭업 그룹 모바일 대응 */
+    .stepup-group-container {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    .group-inputs {
+        width: 100%;
+        flex-direction: column;
+        gap: 10px;
+    }
 }
