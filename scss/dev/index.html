@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>샤니송 픽업 확률 계산기 (Final)</title>
+    <title>샤니송 픽업 확률 계산기</title>
     
     <!-- Chart.js Core -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -18,22 +18,19 @@
 <div class="container">
     <h1>샤니송 픽업 확률 계산기</h1>
 
-    <!-- 탭 시스템 컨테이너 -->
     <div id="main-tab-system">
-        <!-- 탭 버튼 영역 -->
         <div class="tab-buttons">
-            <button class="tab-button active" data-tab="tab-3star">3성 픽업</button>
-            <button class="tab-button" data-tab="tab-2star">2성 픽업</button>
+            <!-- 1. 탭 이름 변경 -->
+            <button class="tab-button active" data-tab="tab-3star">3성 가챠</button>
+            <button class="tab-button" data-tab="tab-2star">2성 가챠</button>
         </div>
 
-        <!-- 탭 컨텐츠 영역 -->
         <div class="tab-content-wrapper">
             
-            <!-- 1번 탭: 3성 (기존 기능) -->
+            <!-- 1번 탭: 3성 -->
             <div id="tab-3star" class="tab-content active">
                 <div class="input-group">
-                    <div class="section-title">기본 설정</div>
-                    
+                    <div class="section-title">일반 가챠</div>
                     <div class="input-item">
                         <label for="pickupCount">픽업 개수</label>
                         <input type="number" id="pickupCount">
@@ -42,9 +39,13 @@
                         <label for="pickupRate">개별 픽업 확률 (%)</label>
                         <input type="number" id="pickupRate">
                     </div>
-            
-                    <div class="section-title">스탭업 설정</div>
-            
+                    <div class="input-item">
+                        <label for="normalPulls">일반 가챠 횟수</label>
+                        <input type="number" id="normalPulls">
+                    </div>
+                    <div class="input-item" style="visibility: hidden;"></div>
+
+                    <div class="section-title">스탭업 가챠</div>
                     <div class="input-item">
                         <label for="maxLoops">최대 주회(周回) 수</label>
                         <input type="number" id="maxLoops">
@@ -53,47 +54,58 @@
                         <label for="step4Rate">Step4 픽업 확률 (%)</label>
                         <input type="number" id="step4Rate">
                     </div>
-            
-                    <div class="loop-rewards-container" id="loopRewardsArea">
-                        <!-- JS로 동적 생성됨 -->
-                    </div>
-            
-                    <div class="section-title">가챠 횟수</div>
-            
-                    <div class="input-item">
-                        <label for="normalPulls">일반 가챠 횟수</label>
-                        <input type="number" id="normalPulls">
-                    </div>
                     <div class="input-item">
                         <label for="stepPulls">스탭업 가챠 횟수 (Max 자동)</label>
                         <input type="number" id="stepPulls">
                     </div>
+                    <div class="input-item" style="visibility: hidden;"></div>
+
+                    <div class="loop-rewards-container" id="loopRewardsArea"></div>
                 </div>
                 
                 <div class="result-area" id="resultArea">
                     <div class="chart-row">
                         <div class="chart-container">
                             <canvas id="resultChart"></canvas>
+                            <button id="toggleViewBtn3" class="view-toggle-btn">모드: 개별 확률</button>
                         </div>
-                        <div class="legend-container" id="legendList">
-                            <!-- JS로 동적 생성됨 -->
-                        </div>
+                        <div class="legend-container" id="legendList"></div>
                     </div>
-            
-                    <div class="summary" id="summaryText">
-                        값을 입력하고 엔터 또는 포커스를 해제하면 결과가 나타납니다.
-                    </div>
-            
-                    <div class="logic-detail" id="logicDetailText" style="display:none;">
-                        <!-- JS로 동적 생성됨 -->
-                    </div>
+                    <div class="summary" id="summaryText"></div>
+                    <div class="logic-detail" id="logicDetailText" style="display:none;"></div>
                 </div>
             </div>
 
-            <!-- 2번 탭: 2성 (빈 공간) -->
+            <!-- 2번 탭: 2성 -->
             <div id="tab-2star" class="tab-content">
-                <div style="padding: 40px; text-align: center; color: #888;">
-                    <p>2성 픽업 확률 계산 기능은 준비 중입니다.</p>
+                <div class="input-group">
+                    <div class="section-title">일반 가챠 설정</div>
+                    <div class="input-item">
+                        <label for="countNormal2">픽업 개수</label>
+                        <input type="number" id="countNormal2">
+                    </div>
+                    <div class="input-item">
+                        <label for="rate2Star">전체 픽업 확률 (%)</label>
+                        <input type="number" id="rate2Star">
+                    </div>
+                    <div class="input-item">
+                        <label for="pullsNormal2">가챠 횟수</label>
+                        <input type="number" id="pullsNormal2">
+                    </div>
+                </div>
+
+                <div class="result-area" id="resultArea2">
+                    <div class="chart-row">
+                        <div class="chart-container">
+                            <canvas id="resultChart2"></canvas>
+                            <button id="toggleViewBtn2" class="view-toggle-btn">모드: 개별 확률</button>
+                        </div>
+                        <div class="legend-container" id="legendList2"></div>
+                    </div>
+                    <div class="summary" id="summaryText2">
+                        값을 입력하면 결과가 계산됩니다.
+                    </div>
+                    <div class="logic-detail" id="logicDetailText2" style="display:none;"></div>
                 </div>
             </div>
 
@@ -101,7 +113,6 @@
     </div>
 </div>
 
-<!-- JS 파일 연결 (type="module") -->
 <script type="module" src="js/script.js"></script>
 
 </body>
