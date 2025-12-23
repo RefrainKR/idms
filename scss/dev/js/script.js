@@ -229,10 +229,6 @@ function render3StarUI() {
                  if (i * 40 <= context.stepPulls) rewardHistoryHtml += `[${i}주: ${rText}] `;
                  else rewardHistoryHtml += `<span style="color:#aaa;">[${i}주: ${rText}]</span> `;
              }
-             let zeroPickupDesc = (context.randomRewardCount > 0 || context.totalCeilingCount > 0) 
-                 ? "주회 보상 또는 천장으로 인해 0픽업은 불가능(0%)합니다." 
-                 : `총 ${context.totalPulls}회의 가챠가 모두 픽업을 빗나갈 확률입니다.`;
-
              return `
                 <span class="logic-title">상세 계산 근거</span>
                 <ul class="logic-list">
@@ -249,7 +245,7 @@ function render3StarUI() {
 
 
 // ==========================================
-//  2성 로직 (검증 및 수정 완료)
+//  2성 로직 (수정: 스탭업 50회당 천장 적용)
 // ==========================================
 function init2StarInputs() {
     new InputNumberElement(document.getElementById('rate2Star'), 0, 100, 28, calculate2Star);
@@ -274,7 +270,7 @@ function calculate2Star() {
         pulls: parseInt(document.getElementById(`pullsStep${g}`).value) || 0
     }));
 
-    // [검증 3] 일반 가챠 픽업 개수 = 각 그룹 픽업 개수의 합인지 확인
+    // [검증] 일반 가챠 픽업 개수 = 각 그룹 픽업 개수의 합인지 확인
     const sumGroupCounts = groups.reduce((sum, g) => sum + g.count, 0);
     const summaryEl = document.getElementById('summaryText2');
     const logicEl = document.getElementById('logicDetailText2');
@@ -303,7 +299,6 @@ function calculate2Star() {
 
     groups.forEach(g => {
         if (g.count > 0) {
-            // [검증 1, 2] 각 그룹은 독립적으로 계산되며, Step1(5회차)과 Step2(10회 주기) 규칙이 적용됨
             const dpGroup = calculateSingleGroupDP(g.count, g.pulls, rateTotal, true);
             dpCombined = convolveDistributions(dpCombined, dpGroup);
             totalStepPulls += g.pulls;
@@ -311,7 +306,6 @@ function calculate2Star() {
     });
 
     // === 2. 일반 가챠 계산 (전체 풀 공유) ===
-    // [검증 3] 스탭업 결과를 초기 상태로 사용하여 풀이 공유됨을 반영
     let dp = dpCombined;
     if (dp.length <= normalCount) {
         const diff = (normalCount + 1) - dp.length;
@@ -328,14 +322,12 @@ function calculate2Star() {
         let nextDP = new Array(normalCount + 1).fill(0);
         for (let k = 0; k <= normalCount; k++) {
             if (!currentDP[k]) continue; 
-            
             if (k === normalCount) {
                 nextDP[k] += currentDP[k]; 
             } else {
                 let p_new = (normalCount - k) * probPerCard;
                 if (p_new > 1) p_new = 1;
                 let p_stay = 1.0 - p_new;
-                
                 nextDP[k] += currentDP[k] * p_stay;
                 nextDP[k+1] += currentDP[k] * p_new;
             }
@@ -364,8 +356,12 @@ function calculate2Star() {
         return nextDP;
     }
 
-    let ceilingCount = Math.floor(normalPulls / 100);
-    for (let i = 0; i < ceilingCount; i++) {
+    // 2성 천장 규칙: 일반 100회당 1개 + 스탭업 50회당 1개 (독립적 계산)
+    let normalCeilingCount = Math.floor(normalPulls / 100);
+    let stepUpCeilingCount = Math.floor(totalStepPulls / 50);
+    let totalCeilingCount = normalCeilingCount + stepUpCeilingCount;
+
+    for (let i = 0; i < totalCeilingCount; i++) {
         dp = runSelectTicket(dp);
     }
 
@@ -375,7 +371,8 @@ function calculate2Star() {
         N: normalCount,
         dp: dp,
         context: {
-            totalPulls, normalPulls, totalStepPulls, ceilingCount,
+            totalPulls, normalPulls, totalStepPulls, 
+            normalCeilingCount, stepUpCeilingCount, totalCeilingCount,
             countNormal, countHigh, p_normal_one, p_high_one
         }
     };
@@ -383,10 +380,6 @@ function calculate2Star() {
     render2StarUI();
 }
 
-/**
- * 단일 그룹(스탭업) DP 계산
- * [검증 1] Step1(5회차), Step2(10회 주기) 확정 로직 포함
- */
 function calculateSingleGroupDP(N, pulls, rateTotal, isStepUp) {
     let dp = new Array(N + 1).fill(0);
     dp[0] = 1.0;
@@ -397,10 +390,6 @@ function calculateSingleGroupDP(N, pulls, rateTotal, isStepUp) {
 
     for (let i = 1; i <= pulls; i++) {
         let p_current_one = p_normal;
-
-        // i=5: Step1 마지막 (확정)
-        // i=15, 25...: Step2의 10번째 (확정)
-        // i=10: Step2의 5번째 (확정 X) - 검증 완료
         if (i === 5) {
             p_current_one = p_guaranteed;
         } else if (i > 5 && (i - 5) % 10 === 0) {
@@ -425,9 +414,6 @@ function calculateSingleGroupDP(N, pulls, rateTotal, isStepUp) {
     return dp;
 }
 
-/**
- * 확률 분포 합성 (Convolution)
- */
 function convolveDistributions(dpA, dpB) {
     const sizeA = dpA.length;
     const sizeB = dpB.length;
@@ -458,15 +444,17 @@ function render2StarUI() {
         () => `
             <strong>2성 분석 결과</strong><br>
             총 가챠 횟수 : ${context.totalPulls}회 (일반 ${context.normalPulls} + 스탭업 ${context.totalStepPulls})<br>
-            일반 천장 교환 : ${context.ceilingCount}회 (100연당 1회)<br>
+            천장 교환 합계 : ${context.totalCeilingCount}회 (일반 ${context.normalCeilingCount} + 스탭업 ${context.stepUpCeilingCount})<br>
             <strong>올컴플릿 확률 : ${(dp[N] * 100).toFixed(2)}%</strong>
         `,
         () => `
             <span class="logic-title">상세 계산 근거</span>
             <ul class="logic-list">
                 <li><strong>확률 적용:</strong> 총 ${context.pulls}회 중 ${context.countNormal}회는 기본 개별 확률(${(context.p_normal_one*100).toFixed(2)}%)이, ${context.countHigh}회는 10회차 보정 개별 확률(${(context.p_high_one*100).toFixed(2)}%)이 적용되었습니다.</li>
-                <li><strong>계산 원리:</strong> 각 스탭업 그룹은 독립적인 캐릭터 풀을 가지므로 별도로 계산 후 <strong>합성(Convolution)</strong>하였고, 이후 일반 가챠는 전체 풀을 공유하므로 합성된 결과를 초기 상태로 하여 <strong>DP</strong>를 수행했습니다.</li>
-                <li><strong>천장 교환(${context.ceilingCount}회):</strong> 100회마다 없는 픽업을 확정 획득합니다. (가장 마지막에 적용)</li>
+                <li><strong>계산 원리:</strong> 각 스탭업 그룹은 독립적인 캐릭터 풀을 가지므로 별도로 계산 후 합성(Convolution)하였고, 이후 일반 가챠는 전체 풀을 공유하므로 합성된 결과를 초기 상태로 하여 DP를 수행했습니다.</li>
+                <li><strong>일반 천장(${context.normalCeilingCount}회):</strong> 일반 가챠 100회당 1개 지급.</li>
+                <li><strong>스탭업 천장(${context.stepUpCeilingCount}회):</strong> 4개 그룹 스탭업 합산 50회당 1개 지급.</li>
+                <li><strong>최종 처리:</strong> 합산된 ${context.totalCeilingCount}개의 천장 교환권은 가장 마지막에 적용되어 없는 픽업을 확정 획득합니다.</li>
                 <li><strong>계산 방식:</strong> **동적 계획법(DP)** 알고리즘을 사용하여, **쿠폰 수집가 문제(Coupon Collector's Problem)** 모델을 기반으로 정확한 확률을 계산했습니다.</li>
             </ul>
         `
