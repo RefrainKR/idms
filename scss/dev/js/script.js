@@ -1,6 +1,7 @@
 import { InputNumberElement } from './lib/utils/InputNumberElement.js';
 import { TabManager } from './lib/utils/TabManager.js';
 import { ToggleButtonElement } from './lib/utils/ToggleButtonElement.js';
+import { CollapsibleSection } from './lib/utils/CollapsibleSection.js';
 
 Chart.register(ChartDataLabels);
 
@@ -17,9 +18,26 @@ const TOGGLE_STATES = [
     { name: 'cumulative_more', text: '모드: 누적(이상)' }
 ];
 
+// [신규 기능] 확률 포맷팅 함수
+function formatProbability(probability) {
+    if (probability === 0) return "0.000%";
+    
+    const percent = probability * 100;
+    const text = percent.toFixed(3); // 소수점 3자리
+
+    // 반올림해서 0.000%가 되지만 실제로는 0이 아닌 경우 (극저확률)
+    if (text === "0.000") {
+        const denom = Math.round(1 / probability);
+        return `1/${denom.toLocaleString()}`; // 1/XXX 형식 (쉼표 포함)
+    }
+    
+    return `${text}%`;
+}
+
 window.onload = function() {
     const tabContainer = document.getElementById('main-tab-system');
     new TabManager(tabContainer);
+    new CollapsibleSection();
 
     new ToggleButtonElement('toggleViewBtn3', TOGGLE_STATES, (name) => {
         VIEW_MODE.star3 = name;
@@ -39,12 +57,12 @@ window.onload = function() {
 };
 
 // ==========================================
-//  3성 로직 (기존 유지)
+//  3성 로직
 // ==========================================
 function init3StarInputs() {
     new InputNumberElement(document.getElementById('pickupCount'), 1, 100, 2, calculate3Star);
     new InputNumberElement(document.getElementById('pickupRate'), 0, 100, 1, calculate3Star);
-    new InputNumberElement(document.getElementById('maxLoops'), 1, 10, 3, () => updateLoopSettings());
+    new InputNumberElement(document.getElementById('maxLoops'), 1, 10, 2, () => updateLoopSettings());
     new InputNumberElement(document.getElementById('step4Rate'), 0, 100, 20, calculate3Star);
     new InputNumberElement(document.getElementById('normalPulls'), 0, 9999, 0, calculate3Star);
     stepPullsInputInstance = new InputNumberElement(document.getElementById('stepPulls'), 0, 120, 0, calculate3Star);
@@ -219,7 +237,7 @@ function render3StarUI() {
             가챠 횟수 : ${context.totalPulls}회 (일반 ${context.normalPulls} + 스탭업 ${context.stepPulls})<br>
             랜덤 교환 : ${context.randomRewardCount}회<br>
             천장 교환 : ${context.totalCeilingCount}회 (보상 ${context.selectRewardCount} + 통합 ${context.normalCeiling})<br>
-            <strong>올컴플릿 확률 : ${(dp[N] * 100).toFixed(2)}%</strong>
+            <strong>올컴플릿 확률 : ${formatProbability(dp[N])}</strong>
         `,
         () => {
              let rewardHistoryHtml = "";
@@ -229,10 +247,14 @@ function render3StarUI() {
                  if (i * 40 <= context.stepPulls) rewardHistoryHtml += `[${i}주: ${rText}] `;
                  else rewardHistoryHtml += `<span style="color:#aaa;">[${i}주: ${rText}]</span> `;
              }
+             let zeroPickupDesc = (context.randomRewardCount > 0 || context.totalCeilingCount > 0) 
+                 ? "주회 보상 또는 천장으로 인해 0픽업은 불가능(0%)합니다." 
+                 : `총 ${context.totalPulls}회의 가챠가 모두 픽업을 빗나갈 확률입니다.`;
+
              return `
                 <span class="logic-title">상세 계산 근거</span>
                 <ul class="logic-list">
-                    <li><strong>확률 적용:</strong> 기본 확률(${context.p_indiv_percent}%) ${context.countNormal}회, Step4 개별 확률(${(context.p_step4_total_percent/N).toFixed(2)}%) ${context.countStep4}회 적용되었습니다.</li>
+                    <li><strong>확률 적용:</strong> 기본 확률(${context.p_indiv_percent}%) ${context.countNormal}회, Step4 개별 확률(${(context.p_step4_total_percent/N).toFixed(3)}%) ${context.countStep4}회 적용되었습니다.</li>
                     <li><strong>주회 보상 설정:</strong> ${rewardHistoryHtml}</li>
                     <li><strong>랜덤 교환(${context.randomRewardCount}회):</strong> 보유 수에 따라 중복 또는 신규획득 확률이 적용됩니다.</li>
                     <li><strong>천장 교환(${context.totalCeilingCount}회):</strong> 스탭업 보상(${context.selectRewardCount}회)과 일반 천장(${context.normalCeiling}회)이 합산되어 <strong>가장 마지막에</strong> 적용됩니다.</li>
@@ -245,21 +267,21 @@ function render3StarUI() {
 
 
 // ==========================================
-//  2성 로직 (수정: 스탭업 50회당 천장 적용)
+//  2성 로직
 // ==========================================
 function init2StarInputs() {
     new InputNumberElement(document.getElementById('rate2Star'), 0, 100, 28, calculate2Star);
     new InputNumberElement(document.getElementById('countNormal2'), 1, 100, 28, calculate2Star);
     new InputNumberElement(document.getElementById('pullsNormal2'), 0, 9999, 0, calculate2Star);
     
-    ['A', 'B', 'C', 'D'].forEach(grp => {
-        new InputNumberElement(document.getElementById(`countStep${grp}`), 1, 100, 6, calculate2Star);
+    const defaultCounts = [8, 7, 7, 6];
+    ['A', 'B', 'C', 'D'].forEach((grp, idx) => {
+        new InputNumberElement(document.getElementById(`countStep${grp}`), 1, 100, defaultCounts[idx], calculate2Star);
         new InputNumberElement(document.getElementById(`pullsStep${grp}`), 0, 9999, 0, calculate2Star);
     });
 }
 
 function calculate2Star() {
-    // 1. 입력값
     const rateTotal = parseFloat(document.getElementById('rate2Star').value) / 100 || 0;
     const normalCount = parseInt(document.getElementById('countNormal2').value) || 0;
     const normalPulls = parseInt(document.getElementById('pullsNormal2').value) || 0;
@@ -270,7 +292,6 @@ function calculate2Star() {
         pulls: parseInt(document.getElementById(`pullsStep${g}`).value) || 0
     }));
 
-    // [검증] 일반 가챠 픽업 개수 = 각 그룹 픽업 개수의 합인지 확인
     const sumGroupCounts = groups.reduce((sum, g) => sum + g.count, 0);
     const summaryEl = document.getElementById('summaryText2');
     const logicEl = document.getElementById('logicDetailText2');
@@ -293,7 +314,6 @@ function calculate2Star() {
         return;
     }
 
-    // === 1. 스탭업 가챠 계산 (각 그룹별 독립 DP 후 합성) ===
     let dpCombined = [1.0]; 
     let totalStepPulls = 0;
 
@@ -305,7 +325,6 @@ function calculate2Star() {
         }
     });
 
-    // === 2. 일반 가챠 계산 (전체 풀 공유) ===
     let dp = dpCombined;
     if (dp.length <= normalCount) {
         const diff = (normalCount + 1) - dp.length;
@@ -345,7 +364,6 @@ function calculate2Star() {
         }
     }
 
-    // === 3. 천장 적용 (마지막에 적용) ===
     function runSelectTicket(currentDP) {
         let nextDP = new Array(normalCount + 1).fill(0);
         for (let k = 0; k <= normalCount; k++) {
@@ -356,7 +374,6 @@ function calculate2Star() {
         return nextDP;
     }
 
-    // 2성 천장 규칙: 일반 100회당 1개 + 스탭업 50회당 1개 (독립적 계산)
     let normalCeilingCount = Math.floor(normalPulls / 100);
     let stepUpCeilingCount = Math.floor(totalStepPulls / 50);
     let totalCeilingCount = normalCeilingCount + stepUpCeilingCount;
@@ -445,16 +462,16 @@ function render2StarUI() {
             <strong>2성 분석 결과</strong><br>
             총 가챠 횟수 : ${context.totalPulls}회 (일반 ${context.normalPulls} + 스탭업 ${context.totalStepPulls})<br>
             천장 교환 합계 : ${context.totalCeilingCount}회 (일반 ${context.normalCeilingCount} + 스탭업 ${context.stepUpCeilingCount})<br>
-            <strong>올컴플릿 확률 : ${(dp[N] * 100).toFixed(2)}%</strong>
+            <strong>올컴플릿 확률 : ${formatProbability(dp[N])}</strong>
         `,
         () => `
             <span class="logic-title">상세 계산 근거</span>
             <ul class="logic-list">
-                <li><strong>확률 적용:</strong> 총 ${context.pulls}회 중 ${context.countNormal}회는 기본 개별 확률(${(context.p_normal_one*100).toFixed(2)}%)이, ${context.countHigh}회는 10회차 보정 개별 확률(${(context.p_high_one*100).toFixed(2)}%)이 적용되었습니다.</li>
-                <li><strong>계산 원리:</strong> 각 스탭업 그룹은 독립적인 캐릭터 풀을 가지므로 별도로 계산 후 합성(Convolution)하였고, 이후 일반 가챠는 전체 풀을 공유하므로 합성된 결과를 초기 상태로 하여 DP를 수행했습니다.</li>
+                <li><strong>확률 적용:</strong> 총 ${context.normalPulls}회 중 ${context.countNormal}회는 기본 개별 확률(${(context.p_normal_one*100).toFixed(3)}%)이, ${context.countHigh}회는 10회차 보정 개별 확률(${(context.p_high_one*100).toFixed(3)}%)이 적용되었습니다.</li>
                 <li><strong>일반 천장(${context.normalCeilingCount}회):</strong> 일반 가챠 100회당 1개 지급.</li>
                 <li><strong>스탭업 천장(${context.stepUpCeilingCount}회):</strong> 4개 그룹 스탭업 합산 50회당 1개 지급.</li>
-                <li><strong>최종 처리:</strong> 합산된 ${context.totalCeilingCount}개의 천장 교환권은 가장 마지막에 적용되어 없는 픽업을 확정 획득합니다.</li>
+                <li><strong>천장 최종 처리:</strong> 합산된 ${context.totalCeilingCount}개의 천장 교환권은 가장 마지막에 적용되어 없는 픽업을 확정 획득합니다.</li>
+                <li><strong>계산 원리:</strong> 각 스탭업 그룹은 독립적인 캐릭터 풀을 가지므로 별도로 계산 후 합성(Convolution)하였고, 이후 일반 가챠는 전체 풀을 공유하므로 합성된 결과를 초기 상태로 하여 DP를 수행했습니다.</li>
                 <li><strong>계산 방식:</strong> **동적 계획법(DP)** 알고리즘을 사용하여, **쿠폰 수집가 문제(Coupon Collector's Problem)** 모델을 기반으로 정확한 확률을 계산했습니다.</li>
             </ul>
         `
@@ -462,7 +479,7 @@ function render2StarUI() {
 }
 
 // ==========================================
-//  데이터 변환 및 공통 렌더링 (기존 유지)
+//  데이터 변환 및 공통 렌더링
 // ==========================================
 
 function transformData(dp, mode) {
@@ -508,10 +525,14 @@ function renderResult(
 
     for (let k = 0; k <= N; k++) {
         chartLabels.push(`${k}픽업`);
-        chartData.push((chartDP[k] * 100).toFixed(2));
         
+        // 차트 데이터 (개별 확률 사용, 소수점 3자리)
+        const chartVal = parseFloat((chartDP[k] * 100).toFixed(3));
+        chartData.push(chartVal);
+        
+        // 리스트 데이터 (포맷팅된 문자열)
         listLabels.push(`${k}픽업${suffix}`);
-        listData.push((listDP[k] * 100).toFixed(2));
+        listData.push(formatProbability(listDP[k]));
 
         if (k === N) backgroundColors.push('#45a247');
         else {
@@ -524,15 +545,18 @@ function renderResult(
     document.getElementById(logicId).innerHTML = logicCallback();
     document.getElementById(logicId).style.display = 'block';
 
+    // 차트용 툴팁 데이터를 위한 포맷팅된 개별 확률 배열 생성
+    const chartTooltipValues = chartDP.map(p => formatProbability(p));
+
     updateLegend(legendId, listLabels, listData, backgroundColors);
-    renderChart(chartId, chartLabels, chartData, backgroundColors);
+    renderChart(chartId, chartLabels, chartData, backgroundColors, chartTooltipValues);
 }
 
 function updateLegend(elementId, labels, data, colors) {
     const listContainer = document.getElementById(elementId);
     listContainer.innerHTML = '';
     labels.forEach((label, index) => {
-        const percent = data[index];
+        const percent = data[index]; // 이미 formatProbability가 적용된 문자열
         const color = colors[index];
         const item = document.createElement('div');
         item.className = 'legend-item';
@@ -541,25 +565,25 @@ function updateLegend(elementId, labels, data, colors) {
                 <span class="color-dot" style="background-color: ${color};"></span>
                 <span>${label}</span>
             </div>
-            <div class="legend-value">${percent}%</div>
+            <div class="legend-value">${percent}</div>
         `;
         listContainer.appendChild(item);
     });
 }
 
-function renderChart(canvasId, labels, data, colors) {
+function renderChart(canvasId, labels, data, colors, tooltipValues) {
     const ctx = document.getElementById(canvasId).getContext('2d');
     
     if (canvasId === 'resultChart') {
         if (myChart3Star) myChart3Star.destroy();
-        myChart3Star = createChart(ctx, labels, data, colors);
+        myChart3Star = createChart(ctx, labels, data, colors, tooltipValues);
     } else {
         if (myChart2Star) myChart2Star.destroy();
-        myChart2Star = createChart(ctx, labels, data, colors);
+        myChart2Star = createChart(ctx, labels, data, colors, tooltipValues);
     }
 }
 
-function createChart(ctx, labels, data, colors) {
+function createChart(ctx, labels, data, colors, tooltipValues) {
     return new Chart(ctx, {
         type: 'pie',
         data: {
@@ -593,7 +617,11 @@ function createChart(ctx, labels, data, colors) {
                 tooltip: {
                     callbacks: {
                         label: function(context) {
-                            return ` ${context.label}: ${context.raw}%`;
+                            const index = context.dataIndex;
+                            const label = context.label;
+                            // 툴팁에서는 포맷팅된 값 사용
+                            const formattedVal = tooltipValues[index];
+                            return ` ${label}: ${formattedVal}`;
                         }
                     }
                 }

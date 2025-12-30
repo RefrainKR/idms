@@ -28,38 +28,61 @@
             
             <!-- 1번 탭: 3성 -->
             <div id="tab-3star" class="tab-content active">
-                <div class="input-group">
-                    <div class="section-title">일반 가챠</div>
-                    <div class="input-item">
-                        <label for="pickupCount">픽업 개수</label>
-                        <input type="number" id="pickupCount">
+                
+                <!-- 1. 일반 가챠 정보 -->
+                <div class="collapsible-container">
+                    <div class="section-header">
+                        <p class="section-title">일반 가챠 정보</p>
+                        <button class="toggle-btn">▼</button>
                     </div>
-                    <div class="input-item">
-                        <label for="pickupRate">개별 픽업 확률 (%)</label>
-                        <input type="number" id="pickupRate">
+                    <div class="section-content">
+                        <div class="input-item">
+                            <label for="pickupCount">픽업 개수</label>
+                            <input type="number" id="pickupCount">
+                        </div>
+                        <div class="input-item">
+                            <label for="pickupRate">개별 픽업 확률 (%)</label>
+                            <input type="number" id="pickupRate">
+                        </div>
                     </div>
-                    <div class="input-item">
-                        <label for="normalPulls">일반 가챠 횟수</label>
-                        <input type="number" id="normalPulls">
-                    </div>
-                    <div class="input-item" style="visibility: hidden;"></div>
+                </div>
 
-                    <div class="section-title">스탭업 가챠</div>
-                    <div class="input-item">
-                        <label for="maxLoops">최대 주회(周回) 수</label>
-                        <input type="number" id="maxLoops">
+                <!-- 2. 스탭업 가챠 정보 -->
+                <div class="collapsible-container">
+                    <div class="section-header">
+                        <p class="section-title">스탭업 가챠 정보</p>
+                        <button class="toggle-btn">▼</button>
                     </div>
-                    <div class="input-item">
-                        <label for="step4Rate">Step4 픽업 확률 (%)</label>
-                        <input type="number" id="step4Rate">
+                    <div class="section-content">
+                        <div class="input-item">
+                            <label for="maxLoops">최대 주회(周回) 수</label>
+                            <input type="number" id="maxLoops">
+                        </div>
+                        <div class="input-item">
+                            <label for="step4Rate">Step4 픽업 확률 (%)</label>
+                            <input type="number" id="step4Rate">
+                        </div>
+                        
+                        <!-- 주회 보상 -->
+                        <div class="loop-rewards-container" id="loopRewardsArea"></div>
                     </div>
-                    <div class="input-item">
-                        <label for="stepPulls">스탭업 가챠 횟수 (Max 자동)</label>
-                        <input type="number" id="stepPulls">
-                    </div>
-                    <div class="input-item" style="visibility: hidden;"></div>
+                </div>
 
-                    <div class="loop-rewards-container" id="loopRewardsArea"></div>
+                <!-- 3. 가챠 횟수 -->
+                <div class="collapsible-container">
+                    <div class="section-header">
+                        <p class="section-title">가챠 횟수</p>
+                    </div>
+                    <div class="section-content">
+                        <div class="input-item">
+                            <label for="normalPulls">일반 가챠 횟수</label>
+                            <input type="number" id="normalPulls">
+                        </div>
+                        <div class="input-item">
+                            <label for="stepPulls">스탭업 가챠 횟수 (Max 자동)</label>
+                            <input type="number" id="stepPulls">
+                        </div>
+                    </div>
                 </div>
                 
                 <div class="result-area" id="resultArea">
@@ -77,82 +100,98 @@
 
             <!-- 2번 탭: 2성 -->
             <div id="tab-2star" class="tab-content">
-                <div class="input-group">
-                    <div class="section-title">일반 가챠 설정</div>
-                    <div class="input-item">
-                        <label for="countNormal2">픽업 개수</label>
-                        <input type="number" id="countNormal2">
+                <!-- 1. 일반 가챠 정보 -->
+                <div class="collapsible-container">
+                    <div class="section-header">
+                        <p class="section-title">일반 가챠 정보</p>
+                        <button class="toggle-btn">▼</button>
                     </div>
-                    <div class="input-item">
-                        <label for="rate2Star">전체 픽업 확률 (%)</label>
-                        <input type="number" id="rate2Star">
-                    </div>
-                    <div class="input-item">
-                        <label for="pullsNormal2">가챠 횟수</label>
-                        <input type="number" id="pullsNormal2">
-                    </div>
-                    <div class="input-item" style="visibility: hidden;"></div> <!-- 레이아웃 맞춤용 -->
-
-                    <div class="section-title">스탭업 가챠 (그룹별 설정)</div>
-                    
-                    <!-- [수정] 그룹 A -->
-                    <div class="stepup-group-container">
-                        <div class="group-title">그룹 A</div>
-                        <div class="group-inputs">
-                            <div class="input-item">
-                                <label for="countStepA">픽업 개수</label>
-                                <input type="number" id="countStepA">
-                            </div>
-                            <div class="input-item">
-                                <label for="pullsStepA">가챠 횟수</label>
-                                <input type="number" id="pullsStepA">
-                            </div>
+                    <div class="section-content">
+                        <div class="input-item">
+                            <label for="countNormal2">픽업 개수 (전체)</label>
+                            <input type="number" id="countNormal2">
+                        </div>
+                        <div class="input-item">
+                            <label for="rate2Star">전체 픽업 확률 (%)</label>
+                            <input type="number" id="rate2Star">
                         </div>
                     </div>
-
-                    <!-- [수정] 그룹 B -->
-                    <div class="stepup-group-container">
-                        <div class="group-title">그룹 B</div>
-                        <div class="group-inputs">
-                            <div class="input-item">
-                                <label for="countStepB">픽업 개수</label>
-                                <input type="number" id="countStepB">
-                            </div>
-                            <div class="input-item">
-                                <label for="pullsStepB">가챠 횟수</label>
-                                <input type="number" id="pullsStepB">
-                            </div>
-                        </div>
+                </div>
+                
+                <!-- 2. 스탭업 가챠 설정 -->
+                <div class="collapsible-container">
+                    <div class="section-header">
+                        <p class="section-title">스탭업 가챠 설정</p>
+                        <button class="toggle-btn">▼</button>
                     </div>
-
-                    <!-- [수정] 그룹 C -->
-                    <div class="stepup-group-container">
-                        <div class="group-title">그룹 C</div>
-                        <div class="group-inputs">
-                            <div class="input-item">
-                                <label for="countStepC">픽업 개수</label>
-                                <input type="number" id="countStepC">
-                            </div>
-                            <div class="input-item">
-                                <label for="pullsStepC">가챠 횟수</label>
-                                <input type="number" id="pullsStepC">
+                    <div class="section-content force-block" style="display: block;"> 
+                        
+                        <!-- 픽업 개수 모음 -->
+                        <div class="group-row" style="margin-bottom: 10px;">
+                            <div class="group-label">픽업 개수</div>
+                            <div class="group-inputs-container">
+                                <div class="group-input-block">
+                                    <span class="group-name">A</span>
+                                    <input type="number" id="countStepA" style="width: 100%;">
+                                </div>
+                                <div class="group-input-block">
+                                    <span class="group-name">B</span>
+                                    <input type="number" id="countStepB" style="width: 100%;">
+                                </div>
+                                <div class="group-input-block">
+                                    <span class="group-name">C</span>
+                                    <input type="number" id="countStepC" style="width: 100%;">
+                                </div>
+                                <div class="group-input-block">
+                                    <span class="group-name">D</span>
+                                    <input type="number" id="countStepD" style="width: 100%;">
+                                </div>
                             </div>
                         </div>
+
                     </div>
+                </div>
 
-                    <!-- [수정] 그룹 D -->
-                    <div class="stepup-group-container">
-                        <div class="group-title">그룹 D</div>
-                        <div class="group-inputs">
+                <!-- 3. 가챠 횟수 -->
+                <div class="collapsible-container">
+                    <div class="section-header">
+                        <p class="section-title">가챠 횟수</p>
+                    </div>
+                    <div class="section-content" style="display: block;">
+                        
+                        <!-- 일반 가챠 횟수 -->
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 15px;">
                             <div class="input-item">
-                                <label for="countStepD">픽업 개수</label>
-                                <input type="number" id="countStepD">
+                                <label for="pullsNormal2">일반 가챠 횟수</label>
+                                <input type="number" id="pullsNormal2">
                             </div>
-                            <div class="input-item">
-                                <label for="pullsStepD">가챠 횟수</label>
-                                <input type="number" id="pullsStepD">
+                            <!-- 레이아웃 균형을 위한 빈칸 -->
+                            <div class="input-item"></div>
+                        </div>
+
+                        <!-- 스탭업 가챠 횟수 모음 -->
+                        <div class="group-row">
+                            <div class="group-label">스탭업 횟수</div>
+                            <div class="group-inputs-container">
+                                <div class="group-input-block">
+                                    <span class="group-name">A</span>
+                                    <input type="number" id="pullsStepA" style="width: 100%;">
+                                </div>
+                                <div class="group-input-block">
+                                    <span class="group-name">B</span>
+                                    <input type="number" id="pullsStepB" style="width: 100%;">
+                                </div>
+                                <div class="group-input-block">
+                                    <span class="group-name">C</span>
+                                    <input type="number" id="pullsStepC" style="width: 100%;">
+                                </div>
+                                <div class="group-input-block">
+                                    <span class="group-name">D</span>
+                                    <input type="number" id="pullsStepD" style="width: 100%;">
+                                </div>
                             </div>
                         </div>
+
                     </div>
                 </div>
 
