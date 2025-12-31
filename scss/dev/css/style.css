@@ -281,20 +281,30 @@ h1 {
 .color-dot { width: 12px; height: 12px; border-radius: 3px; margin-right: 8px; display: inline-block; }
 .legend-value { font-weight: bold; color: #333; }
 
-.view-toggle-btn {
+.btn-group {
+    display: flex;
+    gap: 10px;
     margin-top: 15px;
-    padding: 8px 16px;
+    justify-content: center;
+}
+
+.view-toggle-btn {
+    margin-top: 0; 
+    padding: 8px 12px;
     background-color: var(--btn-bg);
     color: white;
     border: none;
     border-radius: 20px;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     cursor: pointer;
     transition: background-color 0.3s;
     box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    white-space: nowrap;
 }
 
-.view-toggle-btn:hover { background-color: var(--btn-hover); }
+.view-toggle-btn:hover {
+    background-color: var(--btn-hover);
+}
 
 .summary {
     background-color: #f8f9fa;
@@ -338,27 +348,44 @@ h1 {
     .chart-row { flex-direction: column; }
     .chart-container, .legend-container { width: 100%; flex: none; }
     
-    .input-item { flex-wrap: wrap; }
-    .input-item label { width: 100%; margin-bottom: 5px; }
-    .input-item input, .input-item select { width: 100%; }
+    .input-item, 
+    .loop-reward-item { 
+        flex-wrap: nowrap; 
+        gap: 10px;
+    }
     
-    .loop-reward-item { flex-wrap: wrap; }
-    .loop-reward-select { width: 100%; margin-top: 5px; }
+    .input-item label,
+    .loop-reward-item label { 
+        width: auto; 
+        margin-bottom: 0; 
+        font-size: 0.85rem;
+        flex: 1;
+    }
     
-    /* 2성 스탭업 그룹 모바일 대응 */
+    .input-item input, 
+    .input-item select,
+    .loop-reward-select { 
+        width: 100px;
+        flex-shrink: 0;
+    }
+    
     .group-row { 
         flex-direction: column; 
         align-items: flex-start; 
         gap: 10px;
     }
     
-    /* [수정] 모바일에서는 2x2 배치 */
     .group-inputs-container { 
-        grid-template-columns: 1fr 1fr; 
+        grid-template-columns: 1fr 1fr !important; 
         gap: 8px; 
     }
 
     .group-input-block {
         padding: 6px; 
+        gap: 5px;
+    }
+    
+    .group-input-block .group-name {
+        font-size: 0.9rem;
     }
 }

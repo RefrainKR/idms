@@ -10,27 +10,33 @@ let myChart2Star = null;
 let stepPullsInputInstance = null; 
 
 const CACHE = { star3: null, star2: null };
-const VIEW_MODE = { star3: 'individual', star2: 'individual' };
 
-const TOGGLE_STATES = [
-    { name: 'individual', text: '모드: 개별 확률' },
-    { name: 'cumulative_less', text: '모드: 누적(이하)' },
-    { name: 'cumulative_more', text: '모드: 누적(이상)' }
+// 뷰 모드 관리
+const VIEW_MODE = { star3: 'individual', star2: 'individual' };
+// 천장 포함 여부 관리 (기본값: 포함)
+const CEILING_MODE = { star3: 'included', star2: 'included' };
+
+// 3. 토글 버튼 텍스트에서 "모드: " 제거
+const TOGGLE_STATES_VIEW = [
+    { name: 'individual', text: '개별 확률' },
+    { name: 'cumulative_less', text: '누적(이하)' },
+    { name: 'cumulative_more', text: '누적(이상)' }
 ];
 
-// [신규 기능] 확률 포맷팅 함수
+// 4. 천장 토글 상태 정의
+const TOGGLE_STATES_CEILING = [
+    { name: 'included', text: '천장 포함' },
+    { name: 'excluded', text: '천장 미포함' }
+];
+
 function formatProbability(probability) {
     if (probability === 0) return "0.000%";
-    
     const percent = probability * 100;
-    const text = percent.toFixed(3); // 소수점 3자리
-
-    // 반올림해서 0.000%가 되지만 실제로는 0이 아닌 경우 (극저확률)
+    const text = percent.toFixed(3); 
     if (text === "0.000") {
         const denom = Math.round(1 / probability);
-        return `1/${denom.toLocaleString()}`; // 1/XXX 형식 (쉼표 포함)
+        return `1/${denom.toLocaleString()}`; 
     }
-    
     return `${text}%`;
 }
 
@@ -39,14 +45,28 @@ window.onload = function() {
     new TabManager(tabContainer);
     new CollapsibleSection();
 
-    new ToggleButtonElement('toggleViewBtn3', TOGGLE_STATES, (name) => {
+    // --- 3성 버튼 설정 ---
+    // 뷰 모드
+    new ToggleButtonElement('toggleViewBtn3', TOGGLE_STATES_VIEW, (name) => {
         VIEW_MODE.star3 = name;
         render3StarUI();
     });
+    // 천장 토글
+    new ToggleButtonElement('toggleCeilingBtn3', TOGGLE_STATES_CEILING, (name) => {
+        CEILING_MODE.star3 = name;
+        calculate3Star(); // 계산 로직이 바뀌므로 재계산 필요
+    });
 
-    new ToggleButtonElement('toggleViewBtn2', TOGGLE_STATES, (name) => {
+    // --- 2성 버튼 설정 ---
+    // 뷰 모드
+    new ToggleButtonElement('toggleViewBtn2', TOGGLE_STATES_VIEW, (name) => {
         VIEW_MODE.star2 = name;
         render2StarUI();
+    });
+    // 천장 토글
+    new ToggleButtonElement('toggleCeilingBtn2', TOGGLE_STATES_CEILING, (name) => {
+        CEILING_MODE.star2 = name;
+        calculate2Star(); // 계산 로직이 바뀌므로 재계산 필요
     });
 
     init3StarInputs();
@@ -192,9 +212,10 @@ function calculate3Star() {
             let currentLoop = i / 40;
             let rewardType = loopRewards[currentLoop];
             if (rewardType === 'random') {
-                dp = runRandomPickup(dp);
+                dp = runRandomPickup(dp); // 랜덤 교환은 토글과 상관없이 항상 적용
                 randomRewardCount++;
             } else if (rewardType === 'select') {
+                // 선택 교환(천장) 카운트는 하지만, 실제 DP 적용은 아래에서 토글 확인 후 수행
                 selectRewardCount++;
             }
         }
@@ -204,8 +225,11 @@ function calculate3Star() {
     let normalCeiling = Math.floor(totalPulls / 200);
     let totalCeilingCount = selectRewardCount + normalCeiling;
 
-    for (let i = 0; i < totalCeilingCount; i++) {
-        dp = runSelectTicket(dp);
+    // [수정 4] 천장 포함 여부 확인
+    if (CEILING_MODE.star3 === 'included') {
+        for (let i = 0; i < totalCeilingCount; i++) {
+            dp = runSelectTicket(dp);
+        }
     }
 
     CACHE.star3 = {
@@ -229,6 +253,12 @@ function render3StarUI() {
     const chartDP = dp; 
     const listDP = transformData(dp, mode);
     
+    // 천장 미포함 시 메시지 추가
+    let ceilingNote = "";
+    if (CEILING_MODE.star3 === 'excluded' && context.totalCeilingCount > 0) {
+        ceilingNote = ` (미적용: ${context.totalCeilingCount}회)`;
+    }
+
     renderResult(
         N, chartDP, listDP, mode,
         'resultChart', 'legendList', 'summaryText', 'logicDetailText',
@@ -236,7 +266,7 @@ function render3StarUI() {
             <strong>3성 분석 결과</strong><br>
             가챠 횟수 : ${context.totalPulls}회 (일반 ${context.normalPulls} + 스탭업 ${context.stepPulls})<br>
             랜덤 교환 : ${context.randomRewardCount}회<br>
-            천장 교환 : ${context.totalCeilingCount}회 (보상 ${context.selectRewardCount} + 통합 ${context.normalCeiling})<br>
+            천장 교환 : ${context.totalCeilingCount}회 (보상 ${context.selectRewardCount} + 통합 ${context.normalCeiling})${ceilingNote}<br>
             <strong>올컴플릿 확률 : ${formatProbability(dp[N])}</strong>
         `,
         () => {
@@ -247,17 +277,21 @@ function render3StarUI() {
                  if (i * 40 <= context.stepPulls) rewardHistoryHtml += `[${i}주: ${rText}] `;
                  else rewardHistoryHtml += `<span style="color:#aaa;">[${i}주: ${rText}]</span> `;
              }
-             let zeroPickupDesc = (context.randomRewardCount > 0 || context.totalCeilingCount > 0) 
-                 ? "주회 보상 또는 천장으로 인해 0픽업은 불가능(0%)합니다." 
-                 : `총 ${context.totalPulls}회의 가챠가 모두 픽업을 빗나갈 확률입니다.`;
+             
+             let ceilingDesc = "";
+             if (CEILING_MODE.star3 === 'included') {
+                 ceilingDesc = `합산된 ${context.totalCeilingCount}개의 천장 교환권은 가장 마지막에 적용되어 없는 픽업을 확정 획득합니다.`;
+             } else {
+                 ceilingDesc = `<span style="color:red;">사용자 설정에 의해 ${context.totalCeilingCount}개의 천장 교환권 적용이 제외되었습니다.</span>`;
+             }
 
              return `
                 <span class="logic-title">상세 계산 근거</span>
                 <ul class="logic-list">
                     <li><strong>확률 적용:</strong> 기본 확률(${context.p_indiv_percent}%) ${context.countNormal}회, Step4 개별 확률(${(context.p_step4_total_percent/N).toFixed(3)}%) ${context.countStep4}회 적용되었습니다.</li>
                     <li><strong>주회 보상 설정:</strong> ${rewardHistoryHtml}</li>
-                    <li><strong>랜덤 교환(${context.randomRewardCount}회):</strong> 보유 수에 따라 중복 또는 신규획득 확률이 적용됩니다.</li>
-                    <li><strong>천장 교환(${context.totalCeilingCount}회):</strong> 스탭업 보상(${context.selectRewardCount}회)과 일반 천장(${context.normalCeiling}회)이 합산되어 <strong>가장 마지막에</strong> 적용됩니다.</li>
+                    <li><strong>랜덤 교환(${context.randomRewardCount}회):</strong> 보유 수에 따라 중복 또는 신규획득 확률이 적용됩니다. (설정 무관 항상 적용)</li>
+                    <li><strong>천장 교환(${context.totalCeilingCount}회):</strong> ${ceilingDesc}</li>
                     <li><strong>계산 방식:</strong> **동적 계획법(DP)** 알고리즘을 사용하여, **쿠폰 수집가 문제(Coupon Collector's Problem)** 모델을 기반으로 정확한 확률을 계산했습니다.</li>
                 </ul>
             `;
@@ -314,17 +348,20 @@ function calculate2Star() {
         return;
     }
 
+    // 1. 스탭업 가챠 계산 (그룹별 DP -> 합성)
     let dpCombined = [1.0]; 
     let totalStepPulls = 0;
 
     groups.forEach(g => {
         if (g.count > 0) {
+            // [참고] Step1/2 확정은 '랜덤 획득' 개념이므로 천장 토글과 무관하게 항상 적용
             const dpGroup = calculateSingleGroupDP(g.count, g.pulls, rateTotal, true);
             dpCombined = convolveDistributions(dpCombined, dpGroup);
             totalStepPulls += g.pulls;
         }
     });
 
+    // 2. 일반 가챠 계산
     let dp = dpCombined;
     if (dp.length <= normalCount) {
         const diff = (normalCount + 1) - dp.length;
@@ -364,6 +401,7 @@ function calculate2Star() {
         }
     }
 
+    // 3. 천장 적용
     function runSelectTicket(currentDP) {
         let nextDP = new Array(normalCount + 1).fill(0);
         for (let k = 0; k <= normalCount; k++) {
@@ -378,8 +416,11 @@ function calculate2Star() {
     let stepUpCeilingCount = Math.floor(totalStepPulls / 50);
     let totalCeilingCount = normalCeilingCount + stepUpCeilingCount;
 
-    for (let i = 0; i < totalCeilingCount; i++) {
-        dp = runSelectTicket(dp);
+    // [수정 4] 천장 포함 여부 확인
+    if (CEILING_MODE.star2 === 'included') {
+        for (let i = 0; i < totalCeilingCount; i++) {
+            dp = runSelectTicket(dp);
+        }
     }
 
     let totalPulls = normalPulls + totalStepPulls;
@@ -397,6 +438,7 @@ function calculate2Star() {
     render2StarUI();
 }
 
+// ... (calculateSingleGroupDP, convolveDistributions 동일) ...
 function calculateSingleGroupDP(N, pulls, rateTotal, isStepUp) {
     let dp = new Array(N + 1).fill(0);
     dp[0] = 1.0;
@@ -455,33 +497,44 @@ function render2StarUI() {
     const chartDP = dp; 
     const listDP = transformData(dp, mode);
 
+    let ceilingNote = "";
+    if (CEILING_MODE.star2 === 'excluded' && context.totalCeilingCount > 0) {
+        ceilingNote = ` (미적용: ${context.totalCeilingCount}회)`;
+    }
+
     renderResult(
         N, chartDP, listDP, mode,
         'resultChart2', 'legendList2', 'summaryText2', 'logicDetailText2',
         () => `
             <strong>2성 분석 결과</strong><br>
             총 가챠 횟수 : ${context.totalPulls}회 (일반 ${context.normalPulls} + 스탭업 ${context.totalStepPulls})<br>
-            천장 교환 합계 : ${context.totalCeilingCount}회 (일반 ${context.normalCeilingCount} + 스탭업 ${context.stepUpCeilingCount})<br>
+            천장 교환 합계 : ${context.totalCeilingCount}회 (일반 ${context.normalCeilingCount} + 스탭업 ${context.stepUpCeilingCount})${ceilingNote}<br>
             <strong>올컴플릿 확률 : ${formatProbability(dp[N])}</strong>
         `,
-        () => `
+        () => {
+            let ceilingDesc = "";
+            if (CEILING_MODE.star2 === 'included') {
+                ceilingDesc = `합산된 ${context.totalCeilingCount}개의 천장 교환권은 가장 마지막에 적용되어 없는 픽업을 확정 획득합니다.`;
+            } else {
+                ceilingDesc = `<span style="color:red;">사용자 설정에 의해 ${context.totalCeilingCount}개의 천장 교환권 적용이 제외되었습니다.</span>`;
+            }
+
+            return `
             <span class="logic-title">상세 계산 근거</span>
             <ul class="logic-list">
                 <li><strong>확률 적용:</strong> 총 ${context.normalPulls}회 중 ${context.countNormal}회는 기본 개별 확률(${(context.p_normal_one*100).toFixed(3)}%)이, ${context.countHigh}회는 10회차 보정 개별 확률(${(context.p_high_one*100).toFixed(3)}%)이 적용되었습니다.</li>
+                <li><strong>계산 원리:</strong> 각 스탭업 그룹은 독립적인 캐릭터 풀을 가지므로 별도로 계산 후 합성(Convolution)하였고, 이후 일반 가챠는 전체 풀을 공유하므로 합성된 결과를 초기 상태로 하여 DP를 수행했습니다.</li>
                 <li><strong>일반 천장(${context.normalCeilingCount}회):</strong> 일반 가챠 100회당 1개 지급.</li>
                 <li><strong>스탭업 천장(${context.stepUpCeilingCount}회):</strong> 4개 그룹 스탭업 합산 50회당 1개 지급.</li>
-                <li><strong>천장 최종 처리:</strong> 합산된 ${context.totalCeilingCount}개의 천장 교환권은 가장 마지막에 적용되어 없는 픽업을 확정 획득합니다.</li>
-                <li><strong>계산 원리:</strong> 각 스탭업 그룹은 독립적인 캐릭터 풀을 가지므로 별도로 계산 후 합성(Convolution)하였고, 이후 일반 가챠는 전체 풀을 공유하므로 합성된 결과를 초기 상태로 하여 DP를 수행했습니다.</li>
+                <li><strong>천장 최종 처리:</strong> ${ceilingDesc}</li>
                 <li><strong>계산 방식:</strong> **동적 계획법(DP)** 알고리즘을 사용하여, **쿠폰 수집가 문제(Coupon Collector's Problem)** 모델을 기반으로 정확한 확률을 계산했습니다.</li>
             </ul>
-        `
+            `;
+        }
     );
 }
 
-// ==========================================
-//  데이터 변환 및 공통 렌더링
-// ==========================================
-
+// ... (transformData, renderResult, updateLegend, renderChart, createChart 동일) ...
 function transformData(dp, mode) {
     let newDP = new Array(dp.length).fill(0);
     const N = dp.length - 1;
@@ -526,11 +579,9 @@ function renderResult(
     for (let k = 0; k <= N; k++) {
         chartLabels.push(`${k}픽업`);
         
-        // 차트 데이터 (개별 확률 사용, 소수점 3자리)
         const chartVal = parseFloat((chartDP[k] * 100).toFixed(3));
         chartData.push(chartVal);
         
-        // 리스트 데이터 (포맷팅된 문자열)
         listLabels.push(`${k}픽업${suffix}`);
         listData.push(formatProbability(listDP[k]));
 
@@ -545,7 +596,6 @@ function renderResult(
     document.getElementById(logicId).innerHTML = logicCallback();
     document.getElementById(logicId).style.display = 'block';
 
-    // 차트용 툴팁 데이터를 위한 포맷팅된 개별 확률 배열 생성
     const chartTooltipValues = chartDP.map(p => formatProbability(p));
 
     updateLegend(legendId, listLabels, listData, backgroundColors);
@@ -556,7 +606,7 @@ function updateLegend(elementId, labels, data, colors) {
     const listContainer = document.getElementById(elementId);
     listContainer.innerHTML = '';
     labels.forEach((label, index) => {
-        const percent = data[index]; // 이미 formatProbability가 적용된 문자열
+        const percent = data[index];
         const color = colors[index];
         const item = document.createElement('div');
         item.className = 'legend-item';
@@ -619,7 +669,6 @@ function createChart(ctx, labels, data, colors, tooltipValues) {
                         label: function(context) {
                             const index = context.dataIndex;
                             const label = context.label;
-                            // 툴팁에서는 포맷팅된 값 사용
                             const formattedVal = tooltipValues[index];
                             return ` ${label}: ${formattedVal}`;
                         }
