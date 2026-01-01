@@ -10,25 +10,23 @@ let myChart2Star = null;
 let stepPullsInputInstance = null; 
 
 const CACHE = { star3: null, star2: null };
-
-// 뷰 모드 관리
 const VIEW_MODE = { star3: 'individual', star2: 'individual' };
-// 천장 포함 여부 관리 (기본값: 포함)
 const CEILING_MODE = { star3: 'included', star2: 'included' };
 
-// 3. 토글 버튼 텍스트에서 "모드: " 제거
 const TOGGLE_STATES_VIEW = [
     { name: 'individual', text: '개별 확률' },
     { name: 'cumulative_less', text: '누적(이하)' },
     { name: 'cumulative_more', text: '누적(이상)' }
 ];
 
-// 4. 천장 토글 상태 정의
 const TOGGLE_STATES_CEILING = [
     { name: 'included', text: '천장 포함' },
     { name: 'excluded', text: '천장 미포함' }
 ];
 
+/**
+ * 확률 포맷팅 유틸리티
+ */
 function formatProbability(probability) {
     if (probability === 0) return "0.000%";
     const percent = probability * 100;
@@ -45,28 +43,24 @@ window.onload = function() {
     new TabManager(tabContainer);
     new CollapsibleSection();
 
-    // --- 3성 버튼 설정 ---
-    // 뷰 모드
+    // 3성 버튼 설정
     new ToggleButtonElement('toggleViewBtn3', TOGGLE_STATES_VIEW, (name) => {
         VIEW_MODE.star3 = name;
         render3StarUI();
     });
-    // 천장 토글
     new ToggleButtonElement('toggleCeilingBtn3', TOGGLE_STATES_CEILING, (name) => {
         CEILING_MODE.star3 = name;
-        calculate3Star(); // 계산 로직이 바뀌므로 재계산 필요
+        calculate3Star();
     });
 
-    // --- 2성 버튼 설정 ---
-    // 뷰 모드
+    // 2성 버튼 설정
     new ToggleButtonElement('toggleViewBtn2', TOGGLE_STATES_VIEW, (name) => {
         VIEW_MODE.star2 = name;
         render2StarUI();
     });
-    // 천장 토글
     new ToggleButtonElement('toggleCeilingBtn2', TOGGLE_STATES_CEILING, (name) => {
         CEILING_MODE.star2 = name;
-        calculate2Star(); // 계산 로직이 바뀌므로 재계산 필요
+        calculate2Star();
     });
 
     init3StarInputs();
@@ -76,9 +70,11 @@ window.onload = function() {
     calculate2Star();
 };
 
-// ==========================================
-//  3성 로직
-// ==========================================
+/* 
+   ################################################################
+   # 3성 가챠 로직
+   ################################################################
+*/
 function init3StarInputs() {
     new InputNumberElement(document.getElementById('pickupCount'), 1, 100, 2, calculate3Star);
     new InputNumberElement(document.getElementById('pickupRate'), 0, 100, 1, calculate3Star);
@@ -177,6 +173,7 @@ function calculate3Star() {
         }
         return nextDP;
     }
+    
     function runSelectTicket(currentDP) {
         let nextDP = new Array(N + 1).fill(0);
         for (let k = 0; k <= N; k++) {
@@ -186,6 +183,7 @@ function calculate3Star() {
         }
         return nextDP;
     }
+    
     function runRandomPickup(currentDP) {
         let nextDP = new Array(N + 1).fill(0);
         for (let k = 0; k <= N; k++) {
@@ -201,7 +199,10 @@ function calculate3Star() {
         return nextDP;
     }
 
+    // 1. 일반 가챠
     for (let i = 0; i < normalPulls; i++) dp = runGacha(dp, p_normal_one);
+
+    // 2. 스탭업 가챠
     for (let i = 1; i <= stepPulls; i++) {
         let isStep4 = (i % 40 === 0); 
         if (isStep4) countStep4++; else countNormal++;
@@ -212,10 +213,9 @@ function calculate3Star() {
             let currentLoop = i / 40;
             let rewardType = loopRewards[currentLoop];
             if (rewardType === 'random') {
-                dp = runRandomPickup(dp); // 랜덤 교환은 토글과 상관없이 항상 적용
+                dp = runRandomPickup(dp); 
                 randomRewardCount++;
             } else if (rewardType === 'select') {
-                // 선택 교환(천장) 카운트는 하지만, 실제 DP 적용은 아래에서 토글 확인 후 수행
                 selectRewardCount++;
             }
         }
@@ -225,7 +225,7 @@ function calculate3Star() {
     let normalCeiling = Math.floor(totalPulls / 200);
     let totalCeilingCount = selectRewardCount + normalCeiling;
 
-    // [수정 4] 천장 포함 여부 확인
+    // 3. 천장 적용
     if (CEILING_MODE.star3 === 'included') {
         for (let i = 0; i < totalCeilingCount; i++) {
             dp = runSelectTicket(dp);
@@ -253,7 +253,6 @@ function render3StarUI() {
     const chartDP = dp; 
     const listDP = transformData(dp, mode);
     
-    // 천장 미포함 시 메시지 추가
     let ceilingNote = "";
     if (CEILING_MODE.star3 === 'excluded' && context.totalCeilingCount > 0) {
         ceilingNote = ` (미적용: ${context.totalCeilingCount}회)`;
@@ -300,9 +299,11 @@ function render3StarUI() {
 }
 
 
-// ==========================================
-//  2성 로직
-// ==========================================
+/* 
+   ################################################################
+   # 2성 가챠 로직
+   ################################################################
+*/
 function init2StarInputs() {
     new InputNumberElement(document.getElementById('rate2Star'), 0, 100, 28, calculate2Star);
     new InputNumberElement(document.getElementById('countNormal2'), 1, 100, 28, calculate2Star);
@@ -336,7 +337,6 @@ function calculate2Star() {
         myChart2Star = null;
         legendEl.innerHTML = '';
         logicEl.style.display = 'none';
-        
         summaryEl.innerHTML = `
             <div style="color: red; font-weight: bold;">
                 [오류] 픽업 개수 불일치<br>
@@ -348,16 +348,19 @@ function calculate2Star() {
         return;
     }
 
-    // 1. 스탭업 가챠 계산 (그룹별 DP -> 합성)
+    // 1. 스탭업 가챠 계산
     let dpCombined = [1.0]; 
     let totalStepPulls = 0;
+    let totalStepUpNormalPulls = 0;
+    let totalStepUpGuaranteedPulls = 0;
 
     groups.forEach(g => {
         if (g.count > 0) {
-            // [참고] Step1/2 확정은 '랜덤 획득' 개념이므로 천장 토글과 무관하게 항상 적용
-            const dpGroup = calculateSingleGroupDP(g.count, g.pulls, rateTotal, true);
-            dpCombined = convolveDistributions(dpCombined, dpGroup);
+            const result = calculateSingleGroupDP(g.count, g.pulls, rateTotal, true);
+            dpCombined = convolveDistributions(dpCombined, result.dp);
             totalStepPulls += g.pulls;
+            totalStepUpNormalPulls += result.normalPullsCount;
+            totalStepUpGuaranteedPulls += result.guaranteedPullsCount;
         }
     });
 
@@ -416,7 +419,6 @@ function calculate2Star() {
     let stepUpCeilingCount = Math.floor(totalStepPulls / 50);
     let totalCeilingCount = normalCeilingCount + stepUpCeilingCount;
 
-    // [수정 4] 천장 포함 여부 확인
     if (CEILING_MODE.star2 === 'included') {
         for (let i = 0; i < totalCeilingCount; i++) {
             dp = runSelectTicket(dp);
@@ -431,28 +433,35 @@ function calculate2Star() {
         context: {
             totalPulls, normalPulls, totalStepPulls, 
             normalCeilingCount, stepUpCeilingCount, totalCeilingCount,
-            countNormal, countHigh, p_normal_one, p_high_one
+            countNormal, countHigh, p_normal_one, p_high_one,
+            groups, rateTotal, totalStepUpNormalPulls, totalStepUpGuaranteedPulls
         }
     };
 
     render2StarUI();
 }
 
-// ... (calculateSingleGroupDP, convolveDistributions 동일) ...
 function calculateSingleGroupDP(N, pulls, rateTotal, isStepUp) {
     let dp = new Array(N + 1).fill(0);
     dp[0] = 1.0;
-    if (pulls <= 0) return dp;
+    if (pulls <= 0) return { dp, normalPullsCount: 0, guaranteedPullsCount: 0 };
 
-    const p_normal = rateTotal / N;
-    const p_guaranteed = 1.0 / N; 
+    const p_normal = rateTotal / N; 
+    const p_guaranteed = 1.0 / N;   
+
+    let normalPullsCount = 0;
+    let guaranteedPullsCount = 0;
 
     for (let i = 1; i <= pulls; i++) {
         let p_current_one = p_normal;
         if (i === 5) {
-            p_current_one = p_guaranteed;
+            p_current_one = p_guaranteed; 
+            guaranteedPullsCount++;
         } else if (i > 5 && (i - 5) % 10 === 0) {
             p_current_one = p_guaranteed;
+            guaranteedPullsCount++;
+        } else {
+            normalPullsCount++;
         }
 
         let nextDP = new Array(N + 1).fill(0);
@@ -470,7 +479,7 @@ function calculateSingleGroupDP(N, pulls, rateTotal, isStepUp) {
         }
         dp = nextDP;
     }
-    return dp;
+    return { dp, normalPullsCount, guaranteedPullsCount };
 }
 
 function convolveDistributions(dpA, dpB) {
@@ -519,10 +528,27 @@ function render2StarUI() {
                 ceilingDesc = `<span style="color:red;">사용자 설정에 의해 ${context.totalCeilingCount}개의 천장 교환권 적용이 제외되었습니다.</span>`;
             }
 
+            // [수정] 그룹별 상세 확률 텍스트 업데이트 (%, 주기 설명 명확화)
+            let groupDetailHtml = "";
+            context.groups.forEach(g => {
+                if (g.count > 0) {
+                    const indivRate = (context.rateTotal * 100 / g.count).toFixed(3);
+                    const guarRate = (100 / g.count).toFixed(3);
+                    groupDetailHtml += `<li><strong>그룹 ${g.id} (${g.count}종):</strong> 기본 개별 ${indivRate}%, Step1(5회)/Step2(10주기-5회) 확정 시 개별 ${guarRate}%</li>`;
+                }
+            });
+
             return `
             <span class="logic-title">상세 계산 근거</span>
             <ul class="logic-list">
-                <li><strong>확률 적용:</strong> 총 ${context.normalPulls}회 중 ${context.countNormal}회는 기본 개별 확률(${(context.p_normal_one*100).toFixed(3)}%)이, ${context.countHigh}회는 10회차 보정 개별 확률(${(context.p_high_one*100).toFixed(3)}%)이 적용되었습니다.</li>
+                <li><strong>확률 적용 (일반):</strong> 총 ${context.normalPulls}회 중 ${context.countNormal}회는 기본 개별 확률(${(context.p_normal_one*100).toFixed(3)}%)이, ${context.countHigh}회는 10회차 보정(전체 95%) 개별 확률(${(context.p_high_one*100).toFixed(3)}%)이 적용되었습니다.</li>
+                
+                <!-- [수정] 텍스트 변경: % 제거, 그룹별 개별/확정 확률로 표기 -->
+                <li><strong>확률 적용 (스탭업):</strong> 총 ${context.totalStepPulls}회 중 ${context.totalStepUpNormalPulls}회는 그룹별 개별 확률이, ${context.totalStepUpGuaranteedPulls}회는 그룹별 확정 개별 확률이 적용되었습니다.</li>
+                <ul style="margin-top:0; padding-left:20px; list-style-type:circle;">
+                    ${groupDetailHtml}
+                </ul>
+                
                 <li><strong>계산 원리:</strong> 각 스탭업 그룹은 독립적인 캐릭터 풀을 가지므로 별도로 계산 후 합성(Convolution)하였고, 이후 일반 가챠는 전체 풀을 공유하므로 합성된 결과를 초기 상태로 하여 DP를 수행했습니다.</li>
                 <li><strong>일반 천장(${context.normalCeilingCount}회):</strong> 일반 가챠 100회당 1개 지급.</li>
                 <li><strong>스탭업 천장(${context.stepUpCeilingCount}회):</strong> 4개 그룹 스탭업 합산 50회당 1개 지급.</li>
@@ -534,7 +560,7 @@ function render2StarUI() {
     );
 }
 
-// ... (transformData, renderResult, updateLegend, renderChart, createChart 동일) ...
+// ... (이후 변환 및 렌더링 함수는 기존과 동일) ...
 function transformData(dp, mode) {
     let newDP = new Array(dp.length).fill(0);
     const N = dp.length - 1;
@@ -578,10 +604,8 @@ function renderResult(
 
     for (let k = 0; k <= N; k++) {
         chartLabels.push(`${k}픽업`);
-        
         const chartVal = parseFloat((chartDP[k] * 100).toFixed(3));
         chartData.push(chartVal);
-        
         listLabels.push(`${k}픽업${suffix}`);
         listData.push(formatProbability(listDP[k]));
 
@@ -623,7 +647,6 @@ function updateLegend(elementId, labels, data, colors) {
 
 function renderChart(canvasId, labels, data, colors, tooltipValues) {
     const ctx = document.getElementById(canvasId).getContext('2d');
-    
     if (canvasId === 'resultChart') {
         if (myChart3Star) myChart3Star.destroy();
         myChart3Star = createChart(ctx, labels, data, colors, tooltipValues);
