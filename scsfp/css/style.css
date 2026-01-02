@@ -342,6 +342,51 @@ h1 {
     display: block;
 }
 
+.reset-area {
+    display: flex;
+    justify-content: space-between; /* 좌우 정렬 */
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.preset-group {
+    display: flex;
+    gap: 5px;
+}
+
+.preset-btn {
+    padding: 6px 12px;
+    background-color: #e3f2fd; /* 옅은 파란색 */
+    color: var(--primary-color);
+    border: 1px solid #bbdefb;
+    border-radius: 5px;
+    font-size: 0.85rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.preset-btn:hover {
+    background-color: #bbdefb;
+}
+
+.reset-btn {
+    padding: 6px 12px;
+    background-color: #f0f0f0;
+    color: #555;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.reset-btn:hover {
+    background-color: #e0e0e0;
+    border-color: #bbb;
+    color: #333;
+}
+
 @media (max-width: 650px) {
     .section-content, .loop-rewards-container { grid-template-columns: 1fr; }
     
