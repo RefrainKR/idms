@@ -9,7 +9,6 @@ Chart.register(ChartDataLabels);
 let myChart3Star = null;
 let myChart2Star = null;
 let stepPullsInputInstance = null; 
-let isInitializing = true; 
 
 const CACHE = { star3: null, star2: null };
 const VIEW_MODE = { star3: 'individual', star2: 'individual' };
@@ -69,8 +68,6 @@ function formatProbability(probability) {
 }
 
 window.onload = function() {
-    isInitializing = true; 
-
     const tabContainer = document.getElementById('main-tab-system');
     new TabManager(tabContainer);
     new CollapsibleSection();
@@ -107,13 +104,10 @@ window.onload = function() {
 
     init3StarInputs();
     init2StarInputs();
-
-    isInitializing = false; 
 };
 
-// ... (저장/로드/초기화/프리셋 로직들은 기존과 동일, 생략 없음) ...
+/* --- 저장/로드/초기화/프리셋 로직 --- */
 function save3StarData() {
-    if (isInitializing) return;
     const data = {};
     CONFIG_3STAR.forEach(cfg => {
         if (EXCLUDE_SAVE_IDS.includes(cfg.id)) return;
@@ -132,7 +126,6 @@ function save3StarData() {
 }
 
 function save2StarData() {
-    if (isInitializing) return;
     const data = {};
     CONFIG_2STAR.forEach(cfg => {
         if (EXCLUDE_SAVE_IDS.includes(cfg.id)) return;
@@ -149,6 +142,7 @@ function save2StarData() {
 function reset3Star() {
     if (!confirm("3성 탭의 설정을 초기화하시겠습니까?")) return;
     storageManager.remove(KEY_3STAR);
+    
     CONFIG_3STAR.forEach(cfg => {
         const instance = inputInstances.star3[cfg.id];
         if (instance) instance.setValue(cfg.def, false);
@@ -161,6 +155,7 @@ function reset3Star() {
 function reset2Star() {
     if (!confirm("2성 탭의 설정을 초기화하시겠습니까?")) return;
     storageManager.remove(KEY_2STAR);
+
     CONFIG_2STAR.forEach(cfg => {
         const instance = inputInstances.star2[cfg.id];
         if (instance) instance.setValue(cfg.def, false);
@@ -206,11 +201,16 @@ function apply3StarSettings(settings) {
     save3StarData();
 }
 
+// ==========================================
+//  3성 로직
+// ==========================================
 function init3StarInputs() {
     const savedData = storageManager.load(KEY_3STAR) || {};
+
     CONFIG_3STAR.forEach(cfg => {
         const el = document.getElementById(cfg.id);
         let initialVal;
+        
         if (EXCLUDE_SAVE_IDS.includes(cfg.id)) {
             initialVal = 0;
         } 
@@ -219,6 +219,7 @@ function init3StarInputs() {
         } else {
             initialVal = cfg.def;
         }
+        
         inputInstances.star3[cfg.id] = new InputNumberElement(
             el, cfg.min, cfg.max, initialVal,
             () => {
@@ -227,6 +228,7 @@ function init3StarInputs() {
             }
         );
     });
+
     updateLoopSettings();
     calculate3Star();
 }
@@ -235,6 +237,7 @@ function updateLoopSettings() {
     const maxLoopsInput = document.getElementById('maxLoops');
     const maxLoops = parseInt(maxLoopsInput.value) || 1;
     const container = document.getElementById('loopRewardsArea');
+    
     const savedData = storageManager.load(KEY_3STAR) || {};
     const savedRewards = savedData.loopRewards || {};
 
@@ -278,13 +281,13 @@ function updateLoopSettings() {
         stepPullsInputInstance.setMax(maxLoops * 40);
     }
     const stepLabel = document.querySelector('label[for="stepPulls"]');
-    if (stepLabel) stepLabel.textContent = `스탭업 가챠 횟수 (Max ${maxLoops * 40})`;
+    // [수정] 라벨 텍스트 변경
+    if (stepLabel) stepLabel.textContent = `스탭업 횟수(${maxLoops * 40})`;
     
     calculate3Star();
 }
 
 function calculate3Star() {
-    // ... (계산 로직 동일) ...
     const N = parseInt(document.getElementById('pickupCount').value) || 0;
     const p_indiv_percent = parseFloat(document.getElementById('pickupRate').value) || 0;
     let p_step4_total_percent = parseFloat(document.getElementById('step4Rate').value) || 0;
@@ -425,8 +428,8 @@ function render3StarUI() {
              for(let i=1; i<=context.maxLoops; i++) {
                  let rType = context.loopRewards[i];
                  let rText = '없음';
-                 if (rType === 'random') rText = '픽업 티켓';
-                 else if (rType === 'select') rText = '셀렉 티켓';
+                 if (rType === 'random') rText = '랜덤 교환';
+                 else if (rType === 'select') rText = '천장 교환';
 
                  if (i * 40 <= context.stepPulls) rewardHistoryHtml += `[${i}주: ${rText}] `;
                  else rewardHistoryHtml += `<span style="color:#aaa;">[${i}주: ${rText}]</span> `;
@@ -434,26 +437,25 @@ function render3StarUI() {
              
              let ceilingDesc = "";
              if (CEILING_MODE.star3 === 'included') {
-                 ceilingDesc = `합산된 ${context.totalCeilingCount}개의 셀렉 티켓(천장)은 가장 마지막에 적용되어 없는 픽업을 확정 획득합니다.`;
+                 ceilingDesc = `합산된 ${context.totalCeilingCount}개의 천장 교환(셀렉 티켓)은 가장 마지막에 적용되어 없는 픽업을 확정 획득합니다.`;
              } else {
-                 ceilingDesc = `<span style="color:red;">사용자 설정에 의해 ${context.totalCeilingCount}개의 셀렉 티켓(천장) 적용이 제외되었습니다.</span>`;
+                 ceilingDesc = `<span style="color:red;">사용자 설정에 의해 ${context.totalCeilingCount}개의 천장 교환(셀렉 티켓) 적용이 제외되었습니다.</span>`;
              }
 
-             // [수정] 3성 상세 계산 근거: 접기/펼치기 HTML 반환
              return `
-             <div class="section-header" style="cursor: pointer; margin-bottom: 10px;">
-                <span class="logic-title" style="border-bottom: none; margin-bottom: 0;">상세 계산 근거</span>
-                <button class="toggle-btn">▼</button>
-             </div>
-             <div class="section-content" style="display: none;">
-                <ul class="logic-list">
-                    <li><strong>확률 적용:</strong> 기본 확률(${context.p_indiv_percent}%) ${context.countNormal}회, Step4 개별 확률(${(context.p_step4_total_percent/N).toFixed(3)}%) ${context.countStep4}회 적용되었습니다.</li>
-                    <li><strong>주회 보상 설정:</strong> ${rewardHistoryHtml}</li>
-                    <li><strong>랜덤 교환(픽업 티켓)(${context.randomRewardCount}회):</strong> 보유 수에 따라 중복 또는 신규획득 확률이 적용됩니다. (설정 무관 항상 적용)</li>
-                    <li><strong>천장 교환(셀렉 티켓)(${context.totalCeilingCount}회):</strong> ${ceilingDesc}</li>
-                    <li><strong>계산 방식:</strong> **동적 계획법(DP)** 알고리즘을 사용하여, **쿠폰 수집가 문제(Coupon Collector's Problem)** 모델을 기반으로 정확한 확률을 계산했습니다.</li>
-                </ul>
-             </div>
+                <div class="section-header" style="cursor: pointer; margin-bottom: 10px;">
+                    <span class="logic-title" style="border-bottom: none; margin-bottom: 0;">상세 계산 근거</span>
+                    <button class="toggle-btn">▼</button>
+                </div>
+                <div class="section-content" style="display: none;">
+                    <ul class="logic-list">
+                        <li><strong>확률 적용:</strong> 기본 확률(${context.p_indiv_percent}%) ${context.countNormal}회, Step4 개별 확률(${(context.p_step4_total_percent/N).toFixed(3)}%) ${context.countStep4}회 적용되었습니다.</li>
+                        <li><strong>주회 보상 설정:</strong> ${rewardHistoryHtml}</li>
+                        <li><strong>랜덤 교환(픽업 티켓)(${context.randomRewardCount}회):</strong> 보유 수에 따라 중복 또는 신규획득 확률이 적용됩니다. (설정 무관 항상 적용)</li>
+                        <li><strong>천장 교환(셀렉 티켓)(${context.totalCeilingCount}회):</strong> ${ceilingDesc}</li>
+                        <li><strong>계산 방식:</strong> **동적 계획법(DP)** 알고리즘을 사용하여, **쿠폰 수집가 문제(Coupon Collector's Problem)** 모델을 기반으로 정확한 확률을 계산했습니다.</li>
+                    </ul>
+                </div>
             `;
         }
     );
@@ -461,7 +463,7 @@ function render3StarUI() {
 
 
 // ==========================================
-//  2성 로직
+//  2성 로직 (변동 없음)
 // ==========================================
 function init2StarInputs() {
     const savedData = storageManager.load(KEY_2STAR) || {};
@@ -492,7 +494,6 @@ function init2StarInputs() {
 }
 
 function calculate2Star() {
-    // ... (계산 로직 동일) ...
     const rateTotal = parseFloat(document.getElementById('rate2Star').value) / 100 || 0;
     const normalCount = parseInt(document.getElementById('countNormal2').value) || 0;
     const normalPulls = parseInt(document.getElementById('pullsNormal2').value) || 0;
@@ -712,7 +713,6 @@ function render2StarUI() {
                 }
             });
 
-            // [수정] 2성 상세 계산 근거: 접기/펼치기 HTML 반환
             return `
             <div class="section-header" style="cursor: pointer; margin-bottom: 10px;">
                 <span class="logic-title" style="border-bottom: none; margin-bottom: 0;">상세 계산 근거</span>
@@ -737,7 +737,7 @@ function render2StarUI() {
     );
 }
 
-// ... (transformData, updateLegend, renderChart, createChart 는 동일) ...
+// ... (나머지 변환 및 렌더링 함수는 동일) ...
 function transformData(dp, mode) {
     let newDP = new Array(dp.length).fill(0);
     const N = dp.length - 1;
@@ -795,7 +795,7 @@ function renderResult(
 
     document.getElementById(summaryId).innerHTML = summaryCallback();
     
-    // [중요] HTML 주입 후 이벤트 바인딩
+    // [중요] 상세 계산 근거 HTML 주입 후 토글 이벤트 바인딩
     const logicContainer = document.getElementById(logicId);
     logicContainer.innerHTML = logicCallback();
     logicContainer.style.display = 'block';
@@ -804,6 +804,9 @@ function renderResult(
     if (innerContainer) {
         const btn = innerContainer.querySelector('.toggle-btn');
         const content = logicContainer.querySelector('.section-content');
+        
+        // 초기 상태: display: none (CSS/HTML에 명시됨)
+        // 토글 동작 구현
         innerContainer.addEventListener('click', () => {
             if (content.style.display === 'none') {
                 content.style.display = 'block';
@@ -815,8 +818,10 @@ function renderResult(
         });
     }
 
+    const chartTooltipValues = chartDP.map(p => formatProbability(p));
+
     updateLegend(legendId, listLabels, listData, backgroundColors);
-    renderChart(chartId, chartLabels, chartData, backgroundColors, chartDP.map(p => formatProbability(p)));
+    renderChart(chartId, chartLabels, chartData, backgroundColors, chartTooltipValues);
 }
 
 function updateLegend(elementId, labels, data, colors) {
