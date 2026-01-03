@@ -1,1 +1,0 @@
-- https://aistudio.google.com/ 의 도움에 의해 만들어졌습니다.

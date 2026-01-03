@@ -109,14 +109,14 @@ h1 {
     padding: 0 5px;
 }
 
+.section-content.logic-content {
+    display: block;
+}
+
 .section-content {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 10px; 
-}
-
-.section-content.force-block {
-    display: block; 
+    gap: 10px;
 }
 
 /* --- Input Styles --- */

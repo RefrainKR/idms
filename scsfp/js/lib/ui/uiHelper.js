@@ -33,11 +33,11 @@ export function renderResultCommon(
         }
     }
 
-    document.getElementById(ids.summary).innerHTML = htmlGenerators.summary();
+    const logicHtml = htmlGenerators.logic().replace('class="section-content"', 'class="section-content logic-content"');
     
     const logicContainer = document.getElementById(ids.logic);
-    logicContainer.innerHTML = htmlGenerators.logic();
-    logicContainer.style.display = 'block';
+    logicContainer.innerHTML = logicHtml;
+    logicContainer.style.display = 'block'; // 컨테이너 자체는 보임 (내부 컨텐츠가 접힘/펼침)
 
     const chartTooltipValues = chartDP.map(p => formatProbability(p));
 
