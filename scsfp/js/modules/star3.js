@@ -255,11 +255,11 @@ export function render3StarUI() {
                      const btnText = isHidden ? '▲' : '▼';
 
                      return `
-                     <div class="section-header" style="cursor: pointer; margin-bottom: 10px;">
+                    <div class="section-header" style="margin-bottom: 10px;"> 
                         <span class="logic-title" style="border-bottom: none; margin-bottom: 0;">상세 계산 근거</span>
                         <button class="toggle-btn">${btnText}</button>
-                     </div>
-                     <div class="section-content" style="display: ${displayStyle};">
+                    </div>
+                    <div class="section-content logic-content" style="display: ${displayStyle};">
                         <ul class="logic-list">
                             <li><strong>확률 적용:</strong> 기본 확률(${context.p_indiv_percent}%) ${context.countNormal}회, Step4 개별 확률(${(context.p_step4_total_percent/N).toFixed(3)}%) ${context.countStep4}회 적용되었습니다.</li>
                             <li><strong>주회 보상 설정:</strong> ${rewardHistoryHtml}</li>

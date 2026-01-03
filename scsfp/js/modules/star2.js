@@ -281,11 +281,11 @@ export function render2StarUI() {
                     const btnText = isHidden ? '▲' : '▼';
 
                     return `
-                    <div class="section-header" style="cursor: pointer; margin-bottom: 10px;">
+                    <div class="section-header" style="margin-bottom: 10px;"> 
                         <span class="logic-title" style="border-bottom: none; margin-bottom: 0;">상세 계산 근거</span>
                         <button class="toggle-btn">${btnText}</button>
                     </div>
-                    <div class="section-content" style="display: ${displayStyle};">
+                    <div class="section-content logic-content" style="display: ${displayStyle};">
                         <ul class="logic-list">
                             <li><strong>확률 적용 (일반):</strong> 총 ${context.normalPulls}회 중 ${context.countNormal}회는 기본 개별 확률(${(context.p_normal_one*100).toFixed(3)}%)이, ${context.countHigh}회는 10회차 보정(전체 95%) 개별 확률(${(context.p_high_one*100).toFixed(3)}%)이 적용되었습니다.</li>
                             <li><strong>확률 적용 (스탭업):</strong> 총 ${context.totalStepPulls}회 중 ${context.totalStepUpNormalPulls}회는 그룹별 개별 확률이, ${context.totalStepUpGuaranteedPulls}회는 그룹별 확정 개별 확률이 적용되었습니다.</li>
