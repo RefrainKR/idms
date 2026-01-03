@@ -3,7 +3,6 @@ import { appState, inputInstances, CACHE, VIEW_MODE, CEILING_MODE, RANDOM_MODE, 
 import { storageManager } from '../lib/utils/StorageManager.js';
 import { InputNumberElement } from '../lib/utils/InputNumberElement.js';
 import { runGacha, runSelectTicket, runRandomPickup, transformData, runTotalCountGacha, runGuaranteedTotal } from '../lib/math/core.js';
-import { renderChart, renderBarChart } from '../lib/ui/chartHandler.js';
 import { renderResultCommon, renderTotalBarResult, renderSpecificBarResult } from '../lib/ui/uiHelper.js';
 import { formatProbability } from '../lib/ui/formatter.js';
 
@@ -41,7 +40,12 @@ export function init3StarInputs() {
 }
 
 function updateLoopSettings() {
-    const maxLoops = parseInt(document.getElementById('maxLoops').value) || 1;
+    const maxLoopsInput = document.getElementById('maxLoops');
+    
+    // [수정] 0 || 1 은 1이 되므로, isNaN 체크로 변경하여 0을 허용함
+    let maxLoops = parseInt(maxLoopsInput.value);
+    if (isNaN(maxLoops)) maxLoops = 1; 
+
     const container = document.getElementById('loopRewardsArea');
     
     const savedData = storageManager.load(KEY_3STAR) || {};
@@ -49,6 +53,7 @@ function updateLoopSettings() {
 
     container.innerHTML = '';
 
+    // maxLoops가 0이면 루프가 돌지 않아 보상 설정이 생성되지 않음 (의도된 동작)
     for (let i = 1; i <= maxLoops; i++) {
         const wrapper = document.createElement('div');
         wrapper.className = 'loop-reward-item';
@@ -95,7 +100,12 @@ export function calculate3Star() {
     const p_indiv_percent = parseFloat(document.getElementById('pickupRate').value) || 0;
     let p_step4_total_percent = parseFloat(document.getElementById('step4Rate').value) || 0;
     const normalPulls = parseInt(document.getElementById('normalPulls').value) || 0;
-    const maxLoops = parseInt(document.getElementById('maxLoops').value) || 1;
+    
+    // [수정] 여기도 동일하게 0 허용
+    const maxLoopsInput = document.getElementById('maxLoops');
+    let maxLoops = parseInt(maxLoopsInput.value);
+    if (isNaN(maxLoops)) maxLoops = 1;
+
     let stepPulls = parseInt(document.getElementById('stepPulls').value) || 0;
 
     if (N <= 0) return;
@@ -103,16 +113,12 @@ export function calculate3Star() {
     if (stepPulls > maxStepPulls) stepPulls = maxStepPulls;
     if (p_step4_total_percent > 100) p_step4_total_percent = 100;
 
-    // --- 확률 정의 ---
-    // 1. 수집 종류용 (개별 확률) - 변수명: one
-    const p_normal_one = p_indiv_percent / 100; 
+    const p_normal_one = p_indiv_percent / 100;
     const p_step4_one = (p_step4_total_percent / 100) / N;
 
-    // 2. 총 획득 수용 (전체 확률 합계) - 변수명: all / total
-    const p_normal_total = (p_indiv_percent * N) / 100;
-    const p_step4_total = p_step4_total_percent / 100;
+    const p_normal_all = p_normal_one * N; 
+    const p_step4_all = p_step4_total_percent / 100;
 
-    // 3. 특정 픽업용
     const p_specific_normal = p_indiv_percent / 100;
     const p_specific_step4 = (p_step4_total_percent / 100) / N;
     const p_specific_random_ticket = 1.0 / N; 
@@ -128,15 +134,14 @@ export function calculate3Star() {
         if (sel) loopRewards[i] = sel.value;
     }
 
-    // --- DP 초기화 ---
-    let dp = new Array(N + 1).fill(0); dp[0] = 1.0; // 수집 종류
-    let dpTotal = [1.0]; // 총 획득 수
-    let dpSpecific = [1.0]; // 특정 1명 획득 수
+    let dp = new Array(N + 1).fill(0); dp[0] = 1.0; 
+    let dpTotal = [1.0]; 
+    let dpSpecific = [1.0]; 
 
     // 1. 일반 가챠
     for (let i = 0; i < normalPulls; i++) {
         dp = runGacha(dp, p_normal_one);
-        dpTotal = runTotalCountGacha(dpTotal, p_normal_total);
+        dpTotal = runTotalCountGacha(dpTotal, p_normal_all);
         dpSpecific = runTotalCountGacha(dpSpecific, p_specific_normal);
     }
 
@@ -145,7 +150,6 @@ export function calculate3Star() {
         let isStep4 = (i % 40 === 0); 
         if (isStep4) countStep4++; else countNormal++;
         
-        // [수정] 정의된 변수명(p_..._one) 사용
         let currentProbOne = (isStep4 && STEP4_MODE.star3 === 'included') ? p_step4_one : p_normal_one;
         let currentProbTotal = (isStep4 && STEP4_MODE.star3 === 'included') ? p_step4_total : p_normal_total;
         let currentProbSpecific = (isStep4 && STEP4_MODE.star3 === 'included') ? p_specific_step4 : p_specific_normal;
@@ -209,13 +213,13 @@ export function render3StarUI() {
 
     if (collectionTab && collectionTab.classList.contains('active')) {
         const mode = VIEW_MODE.star3;
-        const chartDP = dp; // 원본 DP는 차트용
-        const listDP = transformData(dp, mode); // [수정] 리스트용 DP는 여기서 변환하여 전달
+        const chartDP = dp; 
+        const listDP = transformData(dp, mode);
         
         let ceilingNote = (CEILING_MODE.star3 === 'excluded' && context.totalCeilingCount > 0) ? ` (미적용: ${context.totalCeilingCount}회)` : "";
 
         renderResultCommon(
-            N, chartDP, listDP, mode, // [수정] chartDP와 listDP를 각각 전달
+            N, chartDP, listDP, mode,
             { chart: 'resultChart', legend: 'legendList', summary: 'summaryText', logic: 'logicDetailText' },
             {
                 summary: () => `
@@ -229,9 +233,12 @@ export function render3StarUI() {
                      let rewardHistoryHtml = "";
                      for(let i=1; i<=context.maxLoops; i++) {
                          let rType = context.loopRewards[i];
-                         let rText = rType === 'random' ? '픽업 티켓' : (rType === 'select' ? '셀렉 티켓' : '없음');
+                         let rText = '없음';
+                         if (rType === 'random') rText = '픽업 티켓';
+                         else if (rType === 'select') rText = '셀렉 티켓';
                          rewardHistoryHtml += (i * 40 <= context.stepPulls) ? `[${i}주: ${rText}] ` : `<span style="color:#aaa;">[${i}주: ${rText}]</span> `;
                      }
+                     
                      let ceilingDesc = (CEILING_MODE.star3 === 'included') 
                         ? `합산된 ${context.totalCeilingCount}개의 천장 교환(셀렉 티켓)은 가장 마지막에 적용되어 없는 픽업을 확정 획득합니다.` 
                         : `<span style="color:red;">사용자 설정에 의해 ${context.totalCeilingCount}개의 천장 교환(셀렉 티켓) 적용이 제외되었습니다.</span>`;
@@ -274,26 +281,23 @@ export function render3StarUI() {
         );
     }
 
-    // 2. 총 획득 수
     if (totalTab && totalTab.classList.contains('active')) {
         let expectedValue = 0;
         for(let i=0; i<dpTotal.length; i++) expectedValue += i * dpTotal[i];
         
         const summaryHtml = `
-            평균 기대 획득 수: 약 <strong>${expectedValue.toFixed(3)}개</strong><br>
+            3성 평균 기대 획득 수: 약 <strong>${expectedValue.toFixed(3)}개</strong><br>
             <span style="font-size:0.85rem; color:#888;">(그래프는 평균 기준 유의미한 확률 구간을 표시합니다.)</span>
         `;
         renderTotalBarResult(dpTotal, VIEW_MODE.star3, { chart: 'resultChartTotal3', summary: 'summaryTextTotal3' }, summaryHtml, chartRefTotal);
     }
 
-    // 3. 특정 픽업
     if (specificTab && specificTab.classList.contains('active')) {
         let expectedValue = 0;
         for(let i=0; i<dpSpecific.length; i++) expectedValue += i * dpSpecific[i];
         
         const summaryHtml = `
-            특정 픽업 기대 획득 수: 약 <strong>${expectedValue.toFixed(3)}개</strong><br>
-            <span style="font-size:0.85rem; color:#dc3545;">(천장 포함 버튼이 활성화 되어있는지 주의하세요.)</span>
+            특정 픽업(담당) 기대 획득 수: 약 <strong>${expectedValue.toFixed(3)}장</strong><br>
             <span style="font-size:0.85rem; color:#888;">(그래프는 평균 기준 유의미한 구간을 표시합니다.)</span>
         `;
 
@@ -301,7 +305,6 @@ export function render3StarUI() {
     }
 }
 
-// ... save3StarData, reset3Star, applyPreset 등 기존 코드 유지 ...
 export function save3StarData() {
     if (appState.isInitializing) return;
     const data = {};
@@ -311,7 +314,10 @@ export function save3StarData() {
         if(el && el.value !== "") data[cfg.id] = el.value;
     });
     
-    const maxLoops = parseInt(document.getElementById('maxLoops').value) || 1;
+    // [수정] 0 허용
+    let maxLoops = parseInt(document.getElementById('maxLoops').value);
+    if (isNaN(maxLoops)) maxLoops = 1;
+
     data.loopRewards = {};
     for (let i = 1; i <= maxLoops; i++) {
         const sel = document.getElementById(`rewardLoop${i}`);
@@ -338,6 +344,18 @@ export function applyGeneralPreset() {
     const settings = {
         pickupCount: 2, pickupRate: 1, maxLoops: 2, step4Rate: 20,
         rewards: { 2: 'random' }
+    };
+    apply3StarSettings(settings);
+}
+
+// [추가] 생일 가챠 프리셋
+export function applyBirthdayPreset() {
+    const settings = {
+        pickupCount: 1, 
+        pickupRate: 1.5, 
+        maxLoops: 0, 
+        step4Rate: 0,
+        rewards: {} // 0주회이므로 보상 없음
     };
     apply3StarSettings(settings);
 }

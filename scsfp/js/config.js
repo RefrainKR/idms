@@ -10,7 +10,7 @@ export const EXCLUDE_SAVE_IDS = [
 export const CONFIG_3STAR = [
     { id: 'pickupCount', min: 1, max: 100, def: 2 },
     { id: 'pickupRate', min: 0, max: 100, def: 1 },
-    { id: 'maxLoops', min: 1, max: 10, def: 2 },
+    { id: 'maxLoops', min: 0, max: 10, def: 2 },
     { id: 'step4Rate', min: 0, max: 100, def: 20 },
     { id: 'normalPulls', min: 0, max: 9999, def: 0 },
     { id: 'stepPulls', min: 0, max: 120, def: 0 } 
@@ -21,7 +21,7 @@ export const CONFIG_2STAR = [
     { id: 'countNormal2', min: 1, max: 100, def: 28 },
     { id: 'pullsNormal2', min: 0, max: 9999, def: 0 },
 ];
-// 2성 그룹 동적 추가
+
 ['A', 'B', 'C', 'D'].forEach((grp, idx) => {
     const defaultCounts = [8, 7, 7, 6];
     CONFIG_2STAR.push({ id: `countStep${grp}`, min: 1, max: 100, def: defaultCounts[idx] });

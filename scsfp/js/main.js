@@ -28,6 +28,8 @@ window.onload = function() {
     if (reset3) reset3.addEventListener('click', Star3.reset3Star);
     const presetGen = document.getElementById('presetGeneralBtn');
     if (presetGen) presetGen.addEventListener('click', Star3.applyGeneralPreset);
+    const presetBirth = document.getElementById('presetBirthdayBtn');
+    if (presetBirth) presetBirth.addEventListener('click', Star3.applyBirthdayPreset);
     const presetPJ = document.getElementById('presetPJBtn');
     if (presetPJ) presetPJ.addEventListener('click', Star3.applyPJPreset);
 
