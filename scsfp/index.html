@@ -25,10 +25,8 @@
         </div>
 
         <div class="tab-content-wrapper">
-            
             <!-- 1번 탭: 3성 -->
             <div id="tab-3star" class="tab-content active">
-                
                 <div class="reset-area">
                     <div class="preset-group">
                         <button id="presetGeneralBtn" class="preset-btn">일반 가챠</button>
@@ -90,19 +88,61 @@
                     </div>
                 </div>
                 
-                <div class="result-area" id="resultArea">
-                    <div class="chart-row">
-                        <div class="chart-container">
-                            <canvas id="resultChart"></canvas>
-                            <div class="btn-group">
-                                <button id="toggleCeilingBtn3" class="view-toggle-btn">천장 포함</button>
-                                <button id="toggleViewBtn3" class="view-toggle-btn">개별 확률</button>
+                <!-- [수정] 결과 서브 탭 시스템 (3개 탭) -->
+                <div id="sub-tab-system-3star" class="sub-tab-container">
+                    
+                    <!-- 서브 탭 버튼 -->
+                    <div class="tab-buttons sub-tab-nav">
+                        <!-- 1. 기존: 중복 제외 종류 수 -->
+                        <button class="tab-button sub-tab-btn active" data-tab="res-3s-collection">수집 종류 (중복X)</button>
+                        <!-- 2. 신규: 중복 포함 총 개수 -->
+                        <button class="tab-button sub-tab-btn" data-tab="res-3s-total">총 획득 수 (중복O)</button>
+                        <!-- 3. 신규: 특정 1명 획득 수 -->
+                        <button class="tab-button sub-tab-btn" data-tab="res-3s-specific">특정 픽업 (날개)</button>
+                    </div>
+            
+                    <!-- 서브 탭 컨텐츠 영역 -->
+                    <div class="tab-content-wrapper">
+                        
+                        <!-- 1. 수집 종류 분석 (기존 결과 영역) -->
+                        <div id="res-3s-collection" class="tab-content active">
+                            <div class="result-area" id="resultArea">
+                                <div class="chart-row">
+                                    <div class="chart-container">
+                                        <canvas id="resultChart"></canvas>
+                                        <div class="btn-group">
+                                            <button id="toggleCeilingBtn3" class="view-toggle-btn">천장 포함</button>
+                                            <button id="toggleViewBtn3" class="view-toggle-btn">개별 확률</button>
+                                        </div>
+                                    </div>
+                                    <div class="legend-container" id="legendList"></div>
+                                </div>
+                                <div class="summary" id="summaryText"></div>
+                                <div class="logic-detail" id="logicDetailText" style="display:none;"></div>
                             </div>
                         </div>
-                        <div class="legend-container" id="legendList"></div>
+            
+                        <!-- 2. 총 획득 수 분석 (신규) -->
+                        <div id="res-3s-total" class="tab-content">
+                            <div class="result-area" id="resultAreaTotal">
+                                <div style="padding: 30px; text-align: center; color: #666;">
+                                    <p>총 획득 수(중복 포함) 분석 그래프가 여기에 표시됩니다.</p>
+                                    <small>(준비 중)</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 3. 특정 픽업(날개) 분석 (신규) -->
+                        <div id="res-3s-specific" class="tab-content">
+                            <div class="result-area" id="resultAreaSpecific">
+                                <div style="padding: 30px; text-align: center; color: #666;">
+                                    <p>특정 픽업 캐릭터 1명의 획득(날개 수집) 확률이 여기에 표시됩니다.</p>
+                                    <small>(준비 중)</small>
+                                </div>
+                            </div>
+                        </div>
+            
                     </div>
-                    <div class="summary" id="summaryText"></div>
-                    <div class="logic-detail" id="logicDetailText" style="display:none;"></div>
                 </div>
             </div>
 

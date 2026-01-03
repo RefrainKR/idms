@@ -194,12 +194,13 @@ export function render2StarUI() {
         { chart: 'resultChart2', legend: 'legendList2', summary: 'summaryText2', logic: 'logicDetailText2' },
         {
             summary: () => `
-                <strong>2성 분석 결과</strong><br>
+                <!-- [수정 4] "2성 분석 결과" 타이틀 제거 -->
                 총 가챠 횟수 : ${context.totalPulls}회 (일반 ${context.normalPulls} + 스탭업 ${context.totalStepPulls})<br>
                 천장 교환 합계 : ${context.totalCeilingCount}회 (일반 ${context.normalCeilingCount} + 스탭업 ${context.stepUpCeilingCount})${ceilingNote}<br>
                 <strong>올컴플릿 확률 : ${formatProbability(dp[N])}</strong>
             `,
             logic: () => {
+                // ... (이전 로직 유지)
                 let ceilingDesc = "";
                 if (CEILING_MODE.star2 === 'included') {
                     ceilingDesc = `합산된 ${context.totalCeilingCount}개의 천장 교환권은 가장 마지막에 적용되어 없는 픽업을 확정 획득합니다.`;

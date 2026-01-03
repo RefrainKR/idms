@@ -9,12 +9,13 @@
     --tab-border: #ccc;
     --btn-bg: #6c757d;
     --btn-hover: #5a6268;
+    
+    /* 경계선 색상 변수 */
+    --border-light: #eee;
+    --border-dark: #aaa; 
 }
 
-/* [추가] 모든 요소에 border-box 적용 (레이아웃 깨짐 방지 핵심) */
-* {
-    box-sizing: border-box;
-}
+* { box-sizing: border-box; }
 
 body {
     font-family: 'Noto Sans KR', sans-serif;
@@ -35,8 +36,6 @@ body {
     width: 100%;
     max-width: 850px;
     padding: 30px;
-    /* box-sizing은 위에서 전체 적용했으므로 중복 제거 가능하지만 유지해도 무관 */
-    box-sizing: border-box; 
 }
 
 h1 {
@@ -46,7 +45,7 @@ h1 {
     color: var(--primary-color);
 }
 
-/* --- 탭 시스템 스타일 --- */
+/* --- 탭 시스템 --- */
 .tab-buttons {
     display: flex;
     border-bottom: 2px solid var(--primary-color);
@@ -76,10 +75,12 @@ h1 {
 @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
 /* --- Collapsible Sections --- */
+/* [수정] 사용자 요청 사항 반영 */
 .collapsible-container {
-    margin-bottom: 20px;
+    margin-bottom: 10px;
     border-bottom: 1px solid #eee;
-    padding-bottom: 10px;
+    padding-top: 10px;
+    padding-bottom: 5px;
 }
 
 .section-header {
@@ -87,13 +88,16 @@ h1 {
     justify-content: space-between;
     align-items: center;
     margin-bottom: 10px;
+    border-bottom: none; 
 }
 
 .section-title {
-    font-size: 1.1rem;
+    font-size: 1.1rem; 
     color: var(--primary-color);
     margin: 0;
     font-weight: bold;
+    border-bottom: none;
+    padding-bottom: 0;
 }
 
 .toggle-btn {
@@ -108,7 +112,11 @@ h1 {
 .section-content {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 20px;
+    gap: 10px; 
+}
+
+.section-content.force-block {
+    display: block; 
 }
 
 /* --- Input Styles --- */
@@ -117,6 +125,7 @@ h1 {
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
+    margin-bottom: 5px; 
 }
 
 .input-item label {
@@ -131,12 +140,13 @@ h1 {
 
 .input-item input, 
 .input-item select,
-.group-input-block input {
+.group-input-block input,
+.loop-reward-select {
     width: 120px;
-    padding: 8px;
+    padding: 5px 8px; 
     border: 1px solid #ddd;
     border-radius: 5px;
-    font-size: 1rem;
+    font-size: 0.9rem; 
     text-align: right;
     background-color: var(--input-bg);
     transition: all 0.3s;
@@ -145,7 +155,8 @@ h1 {
 
 .input-item input:focus, 
 .input-item select:focus,
-.group-input-block input:focus {
+.group-input-block input:focus,
+.loop-reward-select:focus {
     outline: none;
     border-color: var(--primary-color);
     background-color: #fff;
@@ -156,12 +167,12 @@ h1 {
 .loop-rewards-container {
     grid-column: 1 / -1;
     background-color: #f0f4f8;
-    padding: 20px;
+    padding: 15px; 
     border-radius: 10px;
     border: 1px solid #dde1e6;
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 15px;
+    gap: 10px; 
     margin-bottom: 10px;
 }
 
@@ -171,14 +182,13 @@ h1 {
     align-items: center;
     justify-content: space-between;
     background-color: #fff;
-    padding: 10px;
+    padding: 6px 10px; 
     border-radius: 6px;
     border: 1px solid #eee;
     box-shadow: 0 2px 4px rgba(0,0,0,0.03);
 }
 
 .loop-reward-item label { font-size: 0.9rem; color: #444; margin: 0; font-weight: 600; }
-.loop-reward-select { width: 140px; padding: 6px; font-size: 0.9rem; border: 1px solid #ccc; border-radius: 4px; }
 
 /* --- 2-Star Step-up Grouping --- */
 .group-row {
@@ -189,22 +199,22 @@ h1 {
     padding: 15px;
     border-radius: 10px;
     border: 1px solid #dde1e6;
-    margin-bottom: 10px; /* 하단 여백 추가 */
+    margin-bottom: 10px;
 }
 
 .group-label {
-    min-width: 80px; /* 라벨 너비 고정 */
+    min-width: 80px;
     font-weight: bold;
     color: var(--primary-color);
     font-size: 1rem;
-    white-space: nowrap; /* 줄바꿈 방지 */
+    white-space: nowrap;
 }
 
 .group-inputs-container {
     display: grid;
-    grid-template-columns: repeat(4, 1fr); /* 데스크탑: 한 줄에 4개 (1x4) */
+    grid-template-columns: repeat(4, 1fr);
     gap: 10px;
-    flex: 1; /* 남은 공간 모두 차지 */
+    flex: 1;
     width: 100%;
 }
 
@@ -213,11 +223,10 @@ h1 {
     align-items: center;
     gap: 8px;
     background-color: #fff;
-    padding: 8px 12px;
+    padding: 6px 10px; 
     border-radius: 5px;
     border: 1px solid #ddd;
-    /* 내부 요소 정렬 */
-    justify-content: space-between; 
+    justify-content: space-between;
 }
 
 .group-name {
@@ -226,15 +235,13 @@ h1 {
     font-size: 0.9rem;
 }
 
-/* 그룹 내부 인풋 스타일 강제 지정 */
 .group-input-block input {
-    width: 100% !important; /* 부모 크기에 맞춤 */
-    min-width: 40px; /* 최소 크기 보장 */
-    border: 1px solid #eee; /* 내부 인풋은 옅은 테두리 */
+    width: 100% !important;
+    min-width: 40px;
+    border: 1px solid #eee;
     text-align: right;
-    padding: 5px;
+    padding: 4px;
     margin: 0;
-    box-sizing: border-box;
 }
 
 /* --- Common UI --- */
@@ -267,13 +274,10 @@ h1 {
     background-color: #fafafa;
     border: 1px solid #eee;
     border-radius: 10px;
-    padding: 15px;
+    padding: 10px 15px; 
     max-height: 400px;
     overflow-y: auto;
-    
-    /* [수정] 박스 사이징 명시 및 너비 제한 */
-    box-sizing: border-box;
-    width: 100%; /* 모바일에서 부모 너비를 넘지 않도록 */
+    width: 100%;
 }
 
 .legend-item {
@@ -284,23 +288,11 @@ h1 {
     padding-bottom: 8px;
     border-bottom: 1px dashed #eee;
     font-size: 0.95rem;
-    
-    /* [수정] 박스 사이징 명시 */
-    box-sizing: border-box;
     width: 100%;
 }
 
 .legend-item:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
-
-.legend-label { 
-    display: flex; 
-    align-items: center; 
-    /* [수정] 텍스트가 너무 길 경우 줄바꿈 허용하거나 말줄임 처리 */
-    flex: 1;
-    min-width: 0; /* flex 자식의 overflow 처리를 위해 필요 */
-    margin-right: 10px;
-}
-
+.legend-label { display: flex; align-items: center; flex: 1; min-width: 0; margin-right: 10px; }
 .color-dot { width: 12px; height: 12px; border-radius: 3px; margin-right: 8px; display: inline-block; flex-shrink: 0; }
 .legend-value { font-weight: bold; color: #333; flex-shrink: 0; }
 
@@ -309,7 +301,7 @@ h1 {
     gap: 10px;
     margin-top: 15px;
     justify-content: center;
-    flex-wrap: wrap; /* 버튼이 많으면 줄바꿈 */
+    flex-wrap: wrap;
 }
 
 .view-toggle-btn {
@@ -325,7 +317,6 @@ h1 {
     box-shadow: 0 2px 5px rgba(0,0,0,0.2);
     white-space: nowrap;
 }
-
 .view-toggle-btn:hover { background-color: var(--btn-hover); }
 
 /* --- Preset & Reset Buttons --- */
@@ -335,12 +326,7 @@ h1 {
     align-items: center;
     margin-bottom: 10px;
 }
-
-.preset-group {
-    display: flex;
-    gap: 5px;
-}
-
+.preset-group { display: flex; gap: 5px; }
 .preset-btn {
     padding: 6px 12px;
     background-color: #e3f2fd;
@@ -352,7 +338,6 @@ h1 {
     cursor: pointer;
     transition: all 0.2s;
 }
-
 .preset-btn:hover { background-color: #bbdefb; }
 
 .reset-btn {
@@ -365,23 +350,23 @@ h1 {
     cursor: pointer;
     transition: all 0.2s;
 }
-
 .reset-btn:hover { background-color: #e0e0e0; border-color: #bbb; color: #333; }
 
-/* --- Summary & Logic --- */
+/* --- Summary --- */
 .summary {
     background-color: #f8f9fa;
-    padding: 15px;
+    padding: 5px 15px;
     border-radius: 8px;
     border-left: 5px solid var(--accent-color);
     line-height: 1.8;
-    font-size: 1.05rem;
     margin-bottom: 20px;
+    font-size: 0.95rem; 
 }
 
+/* --- Logic Detail --- */
 .logic-detail {
     background-color: #f0f4f8;
-    padding: 15px;
+    padding: 5px 15px; 
     border-radius: 8px;
     border-left: 5px solid var(--info-color);
     line-height: 1.6;
@@ -389,79 +374,45 @@ h1 {
     color: #444;
 }
 
-/* [추가] 토글 후에도 block 속성을 강제로 유지하기 위한 클래스 */
-.section-content.force-block {
-    display: block; 
-}
-
 .logic-title {
+    font-size: 1.1rem; 
     font-weight: bold;
     color: var(--info-color);
     margin-bottom: 8px;
-    border-bottom: 1px solid #dde1e6;
     padding-bottom: 5px;
     display: block;
 }
-
 .logic-list { margin: 0; padding-left: 20px; }
 .logic-list li { margin-bottom: 5px; }
+
+/* --- Sub Tabs --- */
+.sub-tab-container { margin-top: 20px; border-top: none; padding-top: 0; }
+
+.sub-tab-nav { 
+    border-bottom: none; 
+    margin-bottom: 5px; 
+    justify-content: center; 
+    flex-wrap: wrap; 
+    gap: 5px; 
+}
+
+.sub-tab-btn { flex: 0 1 auto; min-width: 100px; padding: 8px 12px; font-size: 0.9rem; background-color: transparent; color: #666; border-radius: 20px; margin: 0; border: 1px solid transparent; white-space: nowrap; }
+.sub-tab-btn:hover { background-color: #f0f0f0; color: #333; }
+.sub-tab-btn.active { background-color: #6c757d; color: white; border-color: #6c757d; font-weight: normal; }
 
 /* 모바일 대응 */
 @media (max-width: 650px) {
     .section-content, .loop-rewards-container { grid-template-columns: 1fr; }
-    
     .chart-row { flex-direction: column; }
     .chart-container, .legend-container { width: 100%; flex: none; }
     
-    .input-item, 
-    .loop-reward-item { 
-        flex-wrap: nowrap; 
-        gap: 10px; 
-    }
+    .input-item, .loop-reward-item { flex-wrap: nowrap; gap: 10px; }
+    .input-item label, .loop-reward-item label { width: auto; margin-bottom: 0; font-size: 0.85rem; flex: 1; }
+    .input-item input, .input-item select, .loop-reward-select { width: 100px; flex-shrink: 0; }
     
-    .input-item label,
-    .loop-reward-item label { 
-        width: auto; 
-        margin-bottom: 0; 
-        font-size: 0.85rem; 
-        flex: 1; 
-    }
-    
-    .input-item input, 
-    .input-item select,
-    .loop-reward-select { 
-        width: 100px; 
-        flex-shrink: 0; 
-    }
-    
-    /* 2성 스탭업 그룹 */
-    .group-row { 
-        flex-direction: column; /* 라벨을 위로, 인풋을 아래로 */
-        align-items: flex-start; 
-        gap: 10px;
-    }
-    
-    .group-inputs-container { 
-        /* 모바일에서는 2열(2x2) 배치 */
-        grid-template-columns: 1fr 1fr; 
-        gap: 8px; 
-        width: 100%;
-    }
-
-    .group-input-block {
-        padding: 6px; 
-        gap: 5px;
-    }
-
-    /* 2성 그룹핑 레이아웃 대응 */
-    .stepup-group-container {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 10px;
-    }
-    .group-inputs {
-        width: 100%;
-        flex-direction: column;
-        gap: 10px;
-    }
+    .group-row { flex-direction: column; align-items: flex-start; gap: 10px; }
+    .group-inputs-container { grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; }
+    .group-input-block { padding: 6px; gap: 5px; }
+    .stepup-group-container { flex-direction: column; align-items: flex-start; gap: 10px; }
+    .group-inputs { width: 100%; flex-direction: column; gap: 10px; }
 }

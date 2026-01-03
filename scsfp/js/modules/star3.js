@@ -182,13 +182,14 @@ export function render3StarUI() {
         { chart: 'resultChart', legend: 'legendList', summary: 'summaryText', logic: 'logicDetailText' },
         {
             summary: () => `
-                <strong>3성 분석 결과</strong><br>
+                <!-- [수정 4] "3성 분석 결과" 타이틀 제거 -->
                 가챠 횟수 : ${context.totalPulls}회 (일반 ${context.normalPulls} + 스탭업 ${context.stepPulls})<br>
                 랜덤 교환(픽업 티켓) : ${context.randomRewardCount}회<br>
                 천장 교환(셀렉 티켓) : ${context.totalCeilingCount}회 (통합 ${context.normalCeiling} + 스탭업 ${context.selectRewardCount})${ceilingNote}<br>
                 <strong>올컴플릿 확률 : ${formatProbability(dp[N])}</strong>
             `,
             logic: () => {
+                // ... (이전 로직 유지)
                 let rewardHistoryHtml = "";
                 for(let i=1; i<=context.maxLoops; i++) {
                     let rType = context.loopRewards[i];
