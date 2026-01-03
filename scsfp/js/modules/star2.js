@@ -323,7 +323,9 @@ export function render2StarUI() {
         
         const summaryHtml = `
             특정 픽업 기대 획득 수: 약 <strong>${expectedValue.toFixed(3)}개</strong><br>
-            <span style="font-size:0.85rem; color:#888;">(가장 많이 돌린 그룹에 속해있다는 가정)</span>
+            <span style="font-size:0.85rem; color:#dc3545;">(천장 포함 버튼이 활성화 되어있는지 주의하세요.)</span>
+            <span style="font-size:0.85rem; color:#666;">(가장 많이 돌린 그룹에 속해있다는 가정)</span>
+            <span style="font-size:0.85rem; color:#888;">(그래프는 평균 기준 유의미한 확률 구간을 표시합니다.)</span>
         `;
         renderSpecificBarResult(dpSpecific, VIEW_MODE.star2, { chart: 'resultChartSpecific2', summary: 'summaryTextSpecific2' }, summaryHtml, chartRefSpecific);
     }
