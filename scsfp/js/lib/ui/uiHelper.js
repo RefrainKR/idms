@@ -1,20 +1,14 @@
 import { formatProbability } from './formatter.js';
 import { renderChart, renderBarChart } from './chartHandler.js';
-// [수정] transformData는 여기서 필요 없으므로 제거 (호출하는 모듈에서 미리 처리)
-// import { transformData } from '../math/core.js'; 
+import { transformData } from '../math/core.js'; 
 
-// 1. 수집 종류 분석 (원 그래프)
-// [핵심 수정] 인자 목록 변경: chartDP, listDP를 명시적으로 받음
+// 1. 수집 종류 분석 (원 그래프) - 기존 유지
 export function renderResultCommon(
-    N, chartDP, listDP, mode, // DP 데이터와 모드
-    ids, // { chart, legend, summary, logic }
-    htmlGenerators, // { summary: () => string, logic: () => string }
-    chartInstanceRef // Chart 인스턴스 참조
+    N, chartDP, listDP, mode, 
+    ids, 
+    htmlGenerators, 
+    chartInstanceRef
 ) {
-    // [제거] 여기서는 transformData를 호출하지 않음 (호출하는 모듈에서 이미 처리)
-    // const chartDP = dp; 
-    // const listDP = transformData(dp, mode);
-
     let chartLabels = [];
     let chartData = [];
     let backgroundColors = [];
@@ -39,8 +33,8 @@ export function renderResultCommon(
         }
     }
 
-    // 요약 및 상세 로직 HTML 주입
     document.getElementById(ids.summary).innerHTML = htmlGenerators.summary();
+    
     const logicContainer = document.getElementById(ids.logic);
     logicContainer.innerHTML = htmlGenerators.logic();
     logicContainer.style.display = 'block';
@@ -52,20 +46,31 @@ export function renderResultCommon(
 }
 
 // 2. 총 획득 수 분석 (막대 그래프)
-// [수정] 인자 목록 변경: dpTotal, mode는 그대로 받고, transformData 호출
 export function renderTotalBarResult(
     dpTotal, mode, 
-    ids, // { chart, summary }
+    ids, 
     summaryHtml,
     chartRef
 ) {
-    const transformedDP = transformData(dpTotal, mode); // [유지] 여기서 transformData 호출
+    const transformedDP = transformData(dpTotal, mode);
     
-    // ... (기존 로직 동일) ...
+    // 기댓값 계산 (슬라이딩 윈도우 중앙 정렬용)
     let expectedValue = 0;
     for(let i=0; i<dpTotal.length; i++) expectedValue += i * dpTotal[i];
     const avgIndex = Math.round(expectedValue);
 
+    // [신규] 가장 확률이 높은 인덱스 찾기 (색상 강조용)
+    let maxVal = -1;
+    let maxIndex = -1;
+    // 전체 범위에서 최대 확률 탐색
+    for(let i=0; i<transformedDP.length; i++) {
+        if (transformedDP[i] > maxVal) {
+            maxVal = transformedDP[i];
+            maxIndex = i;
+        }
+    }
+
+    // 슬라이딩 윈도우 범위 설정
     let startK = Math.max(0, avgIndex - 8);
     let endK = startK + 15; 
     if (endK >= transformedDP.length) {
@@ -73,9 +78,11 @@ export function renderTotalBarResult(
         startK = Math.max(0, endK - 15);
     }
 
+    // 필터링 및 최소 10개 보장
     let tempResults = [];
     for (let k = startK; k <= endK; k++) {
         const val = transformedDP[k] || 0;
+        // 평균 근처면 낮은 확률이라도 표시
         if (mode === 'individual' && val < 0.0001 && Math.abs(k - avgIndex) > 4) continue;
         tempResults.push({ k, val, formatted: formatProbability(val) });
     }
@@ -108,8 +115,13 @@ export function renderTotalBarResult(
         labels.push(`${item.k}개${suffix}`);
         data.push((item.val * 100).toFixed(3));
         tooltipValues.push(item.formatted);
-        if (item.k === avgIndex && mode === 'individual') colors.push('#45a247');
-        else colors.push('#283c86');
+
+        // [수정] 색상 로직: 가장 높은 확률(Peak)이면 짙은 녹색, 아니면 밝은 파랑
+        if (item.k === maxIndex && mode === 'individual') {
+            colors.push('#45a247'); // Peak (짙은 녹색)
+        } else {
+            colors.push('#283c86');
+        }
     });
 
     document.getElementById(ids.summary).innerHTML = summaryHtml;
@@ -117,19 +129,28 @@ export function renderTotalBarResult(
 }
 
 // 3. 특정 픽업 획득 수 (막대 그래프)
-// [수정] 인자 목록 변경: dpSpecific, mode는 그대로 받고, transformData 호출
 export function renderSpecificBarResult(
     dpSpecific, mode,
-    ids, // { chart, summary }
+    ids, 
     summaryHtml,
     chartRef
 ) {
-    const transformedDP = transformData(dpSpecific, mode); // [유지] 여기서 transformData 호출
+    const transformedDP = transformData(dpSpecific, mode);
     
-    // ... (기존 로직 동일) ...
+    // 기댓값 계산 (중앙 정렬용)
     let expectedValue = 0;
     for(let i=0; i<dpSpecific.length; i++) expectedValue += i * dpSpecific[i];
     const avgIndex = Math.round(expectedValue);
+
+    // [신규] 가장 확률이 높은 인덱스 찾기 (색상 강조용)
+    let maxVal = -1;
+    let maxIndex = -1;
+    for(let i=0; i<transformedDP.length; i++) {
+        if (transformedDP[i] > maxVal) {
+            maxVal = transformedDP[i];
+            maxIndex = i;
+        }
+    }
 
     let startK = Math.max(0, avgIndex - 5);
     let endK = startK + 9;
@@ -173,18 +194,20 @@ export function renderSpecificBarResult(
         data.push((item.val * 100).toFixed(3));
         tooltipValues.push(item.formatted);
 
-        if (item.k === 0) colors.push('#e0e0e0');
-        else if (item.k === 1) colors.push('#ffcd56'); 
-        else if (item.k === avgIndex && mode === 'individual') colors.push('#45a247');
-        else colors.push('#36a2eb'); 
+        // [수정] 색상 로직: 가장 높은 확률(Peak)이면 짙은 녹색, 아니면 밝은 파랑
+        if (item.k === maxIndex && mode === 'individual') {
+            colors.push('#45a247'); // Peak (짙은 녹색)
+        } else {
+            colors.push('#283c86');
+        }
     });
 
     document.getElementById(ids.summary).innerHTML = summaryHtml;
     renderBarChart(ids.chart, labels, data, colors, tooltipValues, chartRef);
 }
 
-// (내부 헬퍼) 범례 업데이트 (기존 유지)
-export function updateLegend(elementId, labels, data, colors) {
+// (내부 헬퍼) 범례 업데이트
+function updateLegend(elementId, labels, data, colors) {
     const listContainer = document.getElementById(elementId);
     listContainer.innerHTML = '';
     labels.forEach((label, index) => {

@@ -280,7 +280,7 @@ export function render3StarUI() {
         for(let i=0; i<dpTotal.length; i++) expectedValue += i * dpTotal[i];
         
         const summaryHtml = `
-            3성 평균 기대 획득 수: 약 <strong>${expectedValue.toFixed(3)}개</strong><br>
+            평균 기대 획득 수: 약 <strong>${expectedValue.toFixed(3)}개</strong><br>
             <span style="font-size:0.85rem; color:#888;">(그래프는 평균 기준 유의미한 확률 구간을 표시합니다.)</span>
         `;
         renderTotalBarResult(dpTotal, VIEW_MODE.star3, { chart: 'resultChartTotal3', summary: 'summaryTextTotal3' }, summaryHtml, chartRefTotal);
@@ -292,7 +292,7 @@ export function render3StarUI() {
         for(let i=0; i<dpSpecific.length; i++) expectedValue += i * dpSpecific[i];
         
         const summaryHtml = `
-            특정 픽업(담당) 기대 획득 수: 약 <strong>${expectedValue.toFixed(3)}장</strong><br>
+            특정 픽업 기대 획득 수: 약 <strong>${expectedValue.toFixed(3)}개</strong><br>
             <span style="font-size:0.85rem; color:#888;">(그래프는 평균 기준 유의미한 구간을 표시합니다.)</span>
         `;
 

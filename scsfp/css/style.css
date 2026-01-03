@@ -245,7 +245,7 @@ h1 {
 }
 
 /* --- Common UI --- */
-.result-area { margin-top: 30px; display: block; }
+.result-area {display: block; }
 
 .chart-row {
     display: flex;
@@ -299,7 +299,7 @@ h1 {
 .result-options-header {
     display: flex;
     justify-content: flex-start; /* [변경] 좌측 정렬 */
-    margin-top: 15px;
+    margin-top: 20px;
     padding-left: 5px; /* 컨테이너와 정렬 맞춤 */
 }
 
@@ -396,7 +396,7 @@ h1 {
 .logic-list li { margin-bottom: 5px; }
 
 /* --- Sub Tabs --- */
-.sub-tab-container { margin-top: 20px; border-top: none; padding-top: 0; }
+.sub-tab-container { margin-top: 20px; margin-bottom: 0px; border-top: none;}
 
 .sub-tab-nav { 
     border-bottom: none; 
