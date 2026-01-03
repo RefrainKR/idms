@@ -88,3 +88,36 @@ export function transformData(dp, mode) {
     }
     return newDP;
 }
+
+// [신규] 총 획득 수 DP: 일반/스탭업 확률 시행
+// dp[k] = 총 k개 먹을 확률
+export function runTotalCountGacha(currentDP, p_total) {
+    const size = currentDP.length;
+    // 최대 갯수는 시행 횟수만큼 늘어나므로 배열 크기 확장
+    // (여기서는 동적 배열로 처리)
+    let nextDP = new Array(size + 1).fill(0);
+    
+    for (let k = 0; k < size; k++) {
+        if (currentDP[k] === 0) continue;
+        
+        // 획득 실패 (개수 유지)
+        nextDP[k] += currentDP[k] * (1 - p_total);
+        
+        // 획득 성공 (개수 +1)
+        nextDP[k+1] += currentDP[k] * p_total;
+    }
+    return nextDP;
+}
+
+// [신규] 총 획득 수 DP: 확정 획득 (무조건 +1)
+export function runGuaranteedTotal(currentDP) {
+    const size = currentDP.length;
+    let nextDP = new Array(size + 1).fill(0);
+    
+    for (let k = 0; k < size; k++) {
+        if (currentDP[k] === 0) continue;
+        // 무조건 1개 증가 (Shift Right)
+        nextDP[k+1] = currentDP[k];
+    }
+    return nextDP;
+}

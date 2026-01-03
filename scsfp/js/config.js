@@ -38,3 +38,13 @@ export const TOGGLE_STATES_CEILING = [
     { name: 'included', text: '천장 포함' },
     { name: 'excluded', text: '천장 미포함' }
 ];
+
+export const TOGGLE_STATES_RANDOM = [
+    { name: 'included', text: '랜덤 포함' },
+    { name: 'excluded', text: '랜덤 미포함' }
+];
+
+export const TOGGLE_STATES_STEP4 = [
+    { name: 'included', text: 'Step4 포함' },
+    { name: 'excluded', text: 'Step4 미포함' }
+];

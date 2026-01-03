@@ -1,38 +1,39 @@
 export class CollapsibleSection {
     constructor() {
-        // 특정 요소가 아닌 document 전체에 이벤트를 등록하여
-        // 동적으로 생성되는 요소(상세 계산 근거)와 정적 요소(입력창) 모두 처리
         this.bindGlobalEvents();
     }
 
     bindGlobalEvents() {
         document.body.addEventListener('click', (e) => {
-            // 클릭된 요소가 toggle-btn인지 확인
-            if (e.target && e.target.classList.contains('toggle-btn')) {
-                this.toggleSection(e.target);
+            const btn = e.target.closest('.toggle-btn');
+            // 헤더 전체 클릭 허용을 위해
+            const header = e.target.closest('.section-header');
+
+            if (btn || (header && header.querySelector('.toggle-btn'))) {
+                const targetHeader = header || btn.closest('.section-header');
+                this.toggleSection(targetHeader);
             }
         });
     }
 
-    toggleSection(btn) {
-        const header = btn.closest('.section-header');
-        if (!header) return;
-
+    toggleSection(header) {
         const container = header.parentElement;
         const content = container.querySelector('.section-content');
-        if (!content) return;
+        const btn = header.querySelector('.toggle-btn');
 
-        // 현재 display 상태 확인 (getComputedStyle 사용으로 확실하게 체크)
+        if (!content || !btn) return;
+
         const currentDisplay = window.getComputedStyle(content).display;
-
-        if (currentDisplay === 'none') {
-            // 펼치기: 빈 값을 주어 CSS 정의(block or grid)를 따르게 함
-            content.style.display = ''; 
-            btn.textContent = '▼';
-        } else {
-            // 접기
+        
+        // 현재 숨겨져 있다면 -> 펼치기
+        if (content.style.display === 'none' || currentDisplay === 'none') {
+            content.style.display = 'block'; // force-block 클래스 등 고려
+            btn.textContent = '▼'; // 펼쳐졌음을 표시
+        } 
+        // 현재 보인다면 -> 접기
+        else {
             content.style.display = 'none';
-            btn.textContent = '▲';
+            btn.textContent = '▲'; // 접혔음을 표시
         }
     }
 }
