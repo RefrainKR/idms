@@ -1,37 +1,15 @@
-
 export class ToggleButtonElement {
-    /**
-     * @param {string} elementId - 제어할 버튼 요소의 ID.
-     * @param {Array<Object>} states - 순환할 상태들의 배열.
-     *   - 각 객체는 { name: string, text: string } 형태여야 합니다.
-     *   - name: 상태를 식별하는 고유한 이름 (예: 'highest', 'difference').
-     *   - text: 해당 상태일 때 버튼에 표시될 텍스트 (예: '높은 값', '차이 값').
-     * @param {Function} onStateChange - 상태가 변경될 때마다 호출될 콜백 함수.
-     *   - (새로운 상태의 name, 해당 상태 객체 전체)를 인자로 전달합니다.
-     * @param {string} [initialStateName=states[0].name] - 초기 상태의 이름. 지정하지 않으면 첫 번째 상태로 시작합니다.
-     */
     constructor(elementId, states, onStateChange, initialStateName = null) {
         this.button = document.getElementById(elementId);
-        if (!this.button) {
-            console.error(`ToggleButtonElement: Element with ID '${elementId}' not found.`);
-            return;
-        }
-
-        if (!Array.isArray(states) || states.length === 0) {
-            console.error("ToggleButtonElement: 'states' array must be a non-empty array.");
-            return;
-        }
+        if (!this.button) return;
 
         this.states = states;
         this.onStateChange = onStateChange;
         this.currentIndex = 0;
 
-        // 초기 상태 설정
         if (initialStateName) {
             const initialIndex = this.states.findIndex(s => s.name === initialStateName);
-            if (initialIndex !== -1) {
-                this.currentIndex = initialIndex;
-            }
+            if (initialIndex !== -1) this.currentIndex = initialIndex;
         }
         
         this.bindEvents();
@@ -51,16 +29,27 @@ export class ToggleButtonElement {
         const currentState = this.states[this.currentIndex];
         this.button.textContent = currentState.text;
 
+        // 스타일 클래스 적용
+        // View Mode 버튼(3개 상태)은 항상 활성 스타일 or 별도 클래스 적용 가능
+        // 여기서는 states에 isActive가 true면 active, false면 inactive 적용
+        if (currentState.isActive) {
+            this.button.classList.add('btn-active');
+            this.button.classList.remove('btn-inactive');
+        } else {
+            this.button.classList.add('btn-inactive');
+            this.button.classList.remove('btn-active');
+        }
+
+        // View Mode 버튼 특수 처리 (항상 켜져있는 느낌을 원하면)
+        if (this.states.length > 2) {
+             this.button.classList.remove('btn-inactive');
+             this.button.classList.add('btn-active');
+             this.button.style.backgroundColor = '#6c757d'; // 뷰 모드는 회색 계열
+             this.button.style.borderColor = '#6c757d';
+        }
+
         if (typeof this.onStateChange === 'function') {
             this.onStateChange(currentState.name, currentState);
         }
-    }
-
-    /**
-     * 외부에서 현재 상태의 이름을 가져올 수 있는 getter.
-     * @returns {string}
-     */
-    get currentStateName() {
-        return this.states[this.currentIndex].name;
     }
 }

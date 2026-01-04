@@ -29,22 +29,22 @@ export const CONFIG_2STAR = [
 });
 
 export const TOGGLE_STATES_VIEW = [
-    { name: 'individual', text: '개별 확률' },
-    { name: 'cumulative_less', text: '누적(이하)' },
-    { name: 'cumulative_more', text: '누적(이상)' }
+    { name: 'individual', text: '개별', isActive: true },
+    { name: 'cumulative_less', text: '누적(이하)', isActive: true },
+    { name: 'cumulative_more', text: '누적(이상)', isActive: true }
 ];
 
 export const TOGGLE_STATES_CEILING = [
-    { name: 'included', text: '천장 포함' },
-    { name: 'excluded', text: '천장 미포함' }
+    { name: 'included', text: '천장', isActive: true },
+    { name: 'excluded', text: '천장', isActive: false }
 ];
 
 export const TOGGLE_STATES_RANDOM = [
-    { name: 'included', text: '랜덤 포함' },
-    { name: 'excluded', text: '랜덤 미포함' }
+    { name: 'included', text: '랜덤', isActive: true },
+    { name: 'excluded', text: '랜덤', isActive: false }
 ];
 
 export const TOGGLE_STATES_STEP4 = [
-    { name: 'included', text: 'Step4 포함' },
-    { name: 'excluded', text: 'Step4 미포함' }
+    { name: 'included', text: 'Step4', isActive: true },
+    { name: 'excluded', text: 'Step4', isActive: false }
 ];

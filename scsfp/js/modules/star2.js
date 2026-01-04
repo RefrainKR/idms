@@ -89,6 +89,8 @@ export function calculate2Star() {
             // 2성은 버튼 설정(RANDOM, STEP4)에 영향받지 않고 고정 규칙 적용
             const result = calculateSingleGroupDP(g.count, g.pulls, rateTotal);
             dpCombined = convolveDistributions(dpCombined, result.dp);
+            
+            // 총 획득 수 DP (모든 그룹 합산)
             dpTotal = convolveDistributions(dpTotal, result.dpTotal); 
 
             totalStepPulls += g.pulls;
@@ -97,6 +99,7 @@ export function calculate2Star() {
         }
     });
 
+    // 특정 픽업 DP (타겟 그룹에 대해서만 수행)
     if (targetGroup && targetGroup.count > 0 && targetGroup.pulls > 0) {
         const p_target_normal = rateTotal / targetGroup.count;
         const p_target_guar = 1.0 / targetGroup.count;
@@ -167,7 +170,7 @@ export function calculate2Star() {
             totalPulls, normalPulls, totalStepPulls, 
             normalCeilingCount, stepUpCeilingCount, totalCeilingCount,
             countNormal, countHigh, p_normal_one, p_high_one,
-            groups, rateTotal, totalStepUpNormalPulls, totalStepUpGuaranteedPulls
+            groups, rateTotal, totalStepUpNormalPulls, totalStepUpGuaranteedPulls // groups 객체 포함
         }
     };
 
@@ -237,19 +240,16 @@ export function render2StarUI() {
 
     if (collectionTab && collectionTab.classList.contains('active')) {
         const mode = VIEW_MODE.star2;
-        
-        // [수정 핵심] chartDP와 listDP를 분리하여 인자 개수를 맞춤
+        let ceilingNote = (CEILING_MODE.star2 === 'excluded' && context.totalCeilingCount > 0) ? ` (미적용: ${context.totalCeilingCount}회)` : "";
+
         const chartDP = dp; 
         const listDP = transformData(dp, mode);
 
-        let ceilingNote = (CEILING_MODE.star2 === 'excluded' && context.totalCeilingCount > 0) ? ` (미적용: ${context.totalCeilingCount}회)` : "";
-
         renderResultCommon(
-            N, chartDP, listDP, mode, // 4개 인자 전달
+            N, chartDP, listDP, mode,
             { chart: 'resultChart2', legend: 'legendList2', summary: 'summaryText2', logic: 'logicDetailText2' },
             {
                 summary: () => `
-                    <strong>2성 분석 결과</strong><br>
                     총 가챠 횟수 : ${context.totalPulls}회 (일반 ${context.normalPulls} + 스탭업 ${context.totalStepPulls})<br>
                     천장 교환 합계 : ${context.totalCeilingCount}회 (일반 ${context.normalCeilingCount} + 스탭업 ${context.stepUpCeilingCount})${ceilingNote}<br>
                     <strong>올컴플릿 확률 : ${formatProbability(dp[N])}</strong>
@@ -261,15 +261,20 @@ export function render2StarUI() {
                     } else {
                         ceilingDesc = `<span style="color:red;">사용자 설정에 의해 ${context.totalCeilingCount}개의 천장 교환권 적용이 제외되었습니다.</span>`;
                     }
+                    
+                    let randomDesc = `총 ${context.totalStepPulls}회 중 ${context.totalStepUpNormalPulls}회는 그룹별 개별 확률이, ${context.totalStepUpGuaranteedPulls}회는 그룹별 확정 개별 확률이 적용되었습니다.`;
 
                     let groupDetailHtml = "";
-                    context.groups.forEach(g => {
-                        if (g.count > 0) {
-                            const indivRate = ((context.rateTotal * 100) / g.count).toFixed(3);
-                            const guarRate = (100 / g.count).toFixed(3);
-                            groupDetailHtml += `<li><strong>그룹 ${g.id} (${g.count}종):</strong> 기본 개별 ${indivRate}%, Step1(5회)/Step2(10주기-5회) 확정 시 개별 ${guarRate}%</li>`;
-                        }
-                    });
+                    // [수정] context.groups가 존재하는지 확인
+                    if (context.groups) {
+                        context.groups.forEach(g => {
+                            if (g.count > 0) {
+                                const indivRate = ((context.rateTotal * 100) / g.count).toFixed(3);
+                                const guarRate = (100 / g.count).toFixed(3);
+                                groupDetailHtml += `<li><strong>그룹 ${g.id} (${g.count}종):</strong> 기본 개별 ${indivRate}%, Step1(5회)/Step2(10주기-5회) 확정 시 개별 ${guarRate}%</li>`;
+                            }
+                        });
+                    }
     
                     const currentEl = document.getElementById('logicDetailText2');
                     const content = currentEl ? currentEl.querySelector('.section-content') : null;
@@ -285,10 +290,10 @@ export function render2StarUI() {
                         <span class="logic-title" style="border-bottom: none; margin-bottom: 0;">상세 계산 근거</span>
                         <button class="toggle-btn">${btnText}</button>
                     </div>
-                    <div class="section-content logic-content" style="display: ${displayStyle};">
+                    <div class="section-content logic-view" style="display: ${displayStyle};">
                         <ul class="logic-list">
                             <li><strong>확률 적용 (일반):</strong> 총 ${context.normalPulls}회 중 ${context.countNormal}회는 기본 개별 확률(${(context.p_normal_one*100).toFixed(3)}%)이, ${context.countHigh}회는 10회차 보정(전체 95%) 개별 확률(${(context.p_high_one*100).toFixed(3)}%)이 적용되었습니다.</li>
-                            <li><strong>확률 적용 (스탭업):</strong> 총 ${context.totalStepPulls}회 중 ${context.totalStepUpNormalPulls}회는 그룹별 개별 확률이, ${context.totalStepUpGuaranteedPulls}회는 그룹별 확정 개별 확률이 적용되었습니다.</li>
+                            <li><strong>확률 적용 (스탭업):</strong> ${randomDesc}</li>
                             <ul style="margin-top:0; padding-left:20px; list-style-type:circle;">
                                 ${groupDetailHtml}
                             </ul>
@@ -306,6 +311,7 @@ export function render2StarUI() {
         );
     }
 
+    // 2. 총 획득 수
     if (totalTab && totalTab.classList.contains('active')) {
         let expectedValue = 0;
         for(let i=0; i<dpTotal.length; i++) expectedValue += i * dpTotal[i];
@@ -317,14 +323,15 @@ export function render2StarUI() {
         renderTotalBarResult(dpTotal, VIEW_MODE.star2, { chart: 'resultChartTotal2', summary: 'summaryTextTotal2' }, summaryHtml, chartRefTotal);
     }
 
+    // 3. 특정 픽업
     if (specificTab && specificTab.classList.contains('active')) {
         let expectedValue = 0;
         for(let i=0; i<dpSpecific.length; i++) expectedValue += i * dpSpecific[i];
         
         const summaryHtml = `
-            특정 픽업 기대 획득 수: 약 <strong>${expectedValue.toFixed(3)}개</strong><br>
-            <span style="font-size:0.85rem; color:#dc3545;">(천장 포함 버튼이 활성화 되어있는지 주의하세요.)</span>
-            <span style="font-size:0.85rem; color:#666;">(가장 많이 돌린 그룹에 속해있다는 가정)</span>
+            특정 픽업(담당) 기대 획득 수: 약 <strong>${expectedValue.toFixed(3)}개</strong><br>
+            <span style="font-size:0.85rem; color:#dc3545;">(천장 포함 버튼이 활성화 되어있는지 주의하세요.)</span><br>
+            <span style="font-size:0.85rem; color:#666;">(가장 많이 돌린 그룹에 속해있다는 가정)</span><br>
             <span style="font-size:0.85rem; color:#888;">(그래프는 평균 기준 유의미한 확률 구간을 표시합니다.)</span>
         `;
         renderSpecificBarResult(dpSpecific, VIEW_MODE.star2, { chart: 'resultChartSpecific2', summary: 'summaryTextSpecific2' }, summaryHtml, chartRefSpecific);

@@ -2,7 +2,12 @@ import { formatProbability } from './formatter.js';
 import { renderChart, renderBarChart } from './chartHandler.js';
 import { transformData } from '../math/core.js'; 
 
-// 1. 수집 종류 분석 (원 그래프) - 기존 유지
+const GLOBAL_IDS = {
+    summary: 'globalSummary',
+    logic: 'globalLogic'
+};
+
+// 1. 수집 종류 분석 (원 그래프) - 이미 정상 작동 중
 export function renderResultCommon(
     N, chartDP, listDP, mode, 
     ids, 
@@ -33,14 +38,17 @@ export function renderResultCommon(
         }
     }
 
-    const logicHtml = htmlGenerators.logic().replace('class="section-content"', 'class="section-content logic-content"');
+    // [정상] 공통 ID 사용 중
+    const summaryEl = document.getElementById(GLOBAL_IDS.summary);
+    if(summaryEl) summaryEl.innerHTML = htmlGenerators.summary();
     
-    const logicContainer = document.getElementById(ids.logic);
-    logicContainer.innerHTML = logicHtml;
-    logicContainer.style.display = 'block'; // 컨테이너 자체는 보임 (내부 컨텐츠가 접힘/펼침)
+    const logicContainer = document.getElementById(GLOBAL_IDS.logic);
+    if(logicContainer) {
+        logicContainer.innerHTML = htmlGenerators.logic();
+        logicContainer.style.display = 'block';
+    }
 
     const chartTooltipValues = chartDP.map(p => formatProbability(p));
-
     updateLegend(ids.legend, listLabels, listData, backgroundColors);
     renderChart(ids.chart, chartLabels, chartData, backgroundColors, chartTooltipValues, chartInstanceRef);
 }
@@ -54,15 +62,12 @@ export function renderTotalBarResult(
 ) {
     const transformedDP = transformData(dpTotal, mode);
     
-    // 기댓값 계산 (슬라이딩 윈도우 중앙 정렬용)
     let expectedValue = 0;
     for(let i=0; i<dpTotal.length; i++) expectedValue += i * dpTotal[i];
     const avgIndex = Math.round(expectedValue);
 
-    // [신규] 가장 확률이 높은 인덱스 찾기 (색상 강조용)
     let maxVal = -1;
     let maxIndex = -1;
-    // 전체 범위에서 최대 확률 탐색
     for(let i=0; i<transformedDP.length; i++) {
         if (transformedDP[i] > maxVal) {
             maxVal = transformedDP[i];
@@ -70,19 +75,17 @@ export function renderTotalBarResult(
         }
     }
 
-    // 슬라이딩 윈도우 범위 설정
-    let startK = Math.max(0, avgIndex - 8);
-    let endK = startK + 15; 
+    let startK = Math.max(0, avgIndex - 7);
+    let endK = startK + 14; 
+    
     if (endK >= transformedDP.length) {
         endK = transformedDP.length - 1;
-        startK = Math.max(0, endK - 15);
+        startK = Math.max(0, endK - 14);
     }
 
-    // 필터링 및 최소 10개 보장
     let tempResults = [];
     for (let k = startK; k <= endK; k++) {
         const val = transformedDP[k] || 0;
-        // 평균 근처면 낮은 확률이라도 표시
         if (mode === 'individual' && val < 0.0001 && Math.abs(k - avgIndex) > 4) continue;
         tempResults.push({ k, val, formatted: formatProbability(val) });
     }
@@ -113,18 +116,24 @@ export function renderTotalBarResult(
 
     tempResults.forEach(item => {
         labels.push(`${item.k}개${suffix}`);
-        data.push((item.val * 100).toFixed(3));
+        data.push((item.val * 100).toFixed(2));
         tooltipValues.push(item.formatted);
 
-        // [수정] 색상 로직: 가장 높은 확률(Peak)이면 짙은 녹색, 아니면 밝은 파랑
         if (item.k === maxIndex && mode === 'individual') {
-            colors.push('#45a247'); // Peak (짙은 녹색)
+            colors.push('#45a247');
         } else {
-            colors.push('#283c86');
+            colors.push('#bbdefb');
         }
     });
 
-    document.getElementById(ids.summary).innerHTML = summaryHtml;
+    // [수정] ids.summary 대신 공통 ID 사용
+    const summaryEl = document.getElementById(GLOBAL_IDS.summary);
+    if (summaryEl) summaryEl.innerHTML = summaryHtml;
+
+    // [수정] 막대 그래프 탭에서는 상세 계산 근거를 숨김
+    const logicContainer = document.getElementById(GLOBAL_IDS.logic);
+    if(logicContainer) logicContainer.style.display = 'none';
+
     renderBarChart(ids.chart, labels, data, colors, tooltipValues, chartRef);
 }
 
@@ -137,12 +146,10 @@ export function renderSpecificBarResult(
 ) {
     const transformedDP = transformData(dpSpecific, mode);
     
-    // 기댓값 계산 (중앙 정렬용)
     let expectedValue = 0;
     for(let i=0; i<dpSpecific.length; i++) expectedValue += i * dpSpecific[i];
     const avgIndex = Math.round(expectedValue);
 
-    // [신규] 가장 확률이 높은 인덱스 찾기 (색상 강조용)
     let maxVal = -1;
     let maxIndex = -1;
     for(let i=0; i<transformedDP.length; i++) {
@@ -191,22 +198,28 @@ export function renderSpecificBarResult(
 
     tempResults.forEach(item => {
         labels.push(`${item.k}개${suffix}`);
-        data.push((item.val * 100).toFixed(3));
+        data.push((item.val * 100).toFixed(2));
         tooltipValues.push(item.formatted);
 
-        // [수정] 색상 로직: 가장 높은 확률(Peak)이면 짙은 녹색, 아니면 밝은 파랑
         if (item.k === maxIndex && mode === 'individual') {
-            colors.push('#45a247'); // Peak (짙은 녹색)
+            colors.push('#45a247');
         } else {
-            colors.push('#283c86');
+            colors.push('#bbdefb');
         }
     });
 
-    document.getElementById(ids.summary).innerHTML = summaryHtml;
+    // [수정] ids.summary 대신 공통 ID 사용
+    const summaryEl = document.getElementById(GLOBAL_IDS.summary);
+    if (summaryEl) summaryEl.innerHTML = summaryHtml;
+
+    // [수정] 상세 계산 근거 숨김
+    const logicContainer = document.getElementById(GLOBAL_IDS.logic);
+    if(logicContainer) logicContainer.style.display = 'none';
+
     renderBarChart(ids.chart, labels, data, colors, tooltipValues, chartRef);
 }
 
-// (내부 헬퍼) 범례 업데이트
+// ... updateLegend ...
 function updateLegend(elementId, labels, data, colors) {
     const listContainer = document.getElementById(elementId);
     listContainer.innerHTML = '';

@@ -223,7 +223,6 @@ export function render3StarUI() {
             { chart: 'resultChart', legend: 'legendList', summary: 'summaryText', logic: 'logicDetailText' },
             {
                 summary: () => `
-                    <strong>3성 분석 결과</strong><br>
                     가챠 횟수 : ${context.totalPulls}회 (일반 ${context.normalPulls} + 스탭업 ${context.stepPulls})<br>
                     랜덤 교환(픽업 티켓) : ${context.randomRewardCount}회<br>
                     천장 교환(셀렉 티켓) : ${context.totalCeilingCount}회 (통합 ${context.normalCeiling} + 스탭업 ${context.selectRewardCount})${ceilingNote}<br>
@@ -266,7 +265,7 @@ export function render3StarUI() {
                         <span class="logic-title" style="border-bottom: none; margin-bottom: 0;">상세 계산 근거</span>
                         <button class="toggle-btn">${btnText}</button>
                      </div>
-                     <div class="section-content" style="display: ${displayStyle};">
+                     <div class="section-content logic-view" style="display: ${displayStyle};">
                         <ul class="logic-list">
                             <li><strong>확률 적용:</strong> 기본 확률(${context.p_indiv_percent}%) ${context.countNormal}회, Step4 개별 확률(${(context.p_step4_total_percent/N).toFixed(3)}%) ${context.countStep4}회 적용되었습니다.</li>
                             <li><strong>주회 보상 설정:</strong> ${rewardHistoryHtml}</li>
@@ -286,7 +285,7 @@ export function render3StarUI() {
         for(let i=0; i<dpTotal.length; i++) expectedValue += i * dpTotal[i];
         
         const summaryHtml = `
-            3성 평균 기대 획득 수: 약 <strong>${expectedValue.toFixed(3)}개</strong><br>
+            평균 기대 획득 수: 약 <strong>${expectedValue.toFixed(3)}개</strong><br>
             <span style="font-size:0.85rem; color:#888;">(그래프는 평균 기준 유의미한 확률 구간을 표시합니다.)</span>
         `;
         renderTotalBarResult(dpTotal, VIEW_MODE.star3, { chart: 'resultChartTotal3', summary: 'summaryTextTotal3' }, summaryHtml, chartRefTotal);
@@ -298,6 +297,7 @@ export function render3StarUI() {
         
         const summaryHtml = `
             특정 픽업(담당) 기대 획득 수: 약 <strong>${expectedValue.toFixed(3)}장</strong><br>
+            <span style="font-size:0.85rem; color:#dc3545;">(천장 포함 버튼이 활성화 되어있는지 주의하세요.)</span><br>
             <span style="font-size:0.85rem; color:#888;">(그래프는 평균 기준 유의미한 구간을 표시합니다.)</span>
         `;
 
