@@ -34,55 +34,60 @@ export function renderResultCommon(N, chartDP, listDP, mode, ids, htmlGenerators
     renderChart(ids.chart, chartLabels, chartData, backgroundColors, chartTooltipValues, chartInstanceRef);
 }
 
+// 총 획득 수/특정 픽업 바 차트 출력 통합 함수
 export function renderBarResult(dp, mode, ids, htmlGenerators, chartRef) {
-    const transformedDP = transformData(dp, mode);
+    // 1. [핵심] 표시 범위(Window)는 항상 '개별 확률(Individual)'을 기준으로 산출합니다.
+    //    그래야 누적 모드에서도 "사건이 주로 발생하는 구간"을 볼 수 있습니다.
+    const individualDP = transformData(dp, 'individual');
     
-    // 1. 최대 확률 구간 찾기 (그래프 중심 잡기 및 색상 강조용)
+    // 개별 확률 기준 Peak(최빈값) 찾기
     let maxVal = -1, maxIndex = -1;
-    for(let i=0; i<transformedDP.length; i++) { 
-        if (transformedDP[i] > maxVal) { maxVal = transformedDP[i]; maxIndex = i; } 
+    for(let i=0; i<individualDP.length; i++) { 
+        if (individualDP[i] > maxVal) { maxVal = individualDP[i]; maxIndex = i; } 
     }
 
-    // 2. 유의미한 확률 구간 탐색 (0.01% 미만 제외)
+    // 개별 확률 기준 유의미한 구간 탐색 (0.01% 미만 제외)
     const THRESHOLD = 0.0001;
     let startK = 0;
-    let endK = transformedDP.length - 1;
+    let endK = individualDP.length - 1;
 
-    for (let i = 0; i < transformedDP.length; i++) {
-        if (transformedDP[i] >= THRESHOLD) { startK = i; break; }
+    for (let i = 0; i < individualDP.length; i++) {
+        if (individualDP[i] >= THRESHOLD) { startK = i; break; }
     }
-    for (let i = transformedDP.length - 1; i >= 0; i--) {
-        if (transformedDP[i] >= THRESHOLD) { endK = i; break; }
+    for (let i = individualDP.length - 1; i >= 0; i--) {
+        if (individualDP[i] >= THRESHOLD) { endK = i; break; }
     }
 
-    // 3. [복구됨] 구간이 15개를 넘어가면, 최대 확률 지점(maxIndex)을 기준으로 자르기
+    // 개별 확률 기준 15개 제한 적용
     const MAX_BARS = 15;
     const currentRange = endK - startK + 1;
 
     if (currentRange > MAX_BARS) {
-        // maxIndex를 중심으로 앞뒤로 배분
-        let half = Math.floor(MAX_BARS / 2); // 7
+        let half = Math.floor(MAX_BARS / 2);
         startK = maxIndex - half;
         endK = startK + MAX_BARS - 1;
 
-        // 배열 범위를 벗어나지 않도록 보정
+        // 범위 보정
         if (startK < 0) {
             startK = 0;
-            endK = Math.min(transformedDP.length - 1, MAX_BARS - 1);
+            endK = Math.min(individualDP.length - 1, MAX_BARS - 1);
         }
-        if (endK >= transformedDP.length) {
-            endK = transformedDP.length - 1;
+        if (endK >= individualDP.length) {
+            endK = individualDP.length - 1;
             startK = Math.max(0, endK - MAX_BARS + 1);
         }
     } else {
-        // 15개 미만이면 앞뒤로 1칸씩 여유를 둠 (시각적 답답함 해소)
         startK = Math.max(0, startK - 1);
-        endK = Math.min(transformedDP.length - 1, endK + 1);
+        endK = Math.min(individualDP.length - 1, endK + 1);
     }
+
+    // 2. 실제 출력할 데이터는 사용자가 선택한 모드(mode)로 변환
+    const transformedDP = transformData(dp, mode);
 
     const labels = [], data = [], colors = [], tooltipValues = [];
     let suffix = (mode === 'cumulative_less') ? " 이하" : (mode === 'cumulative_more' ? " 이상" : "");
 
+    // 위에서 구한 startK ~ endK 범위를 사용하여 그래프 그리기
     for (let k = startK; k <= endK; k++) {
         const val = transformedDP[k] || 0;
         
@@ -90,14 +95,14 @@ export function renderBarResult(dp, mode, ids, htmlGenerators, chartRef) {
         data.push((val * 100).toFixed(2));
         tooltipValues.push(formatProbability(val));
         
-        // 색상: 최대값은 초록색, 나머지는 연한 파랑(#e3f2fd)
+        // 초록색 강조는 오직 '개별 모드'일 때만 Peak 지점에 표시 (누적일 땐 파란색 통일)
         colors.push(k === maxIndex && mode === 'individual' ? '#45a247' : '#e3f2fd');
     }
 
-    const summaryEl = document.getElementById(ids.summary || 'globalSummary');
+    const summaryEl = document.getElementById(ids.summary || GLOBAL_IDS.summary);
     if(summaryEl) summaryEl.innerHTML = htmlGenerators.summary();
     
-    const logicContainer = document.getElementById(ids.logic || 'globalLogic');
+    const logicContainer = document.getElementById(ids.logic || GLOBAL_IDS.logic);
     if(logicContainer) logicContainer.style.display = 'none';
 
     renderBarChart(ids.chart, labels, data, colors, tooltipValues, chartRef);
