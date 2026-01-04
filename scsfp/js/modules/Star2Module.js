@@ -69,22 +69,40 @@ export class Star2Module extends BaseGachaModule {
             return;
         }
 
-        // 1. 스탭업 그룹별 계산 (독립 풀)
         let dp = [1.0]; 
-        let dpTotal = [1.0];
+        let dpTotal = [1.0]; 
         let dpSpecific = [1.0];
         let totalStepPulls = 0;
 
+        // 1. 스탭업 그룹별 계산 (수집 및 총 획득 수 합성)
         groups.forEach(g => {
             if (g.count > 0) {
                 const res = this._calculateGroupDP(g.count, g.pulls, rateTotal);
-                dp = MathCore.convolveDistributions(dp, res.dp); // 수집 확률 합성
-                dpTotal = MathCore.convolveDistributions(dpTotal, res.dpTotal); // 총 획득 수 합성
+                dp = MathCore.convolveDistributions(dp, res.dp);
+                dpTotal = MathCore.convolveDistributions(dpTotal, res.dpTotal);
                 totalStepPulls += g.pulls;
             }
         });
 
-        // [중요] 합성된 dp의 크기가 전체 normalCount+1이 되도록 패딩 (0개 수집 상태 방지)
+        // --- [복구된 로직] 특정 픽업(날개) 스탭업 반영 시작 ---
+        // 가정: 가장 많이 돌린 그룹에 타겟 캐릭터가 포함되어 있음
+        const targetGroup = groups.reduce((prev, curr) => (prev.pulls > curr.pulls ? prev : curr), groups[0]);
+        
+        if (targetGroup.count > 0 && targetGroup.pulls > 0) {
+            const p_target_normal = rateTotal / targetGroup.count; // 그룹 내 일반 개별 확률
+            const p_target_guar = 1.0 / targetGroup.count;       // 그룹 내 확정 개별 확률
+
+            for (let i = 1; i <= targetGroup.pulls; i++) {
+                // 5, 15, 25... 회차는 확정 슬롯
+                const isGuar = (i === 5 || (i > 5 && (i - 5) % 10 === 0));
+                const p = isGuar ? p_target_guar : p_target_normal;
+                
+                // 특정 픽업 1개를 얻을 확률 누적
+                dpSpecific = MathCore.runTotalCountGacha(dpSpecific, p);
+            }
+        }
+        
+        // dp 배열 패딩 (수집 확률 오류 방지)
         if (dp.length < normalCount + 1) {
             const padding = new Array(normalCount + 1 - dp.length).fill(0);
             dp = [...dp, ...padding];
@@ -96,8 +114,8 @@ export class Star2Module extends BaseGachaModule {
 
         for (let i = 1; i <= normalPulls; i++) {
             const isHigh = (i % 10 === 0);
-            const p = isHigh ? p_high_one : p_normal_one;
-            const pTot = isHigh ? 0.95 : rateTotal;
+            const p = isHigh ? p_high_one : p_normal_one; // 개별 확률
+            const pTot = isHigh ? 0.95 : rateTotal;       // 전체 확률
 
             dp = MathCore.runGacha(dp, p);
             dpTotal = MathCore.runTotalCountGacha(dpTotal, pTot);
@@ -121,7 +139,7 @@ export class Star2Module extends BaseGachaModule {
             totalStepPulls, 
             totalCeiling, 
             rateTotal,
-            groups // 그룹 정보 포함
+            groups
         }};
         
         this.saveData();
@@ -152,7 +170,7 @@ export class Star2Module extends BaseGachaModule {
             renderTotalBarResult(dpTotal, VIEW_MODE.star2, { chart: 'resultChartTotal2' }, `2성 평균 기대 획득 수: 약 <strong>${expected.toFixed(3)}개</strong>`, this.chartRefs.total);
         } else if (activeSubTab === 'res-2s-specific') {
             let expected = dpSpecific.reduce((acc, p, i) => acc + i * p, 0);
-            renderSpecificBarResult(dpSpecific, VIEW_MODE.star2, { chart: 'resultChartSpecific2' }, `특정 픽업 기대 수: 약 <strong>${expected.toFixed(3)}장</strong><br><span style="font-size:0.85rem; color:#dc3545;">(천장 포함 버튼이 활성화 되어있는지 주의하세요.)</span>`, this.chartRefs.specific);
+            renderSpecificBarResult(dpSpecific, VIEW_MODE.star2, { chart: 'resultChartSpecific2' }, `특정 픽업 기대 수: 약 <strong>${expected.toFixed(3)}장</strong><br><span style="font-size:0.85rem; color:#dc3545;">(천장 포함 버튼이 활성화 되어있는지 주의하세요.)</span><br><span style="font-size:0.85rem; color:#666;">(가장 많이 돌린 그룹에 속해있다는 가정)</span><br>`, this.chartRefs.specific);
         }
     }
 
