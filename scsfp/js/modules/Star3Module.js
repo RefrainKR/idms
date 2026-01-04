@@ -144,7 +144,7 @@ export class Star3Module extends BaseGachaModule {
             renderTotalBarResult(dpTotal, VIEW_MODE.star3, { chart: 'resultChartTotal3' }, `3성 평균 기대 획득 수: 약 <strong>${expected.toFixed(3)}개</strong>`, this.chartRefs.total);
         } else if (activeSubTab === 'res-3s-specific') {
             let expected = dpSpecific.reduce((acc, p, i) => acc + i * p, 0);
-            renderSpecificBarResult(dpSpecific, VIEW_MODE.star3, { chart: 'resultChartSpecific3' }, `특정 픽업(담당) 기대 수: 약 <strong>${expected.toFixed(3)}장</strong><span style="font-size:0.85rem; color:#dc3545;">(천장 포함 버튼이 활성화 되어있는지 주의하세요.)</span><br>`, this.chartRefs.specific);
+            renderSpecificBarResult(dpSpecific, VIEW_MODE.star3, { chart: 'resultChartSpecific3' }, `특정 픽업(담당) 기대 수: 약 <strong>${expected.toFixed(3)}장</strong><br><span style="font-size:0.85rem; color:#dc3545;">(천장 포함 버튼이 활성화 되어있는지 주의하세요.)</span>`, this.chartRefs.specific);
         }
     }
 
