@@ -1,3 +1,39 @@
+import { formatProbability } from './formatter.js';
+import { renderChart, renderBarChart } from './chartHandler.js';
+import { transformData } from '../math/core.js'; 
+
+const GLOBAL_IDS = {
+    summary: 'globalSummary',
+    logic: 'globalLogic'
+};
+
+// 공통 차트/결과 출력 로직
+export function renderResultCommon(N, chartDP, listDP, mode, ids, htmlGenerators, chartInstanceRef) {
+    let chartLabels = [], chartData = [], backgroundColors = [], listLabels = [], listData = [];
+    let suffix = (mode === 'cumulative_less') ? " 이하" : (mode === 'cumulative_more' ? " 이상" : "");
+
+    for (let k = 0; k <= N; k++) {
+        chartLabels.push(`${k}픽업`);
+        chartData.push(parseFloat((chartDP[k] * 100).toFixed(3)));
+        listLabels.push(`${k}픽업${suffix}`);
+        listData.push(formatProbability(listDP[k]));
+        backgroundColors.push(k === N ? '#45a247' : `rgba(40, 60, 134, ${0.3 + 0.7 * (k / N)})`);
+    }
+
+    const summaryEl = document.getElementById(ids.summary || GLOBAL_IDS.summary);
+    if(summaryEl) summaryEl.innerHTML = htmlGenerators.summary();
+    
+    const logicContainer = document.getElementById(ids.logic || GLOBAL_IDS.logic);
+    if(logicContainer) {
+        logicContainer.innerHTML = htmlGenerators.logic ? htmlGenerators.logic() : '';
+        logicContainer.style.display = htmlGenerators.logic ? 'block' : 'none';
+    }
+
+    const chartTooltipValues = chartDP.map(p => formatProbability(p));
+    updateLegend(ids.legend, listLabels, listData, backgroundColors);
+    renderChart(ids.chart, chartLabels, chartData, backgroundColors, chartTooltipValues, chartInstanceRef);
+}
+
 export function renderBarResult(dp, mode, ids, htmlGenerators, chartRef) {
     const transformedDP = transformData(dp, mode);
     
@@ -65,4 +101,25 @@ export function renderBarResult(dp, mode, ids, htmlGenerators, chartRef) {
     if(logicContainer) logicContainer.style.display = 'none';
 
     renderBarChart(ids.chart, labels, data, colors, tooltipValues, chartRef);
+}
+
+// 기존 함수들을 renderBarResult로 래핑하여 호환성 유지
+export function renderTotalBarResult(dp, mode, ids, summaryHtml, chartRef) {
+    renderBarResult(dp, mode, ids, { summary: () => summaryHtml }, chartRef);
+}
+
+export function renderSpecificBarResult(dp, mode, ids, summaryHtml, chartRef) {
+    renderBarResult(dp, mode, ids, { summary: () => summaryHtml }, chartRef);
+}
+
+function updateLegend(elementId, labels, data, colors) {
+    const listContainer = document.getElementById(elementId);
+    if (!listContainer) return;
+    listContainer.innerHTML = '';
+    labels.forEach((label, index) => {
+        const item = document.createElement('div');
+        item.className = 'legend-item';
+        item.innerHTML = `<div class="legend-label"><span class="color-dot" style="background-color: ${colors[index]};"></span><span>${label}</span></div><div class="legend-value">${data[index]}</div>`;
+        listContainer.appendChild(item);
+    });
 }
