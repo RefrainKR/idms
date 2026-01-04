@@ -70,14 +70,14 @@ export function renderBarChart(canvasId, labels, data, colors, tooltipValues, ch
             datasets: [{
                 data: data,
                 backgroundColor: colors,
-                borderColor: '#eee',
+                borderColor: '#bbdefb',
                 borderWidth: 1
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            animation: false, // [수정] 애니메이션 비활성화
+            animation: false,
             layout: { padding: { top: 30, bottom: 10 } }, 
             plugins: {
                 title: { display: false },

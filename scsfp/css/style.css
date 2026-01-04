@@ -355,7 +355,6 @@ h1 {
     text-decoration: none;
 }
 
-
 /* --- Preset & Reset Buttons --- */
 .reset-area {
     display: flex;
@@ -378,14 +377,16 @@ h1 {
 .preset-btn:hover { background-color: #bbdefb; }
 
 .reset-btn {
-    padding: 6px 12px;
+    padding: 6px 8px; 
     background-color: #f0f0f0;
     color: #555;
     border: 1px solid #ccc;
     border-radius: 5px;
-    font-size: 0.85rem;
+    font-size: 1rem; /* 아이콘 크기 살짝 키움 (선택) */
+    font-weight: bold;
     cursor: pointer;
     transition: all 0.2s;
+    line-height: 1; /* 아이콘 수직 정렬 보정 */
 }
 .reset-btn:hover { background-color: #e0e0e0; border-color: #bbb; color: #333; }
 

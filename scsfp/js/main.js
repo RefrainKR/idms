@@ -1,111 +1,97 @@
+import { Star3Module } from './modules/Star3Module.js';
+import { Star2Module } from './modules/Star2Module.js';
 import { TabManager } from './lib/utils/TabManager.js';
-import { ToggleButtonElement } from './lib/utils/ToggleButtonElement.js';
-import { CollapsibleSection } from './lib/utils/CollapsibleSection.js';
-import { appState, VIEW_MODE, CEILING_MODE, RANDOM_MODE, STEP4_MODE } from './state.js';
-import { TOGGLE_STATES_VIEW, TOGGLE_STATES_CEILING, TOGGLE_STATES_RANDOM, TOGGLE_STATES_STEP4 } from './config.js';
-import * as Star3 from './modules/star3.js';
-import * as Star2 from './modules/star2.js';
+import { ToggleButtonElement } from './lib/utils/ToggleButtonElement.js'; // 추가됨
+import { CollapsibleSection } from './lib/utils/CollapsibleSection.js'; // 추가됨
+import { TOGGLE_STATES } from './config.js'; // 추가됨
+import { VIEW_MODE, CEILING_MODE, RANDOM_MODE, STEP4_MODE } from './state.js'; // 추가됨
 
+// Chart.js 플러그인 등록
 Chart.register(ChartDataLabels);
 
 window.onload = function() {
-    appState.isInitializing = true; 
+    // 1. 모듈 인스턴스 생성
+    const star3 = new Star3Module();
+    const star2 = new Star2Module();
 
-    // ============================================================
-    // 1. 탭 시스템 초기화 및 콜백 연결 (Summary 갱신 핵심)
-    // ============================================================
+    star3.init();
+    star2.init();
 
-    // 1-1. 메인 탭 (3성 <-> 2성)
-    const mainTabContainer = document.getElementById('main-tab-system');
-    new TabManager(mainTabContainer, (activeTabId) => {
-        // 메인 탭이 바뀔 때, 현재 활성화된 탭의 UI(Summary 포함)를 강제로 갱신
-        if (activeTabId === 'tab-3star') {
-            Star3.render3StarUI();
-        } else if (activeTabId === 'tab-2star') {
-            Star2.render2StarUI();
-        }
-    });
-
-    // 1-2. 3성 서브 탭 (수집 종류 <-> 총 획득 <-> 특정 픽업)
-    const subTab3Star = document.getElementById('sub-tab-system-3star');
-    if (subTab3Star) {
-        new TabManager(subTab3Star, (activeTabId) => {
-            // 서브 탭을 누를 때마다 Summary와 차트 갱신
-            Star3.render3StarUI();
-        });
-    }
-
-    // 1-3. 2성 서브 탭 (수집 종류 <-> 총 획득 <-> 특정 픽업)
-    const subTab2Star = document.getElementById('sub-tab-system-2star');
-    if (subTab2Star) {
-        new TabManager(subTab2Star, (activeTabId) => {
-            // 서브 탭을 누를 때마다 Summary와 차트 갱신
-            Star2.render2StarUI();
-        });
-    }
-
-    // 2. 토글 섹션 기능 초기화
+    // 2. 공통 UI 유틸리티 초기화
     new CollapsibleSection();
 
-    // ============================================================
-    // 3. 버튼 이벤트 바인딩
-    // ============================================================
-    
-    // 3성 관련
-    const reset3 = document.getElementById('resetBtn3');
-    if (reset3) reset3.addEventListener('click', Star3.reset3Star);
-    
-    const presetGen = document.getElementById('presetGeneralBtn');
-    if (presetGen) presetGen.addEventListener('click', Star3.applyGeneralPreset);
-    
-    const presetBirth = document.getElementById('presetBirthdayBtn');
-    if (presetBirth) presetBirth.addEventListener('click', Star3.applyBirthdayPreset);
-    
-    const presetPJ = document.getElementById('presetPJBtn');
-    if (presetPJ) presetPJ.addEventListener('click', Star3.applyPJPreset);
-
-    // 2성 관련
-    const reset2 = document.getElementById('resetBtn2');
-    if (reset2) reset2.addEventListener('click', Star2.reset2Star);
-
-    // ============================================================
-    // 4. 토글 버튼 설정 (상태 변경 시 재계산 또는 재렌더링)
-    // ============================================================
-
-    // --- 3성 토글 ---
-    new ToggleButtonElement('toggleCeilingBtn3', TOGGLE_STATES_CEILING, (name) => {
-        CEILING_MODE.star3 = name; 
-        Star3.calculate3Star(); // 계산 로직 변경됨 -> 재계산
+    // 3. 메인 탭 시스템 초기화
+    const mainTabManager = new TabManager(document.getElementById('main-tab-system'), (tabId) => {
+        // 탭이 바뀔 때마다 해당 모듈의 UI를 강제로 다시 그림
+        if (tabId === 'tab-3star') star3.renderUI();
+        else if (tabId === 'tab-2star') star2.renderUI();
     });
-    new ToggleButtonElement('toggleRandomBtn3', TOGGLE_STATES_RANDOM, (name) => {
-        RANDOM_MODE.star3 = name; 
-        Star3.calculate3Star(); // 계산 로직 변경됨 -> 재계산
+
+    // 4. 서브 탭 시스템 초기화 (결과 보기 탭)
+    new TabManager(document.getElementById('sub-tab-system-3star'), () => star3.renderUI());
+    new TabManager(document.getElementById('sub-tab-system-2star'), () => star2.renderUI());
+
+    // 5. 3성 토글 버튼들 연결
+    new ToggleButtonElement('toggleCeilingBtn3', TOGGLE_STATES.CEILING, (name) => {
+        CEILING_MODE.star3 = name;
+        star3.calculate();
     });
-    new ToggleButtonElement('toggleStep4Btn3', TOGGLE_STATES_STEP4, (name) => {
-        STEP4_MODE.star3 = name; 
-        Star3.calculate3Star(); // 계산 로직 변경됨 -> 재계산
+    new ToggleButtonElement('toggleRandomBtn3', TOGGLE_STATES.RANDOM, (name) => {
+        RANDOM_MODE.star3 = name;
+        star3.calculate();
     });
-    new ToggleButtonElement('toggleViewBtn3', TOGGLE_STATES_VIEW, (name) => {
+    new ToggleButtonElement('toggleStep4Btn3', TOGGLE_STATES.STEP4, (name) => {
+        STEP4_MODE.star3 = name;
+        star3.calculate();
+    });
+    new ToggleButtonElement('toggleViewBtn3', TOGGLE_STATES.VIEW, (name) => {
         VIEW_MODE.star3 = name;
-        Star3.render3StarUI(); // 보기 방식만 변경됨 -> 재렌더링
+        star3.renderUI();
     });
 
-    // --- 2성 토글 ---
-    new ToggleButtonElement('toggleCeilingBtn2', TOGGLE_STATES_CEILING, (name) => {
-        CEILING_MODE.star2 = name; 
-        Star2.calculate2Star(); // 계산 로직 변경됨 -> 재계산
+    // 6. 2성 토글 버튼들 연결
+    new ToggleButtonElement('toggleCeilingBtn2', TOGGLE_STATES.CEILING, (name) => {
+        CEILING_MODE.star2 = name;
+        star2.calculate();
     });
-    // 2성에는 Random, Step4 버튼이 제거되었으므로 바인딩하지 않음
-    new ToggleButtonElement('toggleViewBtn2', TOGGLE_STATES_VIEW, (name) => {
+    new ToggleButtonElement('toggleViewBtn2', TOGGLE_STATES.VIEW, (name) => {
         VIEW_MODE.star2 = name;
-        Star2.render2StarUI(); // 보기 방식만 변경됨 -> 재렌더링
+        star2.renderUI();
     });
 
-    // ============================================================
-    // 5. 데이터 초기화 및 실행
-    // ============================================================
-    Star3.init3StarInputs();
-    Star2.init2StarInputs();
+    // 7. 리셋 및 프리셋 버튼 이벤트 연결
+    document.getElementById('resetBtn3')?.addEventListener('click', () => star3.reset());
+    document.getElementById('resetBtn2')?.addEventListener('click', () => star2.reset());
 
-    appState.isInitializing = false; 
+    // 8. 3성 프리셋 버튼 연결
+    // 일반 가챠 프리셋: 2픽업, 1%, 2주회(2주회차 랜덤권)
+    document.getElementById('presetGeneralBtn')?.addEventListener('click', () => {
+        star3.applyPreset({ 
+            pickupCount: 2, pickupRate: 1, maxLoops: 2, step4Rate: 20, 
+            rewards: { 2: 'random' } 
+        });
+    });
+
+    // 9. 마지막 확인: 현재 활성화된 탭의 UI를 다시 한 번 호출하여 초기 화면을 확정함
+    const currentMainTab = document.querySelector('.tab-button.active')?.dataset.tab;
+    if (currentMainTab === 'tab-3star') star3.renderUI();
+    else if (currentMainTab === 'tab-2star') star2.renderUI();
+
+    
+    // 생일 가챠 프리셋: 1픽업, 1.5%, 주회 없음
+    document.getElementById('presetBirthdayBtn')?.addEventListener('click', () => {
+        star3.applyPreset({ 
+            pickupCount: 1, pickupRate: 1.5, maxLoops: 0, step4Rate: 0, 
+            rewards: {} 
+        });
+    });
+
+    // PJ 한정 가챠 프리셋: 4픽업, 1%, 3주회(2주 랜덤, 3주 셀렉)
+    document.getElementById('presetPJBtn')?.addEventListener('click', () => {
+        star3.applyPreset({ 
+            pickupCount: 4, pickupRate: 1, maxLoops: 3, step4Rate: 40, 
+            rewards: { 2: 'random', 3: 'select' } 
+        });
+    });
+
 };
