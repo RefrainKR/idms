@@ -41,19 +41,15 @@ export function init3StarInputs() {
 
 function updateLoopSettings() {
     const maxLoopsInput = document.getElementById('maxLoops');
-    
-    // [수정] 0 || 1 은 1이 되므로, isNaN 체크로 변경하여 0을 허용함
     let maxLoops = parseInt(maxLoopsInput.value);
     if (isNaN(maxLoops)) maxLoops = 1; 
 
     const container = document.getElementById('loopRewardsArea');
-    
     const savedData = storageManager.load(KEY_3STAR) || {};
     const savedRewards = savedData.loopRewards || {};
 
     container.innerHTML = '';
 
-    // maxLoops가 0이면 루프가 돌지 않아 보상 설정이 생성되지 않음 (의도된 동작)
     for (let i = 1; i <= maxLoops; i++) {
         const wrapper = document.createElement('div');
         wrapper.className = 'loop-reward-item';
@@ -101,7 +97,6 @@ export function calculate3Star() {
     let p_step4_total_percent = parseFloat(document.getElementById('step4Rate').value) || 0;
     const normalPulls = parseInt(document.getElementById('normalPulls').value) || 0;
     
-    // [수정] 여기도 동일하게 0 허용
     const maxLoopsInput = document.getElementById('maxLoops');
     let maxLoops = parseInt(maxLoopsInput.value);
     if (isNaN(maxLoops)) maxLoops = 1;
@@ -113,11 +108,13 @@ export function calculate3Star() {
     if (stepPulls > maxStepPulls) stepPulls = maxStepPulls;
     if (p_step4_total_percent > 100) p_step4_total_percent = 100;
 
-    const p_normal_one = p_indiv_percent / 100;
+    // --- 확률 정의 ---
+    const p_normal_one = p_indiv_percent / 100; 
     const p_step4_one = (p_step4_total_percent / 100) / N;
 
-    const p_normal_all = p_normal_one * N; 
-    const p_step4_all = p_step4_total_percent / 100;
+    // [수정] 변수명 통일: _all -> _total
+    const p_normal_total = (p_indiv_percent * N) / 100;
+    const p_step4_total = p_step4_total_percent / 100;
 
     const p_specific_normal = p_indiv_percent / 100;
     const p_specific_step4 = (p_step4_total_percent / 100) / N;
@@ -141,7 +138,7 @@ export function calculate3Star() {
     // 1. 일반 가챠
     for (let i = 0; i < normalPulls; i++) {
         dp = runGacha(dp, p_normal_one);
-        dpTotal = runTotalCountGacha(dpTotal, p_normal_all);
+        dpTotal = runTotalCountGacha(dpTotal, p_normal_total);
         dpSpecific = runTotalCountGacha(dpSpecific, p_specific_normal);
     }
 
@@ -151,6 +148,7 @@ export function calculate3Star() {
         if (isStep4) countStep4++; else countNormal++;
         
         let currentProbOne = (isStep4 && STEP4_MODE.star3 === 'included') ? p_step4_one : p_normal_one;
+        // [수정] 위에서 정의한 p_step4_total 사용
         let currentProbTotal = (isStep4 && STEP4_MODE.star3 === 'included') ? p_step4_total : p_normal_total;
         let currentProbSpecific = (isStep4 && STEP4_MODE.star3 === 'included') ? p_specific_step4 : p_specific_normal;
 
@@ -223,6 +221,7 @@ export function render3StarUI() {
             { chart: 'resultChart', legend: 'legendList', summary: 'summaryText', logic: 'logicDetailText' },
             {
                 summary: () => `
+                    <strong>3성 분석 결과</strong><br>
                     가챠 횟수 : ${context.totalPulls}회 (일반 ${context.normalPulls} + 스탭업 ${context.stepPulls})<br>
                     랜덤 교환(픽업 티켓) : ${context.randomRewardCount}회<br>
                     천장 교환(셀렉 티켓) : ${context.totalCeilingCount}회 (통합 ${context.normalCeiling} + 스탭업 ${context.selectRewardCount})${ceilingNote}<br>
@@ -280,17 +279,19 @@ export function render3StarUI() {
         );
     }
 
+    // 2. 총 획득 수
     if (totalTab && totalTab.classList.contains('active')) {
         let expectedValue = 0;
         for(let i=0; i<dpTotal.length; i++) expectedValue += i * dpTotal[i];
         
         const summaryHtml = `
-            평균 기대 획득 수: 약 <strong>${expectedValue.toFixed(3)}개</strong><br>
+            3성 평균 기대 획득 수: 약 <strong>${expectedValue.toFixed(3)}개</strong><br>
             <span style="font-size:0.85rem; color:#888;">(그래프는 평균 기준 유의미한 확률 구간을 표시합니다.)</span>
         `;
         renderTotalBarResult(dpTotal, VIEW_MODE.star3, { chart: 'resultChartTotal3', summary: 'summaryTextTotal3' }, summaryHtml, chartRefTotal);
     }
 
+    // 3. 특정 픽업
     if (specificTab && specificTab.classList.contains('active')) {
         let expectedValue = 0;
         for(let i=0; i<dpSpecific.length; i++) expectedValue += i * dpSpecific[i];
