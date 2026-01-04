@@ -36,17 +36,16 @@ export function renderResultCommon(N, chartDP, listDP, mode, ids, htmlGenerators
 
 // 총 획득 수/특정 픽업 바 차트 출력 통합 함수
 export function renderBarResult(dp, mode, ids, htmlGenerators, chartRef) {
-    // 1. [핵심] 표시 범위(Window)는 항상 '개별 확률(Individual)'을 기준으로 산출합니다.
-    //    그래야 누적 모드에서도 "사건이 주로 발생하는 구간"을 볼 수 있습니다.
+    // 1. 표시 범위와 Peak 위치는 항상 '개별 확률(Individual)'을 기준으로 산출
     const individualDP = transformData(dp, 'individual');
     
-    // 개별 확률 기준 Peak(최빈값) 찾기
+    // 개별 확률 기준 Peak(최빈값) 찾기 -> maxIndex가 기준점이 됩니다.
     let maxVal = -1, maxIndex = -1;
     for(let i=0; i<individualDP.length; i++) { 
         if (individualDP[i] > maxVal) { maxVal = individualDP[i]; maxIndex = i; } 
     }
 
-    // 개별 확률 기준 유의미한 구간 탐색 (0.01% 미만 제외)
+    // 개별 확률 기준 유의미한 구간 탐색
     const THRESHOLD = 0.0001;
     let startK = 0;
     let endK = individualDP.length - 1;
@@ -58,7 +57,7 @@ export function renderBarResult(dp, mode, ids, htmlGenerators, chartRef) {
         if (individualDP[i] >= THRESHOLD) { endK = i; break; }
     }
 
-    // 개별 확률 기준 15개 제한 적용
+    // 15개 제한 적용
     const MAX_BARS = 15;
     const currentRange = endK - startK + 1;
 
@@ -67,7 +66,6 @@ export function renderBarResult(dp, mode, ids, htmlGenerators, chartRef) {
         startK = maxIndex - half;
         endK = startK + MAX_BARS - 1;
 
-        // 범위 보정
         if (startK < 0) {
             startK = 0;
             endK = Math.min(individualDP.length - 1, MAX_BARS - 1);
@@ -81,13 +79,12 @@ export function renderBarResult(dp, mode, ids, htmlGenerators, chartRef) {
         endK = Math.min(individualDP.length - 1, endK + 1);
     }
 
-    // 2. 실제 출력할 데이터는 사용자가 선택한 모드(mode)로 변환
+    // 2. 실제 출력 데이터 변환
     const transformedDP = transformData(dp, mode);
 
     const labels = [], data = [], colors = [], tooltipValues = [];
     let suffix = (mode === 'cumulative_less') ? " 이하" : (mode === 'cumulative_more' ? " 이상" : "");
 
-    // 위에서 구한 startK ~ endK 범위를 사용하여 그래프 그리기
     for (let k = startK; k <= endK; k++) {
         const val = transformedDP[k] || 0;
         
@@ -95,8 +92,8 @@ export function renderBarResult(dp, mode, ids, htmlGenerators, chartRef) {
         data.push((val * 100).toFixed(2));
         tooltipValues.push(formatProbability(val));
         
-        // 초록색 강조는 오직 '개별 모드'일 때만 Peak 지점에 표시 (누적일 땐 파란색 통일)
-        colors.push(k === maxIndex && mode === 'individual' ? '#45a247' : '#e3f2fd');
+        // [수정] 모드와 상관없이, 개별 확률이 가장 높았던 지점(maxIndex)을 항상 초록색으로 강조
+        colors.push(k === maxIndex ? '#45a247' : '#e3f2fd');
     }
 
     const summaryEl = document.getElementById(ids.summary || GLOBAL_IDS.summary);
