@@ -1,25 +1,30 @@
 :root {
+    /* Color Palette */
     --primary-color: #283c86;
     --accent-color: #45a247;
     --info-color: #283c86;
-    --card-bg: #ffffff;
     --text-color: #333;
+    --bg-color: #dcdcdc;
+    --card-bg: #ffffff;
     --input-bg: #f9f9f9;
-    --tab-inactive-bg: #e0e0e0;
-    --tab-border: #ccc;
-    --btn-bg: #6c757d;
-    --btn-hover: #5a6268;
     
-    /* 경계선 색상 변수 */
+    /* Tabs & Borders */
+    --tab-inactive-bg: #e0e0e0;
     --border-light: #eee;
-    --border-dark: #aaa; 
+    --border-dark: #ddd;
+
+    /* Buttons (Presets & Charts) */
+    --btn-preset-bg: #e3f2fd;
+    --btn-preset-border: #bbdefb;
+    --btn-gray-bg: #f0f0f0;
+    --btn-active-bg: #6c757d;
 }
 
 * { box-sizing: border-box; }
 
 body {
     font-family: 'Noto Sans KR', sans-serif;
-    background-color: #dcdcdc; 
+    background-color: var(--bg-color);
     margin: 0;
     padding: 10px;
     min-height: 100vh;
@@ -42,9 +47,10 @@ h1 {
     text-align: center;
     font-size: 1.3rem;
     color: var(--primary-color);
+    margin-bottom: 20px;
 }
 
-/* --- 탭 시스템 --- */
+/* --- 1. Tabs System --- */
 .tab-buttons {
     display: flex;
     border-bottom: 2px solid var(--primary-color);
@@ -60,7 +66,7 @@ h1 {
     font-size: 1rem;
     font-weight: bold;
     cursor: pointer;
-    transition: all 0.3s;
+    transition: background-color 0.3s;
     border-radius: 10px 10px 0 0;
     margin-right: 5px;
 }
@@ -71,15 +77,14 @@ h1 {
 
 .tab-content { display: none; animation: fadeIn 0.3s ease-in-out; }
 .tab-content.active { display: block; }
+
 @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
-/* --- Collapsible Sections --- */
-/* [수정] 사용자 요청 사항 반영 */
+/* --- 2. Sections & Layout --- */
 .collapsible-container {
     margin-bottom: 5px;
-    border-bottom: 1px solid #eee;
-    padding-top: 10px;
-    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border-light);
+    padding: 10px 0;
 }
 
 .section-header {
@@ -87,16 +92,14 @@ h1 {
     justify-content: space-between;
     align-items: center;
     margin-bottom: 10px;
-    border-bottom: none; 
+    cursor: pointer; /* 토글 편의성 */
 }
 
 .section-title {
-    font-size: 1.1rem; 
+    font-size: 1.1rem;
     color: var(--primary-color);
     margin: 0;
     font-weight: bold;
-    border-bottom: none;
-    padding-bottom: 0;
 }
 
 .toggle-btn {
@@ -114,18 +117,32 @@ h1 {
     gap: 10px;
 }
 
-.section-content.force-block {
-    display: block; 
+.section-content.force-block, 
+.section-content.logic-view { display: block; }
+
+/* --- 3. Inputs & Forms --- */
+/* 공통 입력 필드 스타일 */
+input[type="number"], select {
+    width: 120px;
+    padding: 5px 8px;
+    border: 1px solid var(--border-dark);
+    border-radius: 5px;
+    font-size: 0.9rem;
+    text-align: right;
+    background-color: var(--input-bg);
+    transition: all 0.3s;
+    font-family: inherit;
 }
 
-.section-content.logic-view {
-    display: block;
+input:focus, select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    background-color: #fff;
+    box-shadow: 0 0 5px rgba(40, 60, 134, 0.2);
 }
 
-/* --- Input Styles --- */
 .input-item {
     display: flex;
-    flex-direction: row;
     align-items: center;
     justify-content: space-between;
 }
@@ -134,74 +151,51 @@ h1 {
     font-size: 0.95rem;
     font-weight: bold;
     color: #555;
-    margin-bottom: 0;
     margin-right: 10px;
     flex: 1;
     word-break: keep-all;
-    pointer-events: none; 
+    pointer-events: none; /* 클릭 시 투과되어 포커스 해제 유도 */
 }
 
-.input-item input, 
-.input-item select,
-.group-input-block input,
-.loop-reward-select {
-    width: 120px;
-    padding: 5px 8px; 
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    font-size: 0.9rem; 
-    text-align: right;
-    background-color: var(--input-bg);
-    transition: all 0.3s;
-    font-family: 'Noto Sans KR', sans-serif;
-}
-
-.input-item input:focus, 
-.input-item select:focus,
-.group-input-block input:focus,
-.loop-reward-select:focus {
-    outline: none;
-    border-color: var(--primary-color);
-    background-color: #fff;
-    box-shadow: 0 0 5px rgba(40, 60, 134, 0.2);
-}
-
-/* --- 3-Star Step-up Rewards --- */
-.loop-rewards-container {
-    grid-column: 1 / -1;
-    background-color: #f0f4f8;
-    padding: 10px; 
-    border-radius: 10px;
-    border: 1px solid #dde1e6;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 5px; 
-}
-
-.loop-reward-item {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    background-color: #fff;
-    padding: 6px 10px; 
-    border-radius: 6px;
-    border: 1px solid #eee;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.03);
-}
-
-.loop-reward-item label { font-size: 0.9rem; color: #444; margin: 0; font-weight: 600; }
-
-/* --- 2-Star Step-up Grouping --- */
+/* 그룹형 컨테이너 (스탭업 보상, 그룹 인풋 등) */
+.loop-rewards-container,
 .group-row {
-    display: flex;
-    align-items: center;
-    gap: 15px;
     background-color: #f0f4f8;
     padding: 10px;
     border-radius: 10px;
     border: 1px solid #dde1e6;
+    margin-bottom: 5px;
 }
+
+.loop-rewards-container {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 5px;
+}
+
+.group-row {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+/* 내부 아이템 (보상 항목, 그룹 입력 블록) */
+.loop-reward-item,
+.group-input-block {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: #fff;
+    padding: 6px 10px;
+    border-radius: 6px;
+    border: 1px solid var(--border-light);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+}
+
+.loop-reward-item label { font-size: 0.9rem; color: #444; margin: 0; font-weight: 600; }
+.group-input-block { gap: 8px; }
+.group-input-block input { width: 100% !important; min-width: 40px; }
 
 .group-label {
     min-width: 80px;
@@ -216,37 +210,109 @@ h1 {
     grid-template-columns: repeat(4, 1fr);
     gap: 10px;
     flex: 1;
-    width: 100%;
 }
 
-.group-input-block {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background-color: #fff;
-    padding: 6px 10px; 
-    border-radius: 5px;
-    border: 1px solid #ddd;
-    justify-content: space-between;
-}
+/* --- 4. Buttons --- */
+/* 버튼 공통 베이스 */
+button { font-family: inherit; }
 
-.group-name {
+.preset-btn, 
+.reset-btn, 
+.view-toggle-btn,
+.sub-tab-btn {
+    cursor: pointer;
+    transition: all 0.2s;
     font-weight: bold;
+    white-space: nowrap;
+}
+
+/* 리셋 & 프리셋 영역 */
+.reset-area {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+.preset-group { display: flex; gap: 5px; }
+
+.preset-btn {
+    padding: 6px 12px;
+    background-color: var(--btn-preset-bg);
+    color: var(--primary-color);
+    border: 1px solid var(--btn-preset-border);
+    border-radius: 5px;
+    font-size: 0.85rem;
+}
+.preset-btn:hover { background-color: var(--btn-preset-border); }
+
+.reset-btn {
+    padding: 6px 8px;
+    background-color: var(--btn-gray-bg);
     color: #555;
-    font-size: 0.9rem;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 1rem;
+    line-height: 1;
+}
+.reset-btn:hover { background-color: #e0e0e0; border-color: #bbb; color: #333; }
+
+/* 토글 버튼 */
+.result-options-header {
+    display: flex;
+    justify-content: flex-start;
+    margin-top: 20px;
+    padding-left: 5px;
+}
+.btn-group { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 5px; }
+
+.view-toggle-btn {
+    padding: 6px 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    background-color: #fff;
+    color: var(--primary-color);
+}
+.view-toggle-btn:hover { background-color: #f0f4ff; }
+
+.view-toggle-btn.btn-active {
+    background-color: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+.view-toggle-btn.btn-inactive {
+    background-color: #e9ecef;
+    color: #888;
+    border-color: #ccc;
+    text-decoration: line-through;
+}
+.view-toggle-btn.btn-mode {
+    background-color: var(--btn-active-bg);
+    color: white;
+    text-decoration: none;
+    border-color: var(--btn-active-bg);
 }
 
-.group-input-block input {
-    width: 100% !important;
-    min-width: 40px;
-    border: 1px solid #eee;
-    text-align: right;
-    padding: 4px;
-    margin: 0;
-}
+/* 서브 탭 버튼 */
+.sub-tab-container { margin-top: 20px; border-top: none; }
+.sub-tab-nav { justify-content: center; flex-wrap: wrap; gap: 5px; margin-bottom: 5px; border-bottom: none; }
 
-/* --- Common UI --- */
-.result-area {display: block; }
+.sub-tab-btn {
+    flex: 0 1 auto;
+    min-width: 100px;
+    padding: 5px 10px;
+    font-size: 0.85rem;
+    background-color: transparent;
+    color: #666;
+    border-radius: 20px;
+    border: 1px solid transparent;
+}
+.sub-tab-btn:hover { background-color: #f0f0f0; color: #333; }
+.sub-tab-btn.active { background-color: var(--btn-active-bg); color: white; border-color: var(--btn-active-bg); font-weight: normal; }
+
+/* --- 5. Result & Charts --- */
+.result-area { display: block; }
+.shared-result-container { border-top: 1.5px solid var(--border-light); margin-top: 10px; }
 
 .chart-row {
     display: flex;
@@ -258,23 +324,18 @@ h1 {
 
 .chart-container {
     flex: 1 1 300px;
-    position: relative;
     display: flex;
     flex-direction: column;
     align-items: center;
 }
-
-.chart-container canvas {
-    width: 100% !important;
-    height: 350px !important;
-}
+.chart-container canvas { width: 100% !important; height: 350px !important; }
 
 .legend-container {
     flex: 1 1 200px;
     background-color: #fafafa;
-    border: 1px solid #eee;
+    border: 1px solid var(--border-light);
     border-radius: 10px;
-    padding: 10px 15px; 
+    padding: 10px 15px;
     max-height: 400px;
     overflow-y: auto;
     width: 100%;
@@ -286,131 +347,38 @@ h1 {
     justify-content: space-between;
     margin-bottom: 8px;
     padding-bottom: 8px;
-    border-bottom: 1px dashed #eee;
+    border-bottom: 1px dashed var(--border-light);
     font-size: 0.95rem;
     width: 100%;
 }
-
-.legend-item:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
-.legend-label { display: flex; align-items: center; flex: 1; min-width: 0; margin-right: 10px; }
-.color-dot { width: 12px; height: 12px; border-radius: 3px; margin-right: 8px; display: inline-block; flex-shrink: 0; }
+.legend-item:last-child { border-bottom: none; margin: 0; padding: 0; }
+.legend-label { display: flex; align-items: center; flex: 1; margin-right: 10px; min-width: 0; }
+.color-dot { width: 12px; height: 12px; border-radius: 3px; margin-right: 8px; flex-shrink: 0; }
 .legend-value { font-weight: bold; color: #333; flex-shrink: 0; }
 
-.result-options-header {
-    display: flex;
-    justify-content: flex-start; /* [변경] 좌측 정렬 */
-    margin-top: 20px;
-    padding-left: 5px; /* 컨테이너와 정렬 맞춤 */
-}
-
-.btn-group {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 5px;
-    justify-content: flex-start;
-    flex-wrap: wrap; /* [중요] 줄바꿈 허용 */
-}
-
-/* [수정] 공통 결과 영역 스타일 */
-.shared-result-container {
-    border-top: 1.5px solid #eee;
-    margin-top: 10px;
-}
-
-/* [수정] 토글 버튼 스타일 (기본) */
-.view-toggle-btn {
-    margin-top: 0;
-    padding: 6px 10px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    font-size: 0.85rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
-    white-space: nowrap;
-}
-
-/* 활성 상태 (On) */
-.view-toggle-btn.btn-active {
-    background-color: var(--primary-color);
-    color: white;
-    border-color: var(--primary-color);
-}
-
-/* 비활성 상태 (Off) - 회색 + 취소선 */
-.view-toggle-btn.btn-inactive {
-    background-color: #e9ecef;
-    color: #888;
-    border-color: #ccc;
-    text-decoration: line-through;
-}
-
-/* View Mode 버튼 (3가지 상태)는 항상 활성 색상이되 텍스트만 바뀜 */
-.view-toggle-btn.btn-mode {
-    background-color: #6c757d; /* 별도 색상 */
-    color: white;
-    text-decoration: none;
-}
-
-/* --- Preset & Reset Buttons --- */
-.reset-area {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 10px;
-}
-.preset-group { display: flex; gap: 5px; }
-.preset-btn {
-    padding: 6px 12px;
-    background-color: #e3f2fd;
-    color: var(--primary-color);
-    border: 1px solid #bbdefb;
-    border-radius: 5px;
-    font-size: 0.85rem;
-    font-weight: bold;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-.preset-btn:hover { background-color: #bbdefb; }
-
-.reset-btn {
-    padding: 6px 8px; 
-    background-color: #f0f0f0;
-    color: #555;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    font-size: 1rem; /* 아이콘 크기 살짝 키움 (선택) */
-    font-weight: bold;
-    cursor: pointer;
-    transition: all 0.2s;
-    line-height: 1; /* 아이콘 수직 정렬 보정 */
-}
-.reset-btn:hover { background-color: #e0e0e0; border-color: #bbb; color: #333; }
-
-/* --- Summary --- */
-.summary {
-    background-color: #f8f9fa;
+/* --- 6. Summary & Logic Detail --- */
+.summary, .logic-detail {
     padding: 5px 15px;
     border-radius: 8px;
-    border-left: 5px solid var(--accent-color);
-    line-height: 1.8;
+    font-size: 0.95rem;
     margin-bottom: 10px;
-    font-size: 0.95rem; 
 }
 
-/* --- Logic Detail --- */
+.summary {
+    background-color: #f8f9fa;
+    border-left: 5px solid var(--accent-color);
+    line-height: 1.8;
+}
+
 .logic-detail {
     background-color: #f0f4f8;
-    padding: 5px 15px; 
-    border-radius: 8px;
     border-left: 5px solid var(--info-color);
     line-height: 1.6;
-    font-size: 0.95rem;
     color: #444;
 }
 
 .logic-title {
-    font-size: 1.1rem; 
+    font-size: 1.1rem;
     font-weight: bold;
     color: var(--info-color);
     margin-bottom: 8px;
@@ -420,36 +388,26 @@ h1 {
 .logic-list { margin: 0; padding-left: 20px; }
 .logic-list li { margin-bottom: 5px; }
 
-
-
-/* --- Sub Tabs --- */
-.sub-tab-container { margin-top: 20px; margin-bottom: 0px; border-top: none;}
-
-.sub-tab-nav { 
-    border-bottom: none; 
-    margin-bottom: 5px; 
-    justify-content: center; 
-    flex-wrap: wrap; 
-    gap: 5px; 
-}
-
-.sub-tab-btn { flex: 0 1 auto; min-width: 100px; padding: 5px 10px; font-size: 0.85rem; background-color: transparent; color: #666; border-radius: 20px; margin: 0; border: 1px solid transparent; white-space: nowrap; }
-.sub-tab-btn:hover { background-color: #f0f0f0; color: #333; }
-.sub-tab-btn.active { background-color: #6c757d; color: white; border-color: #6c757d; font-weight: normal; }
-
-/* 모바일 대응 */
+/* --- 7. Mobile Responsive --- */
 @media (max-width: 650px) {
-    .section-content, .loop-rewards-container { grid-template-columns: 1fr; }
+    .section-content, 
+    .loop-rewards-container { grid-template-columns: 1fr; }
+    
     .chart-row { flex-direction: column; }
     .chart-container, .legend-container { width: 100%; flex: none; }
     
-    .input-item, .loop-reward-item { flex-wrap: nowrap; gap: 5px; }
-    .input-item label, .loop-reward-item label { width: auto; margin-bottom: 0; font-size: 0.85rem; flex: 1; }
-    .input-item input, .input-item select, .loop-reward-select { width: 100px; flex-shrink: 0; }
+    .input-item, 
+    .loop-reward-item { gap: 5px; }
+    
+    /* 라벨이 길어질 경우 줄바꿈 허용보다는 크기 유지 */
+    .input-item label, 
+    .loop-reward-item label { width: auto; font-size: 0.85rem; flex: 1; }
+    
+    input[type="number"], select { width: 100px; flex-shrink: 0; }
+    
+    .group-row, 
+    .group-inputs-container { grid-template-columns: 1fr 1fr; }
     
     .group-row { flex-direction: column; align-items: flex-start; gap: 10px; }
-    .group-inputs-container { grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; }
-    .group-input-block { padding: 6px; gap: 5px; }
-    .stepup-group-container { flex-direction: column; align-items: flex-start; gap: 10px; }
-    .group-inputs { width: 100%; flex-direction: column; gap: 10px; }
+    .group-inputs-container { width: 100%; gap: 8px; }
 }
