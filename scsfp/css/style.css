@@ -54,7 +54,7 @@ h1 {
 .tab-buttons {
     display: flex;
     border-bottom: 2px solid var(--primary-color);
-    margin-bottom: 10px;
+    margin-bottom: 15px;
 }
 
 .tab-button {
@@ -195,7 +195,7 @@ input:focus, select:focus {
 
 .loop-reward-item label { font-size: 0.9rem; color: #444; margin: 0; font-weight: 600; }
 .group-input-block { gap: 8px; }
-.group-input-block input { width: 100% !important; min-width: 40px; }
+.group-input-block input {width: 100% !important; max-width: 120px;}
 
 .group-label {
     min-width: 80px;
@@ -204,11 +204,12 @@ input:focus, select:focus {
     font-size: 0.9rem;
     white-space: nowrap;
 }
+.group-name {font-size: 0.9rem;}
 
 .group-inputs-container {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 10px;
+    gap: 5px;
     flex: 1;
 }
 
@@ -403,7 +404,7 @@ button { font-family: inherit; }
     .input-item label, 
     .loop-reward-item label { width: auto; font-size: 0.85rem; flex: 1; }
     
-    input[type="number"], select { width: 100px; flex-shrink: 0; }
+    input[type="number"], select { width: 100px !important; flex-shrink: 0; }
     
     .group-row, 
     .group-inputs-container { grid-template-columns: 1fr 1fr; }
