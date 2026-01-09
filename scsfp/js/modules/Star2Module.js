@@ -170,7 +170,7 @@ export class Star2Module extends BaseGachaModule {
             renderTotalBarResult(dpTotal, VIEW_MODE.star2, { chart: 'resultChartTotal2' }, `2성 평균 기대 획득 수: 약 <strong>${expected.toFixed(3)}개</strong>`, this.chartRefs.total);
         } else if (activeSubTab === 'res-2s-specific') {
             let expected = dpSpecific.reduce((acc, p, i) => acc + i * p, 0);
-            renderSpecificBarResult(dpSpecific, VIEW_MODE.star2, { chart: 'resultChartSpecific2' }, `특정 픽업 기대 수: 약 <strong>${expected.toFixed(3)}장</strong><br><span style="font-size:0.85rem; color:#dc3545;">(천장 포함 버튼이 활성화 되어있는지 주의하세요.)</span><br><span style="font-size:0.85rem; color:#666;">(가장 많이 돌린 그룹에 속해있다는 가정)</span><br>`, this.chartRefs.specific);
+            renderSpecificBarResult(dpSpecific, VIEW_MODE.star2, { chart: 'resultChartSpecific2' }, `특정 픽업 기대 수: 약 <strong>${expected.toFixed(3)}장</strong><br><span style="font-size:0.85rem; color:#dc3545;">(천장 버튼이 활성화 된 경우 천장은 무조건 특정 픽업을 가져오는 것으로 설정되어 있습니다.)</span><br><span style="font-size:0.85rem; color:#666;">(가장 많이 돌린 그룹에 속해있다는 가정)</span><br>`, this.chartRefs.specific);
         }
     }
 

@@ -24,7 +24,8 @@ export class BaseGachaModule {
         this.chartRefs = {
             collection: { current: null },
             total: { current: null },
-            specific: { current: null }
+            specific: { current: null },
+            efficiency: { current: null }
         };
         
         // 초기화 중에는 콜백 실행을 방지하기 위한 플래그

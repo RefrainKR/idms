@@ -1,8 +1,9 @@
 import { BaseGachaModule } from './BaseGachaModule.js';
-import { CONFIG, TOGGLE_STATES } from '../config.js';
+import { CONFIG } from '../config.js';
 import { VIEW_MODE, CEILING_MODE, RANDOM_MODE, STEP4_MODE } from '../state.js';
 import * as MathCore from '../lib/math/core.js';
 import { renderResultCommon, renderTotalBarResult, renderSpecificBarResult } from '../lib/ui/uiHelper.js';
+import { renderLineChart } from '../lib/ui/chartHandler.js';
 import { formatProbability } from '../lib/ui/formatter.js';
 
 export class Star3Module extends BaseGachaModule {
@@ -144,7 +145,148 @@ export class Star3Module extends BaseGachaModule {
             renderTotalBarResult(dpTotal, VIEW_MODE.star3, { chart: 'resultChartTotal3' }, `3성 평균 기대 획득 수: 약 <strong>${expected.toFixed(3)}개</strong>`, this.chartRefs.total);
         } else if (activeSubTab === 'res-3s-specific') {
             let expected = dpSpecific.reduce((acc, p, i) => acc + i * p, 0);
-            renderSpecificBarResult(dpSpecific, VIEW_MODE.star3, { chart: 'resultChartSpecific3' }, `특정 픽업 기대 수: 약 <strong>${expected.toFixed(3)}장</strong><br><span style="font-size:0.85rem; color:#dc3545;">(천장 포함 버튼이 활성화 되어있는지 주의하세요.)</span>`, this.chartRefs.specific);
+            renderSpecificBarResult(dpSpecific, VIEW_MODE.star3, { chart: 'resultChartSpecific3' }, `특정 픽업 기대 수: 약 <strong>${expected.toFixed(3)}장</strong><br><span style="font-size:0.85rem; color:#dc3545;">(천장 버튼이 활성화 된 경우 천장은 무조건 특정 픽업을 가져오는 것으로 설정되어 있습니다.)</span>`, this.chartRefs.specific);
+        } else if (activeSubTab === 'res-3s-efficiency') {
+            this.renderEfficiencyComparison();
+        }
+    }
+
+    renderEfficiencyComparison() {
+        const N = this.inputs['pickupCount'].getValue();
+        const p_indiv = this.inputs['pickupRate'].getValue() / 100;
+        const p_step4_total = this.inputs['step4Rate'].getValue() / 100;
+        const maxLoops = this.inputs['maxLoops'].getValue();
+        const stepupLimit = maxLoops * 40;
+
+        const loopRewards = {};
+        for (let i = 1; i <= maxLoops; i++) {
+            loopRewards[i] = document.getElementById(`rewardLoop${i}`)?.value || 'none';
+        }
+
+        const labels = [];
+        const normalData = [];
+        const stepupData = [];
+        
+        // 0회 ~ 200회 시뮬레이션
+        for (let pulls = 0; pulls <= 200; pulls++) {
+            labels.push(pulls);
+
+            // 1. 일반 가챠 계산
+            let dpN = new Array(N + 1).fill(0); dpN[0] = 1.0;
+            for (let i = 0; i < pulls; i++) dpN = MathCore.runGacha(dpN, p_indiv);
+            
+            // [수정] 천장 모드가 'included'일 때만 일반 천장(200회) 적용
+            if (CEILING_MODE.star3 === 'included') {
+                const nCeil = Math.floor(pulls / 200);
+                for (let i = 0; i < nCeil; i++) dpN = MathCore.runSelectTicket(dpN);
+            }
+            
+            normalData.push((dpN[N] * 100).toFixed(2));
+
+            // 2. 스탭업 가챠 계산
+            let dpS = new Array(N + 1).fill(0); dpS[0] = 1.0;
+            for (let i = 1; i <= pulls; i++) {
+                const isStep4 = (i % 40 === 0);
+                const curLoop = Math.ceil(i / 40);
+                const isWithinStepup = (i <= stepupLimit);
+                const useStep4 = (isStep4 && isWithinStepup && STEP4_MODE.star3 === 'included');
+                
+                const p = useStep4 ? (p_step4_total / N) : p_indiv;
+                dpS = MathCore.runGacha(dpS, p);
+
+                if (isStep4 && isWithinStepup) {
+                    const reward = loopRewards[curLoop];
+                    if (reward === 'random' && RANDOM_MODE.star3 === 'included') dpS = MathCore.runRandomPickup(dpS);
+                    // [수정] 천장 모드가 'included'일 때만 주회 보상(셀렉) 적용
+                    else if (reward === 'select' && CEILING_MODE.star3 === 'included') dpS = MathCore.runSelectTicket(dpS);
+                }
+            }
+            
+            // [수정] 천장 모드가 'included'일 때만 스탭업 중 일반 천장(200회) 적용
+            if (CEILING_MODE.star3 === 'included') {
+                const sCeil = Math.floor(pulls / 200);
+                for (let i = 0; i < sCeil; i++) dpS = MathCore.runSelectTicket(dpS);
+            }
+            
+            stepupData.push((dpS[N] * 100).toFixed(2));
+        }
+
+        this.drawEfficiencyChart(labels, normalData, stepupData, stepupLimit);
+    }
+
+    drawEfficiencyChart(labels, normalData, stepupData, limit) {
+        // [포인트 크기] 0회(3), 40배수(6), 10배수(3), 나머지(0)
+        const getPointRadius = (ctx) => {
+            const idx = ctx.dataIndex;
+            if (idx === 0) return 3;
+            if (idx % 40 === 0) return 6;
+            if (idx % 10 === 0) return 3;
+            return 0; // 평소에는 점을 숨김
+        };
+
+        // [호버 효과] 10배수일 때만 호버 원을 그림 (나머지는 0)
+        const getHoverRadius = (ctx) => {
+            const idx = ctx.dataIndex;
+            return (idx % 10 === 0) ? 6 : 0; 
+        };
+
+        const datasets = [
+            {
+                label: '스탭업 가챠',
+                data: stepupData,
+                borderColor: '#45a247',
+                backgroundColor: 'rgba(69, 162, 71, 0.1)',
+                fill: true,
+                tension: 0.1, // 계단 현상을 잘 표현하기 위해 텐션을 낮춤
+                
+                pointRadius: getPointRadius,
+                // [핵심] 10단위가 아니면 마우스를 올려도 점이 커지지 않음
+                pointHoverRadius: getHoverRadius, 
+                
+                pointBackgroundColor: (ctx) => (ctx.dataIndex % 40 === 0 ? '#45a247' : '#fff'),
+                pointBorderColor: '#45a247',
+                borderWidth: 2
+            },
+            {
+                label: '일반 가챠',
+                data: normalData,
+                borderColor: '#283c86',
+                borderDash: [5, 5],
+                tension: 0.1,
+                
+                pointRadius: (ctx) => (ctx.dataIndex % 10 === 0 ? 2 : 0),
+                // [핵심] 일반 가챠 라인도 동일하게 적용
+                pointHoverRadius: getHoverRadius,
+                
+                pointBackgroundColor: '#283c86',
+                borderWidth: 1.5
+            }
+        ];
+
+        renderLineChart('efficiencyChart', labels, datasets, this.chartRefs.efficiency);
+
+        // 요약 텍스트 (limit 지점 데이터 찾기)
+        const summaryEl = document.getElementById('globalSummary');
+        if (summaryEl) {
+            // 데이터가 1회 단위이므로 limit(예: 80)을 그대로 인덱스로 사용 가능
+            const limitIdx = limit; 
+            const gap = (stepupData[limitIdx] - normalData[limitIdx]).toFixed(1);
+            
+            summaryEl.innerHTML = `
+                <strong>효율 분석 결과</strong><br>
+                최대 효율 지점(${limit}회)에서 스탭업 가챠의 성공 확률이 일반 가챠보다 
+                <span style="color:#45a247; font-weight:bold;">약 ${gap}%p</span> 더 높습니다.<br>
+                <span style="font-size:0.85rem; color:#dc3545;">검증이 아직 이루어지지 않은 기능입니다.</span><br>
+                <span style="font-size:0.9rem; color:#666;">* 올컴플릿을 기준으로 한 그래프입니다.</span><br>
+                <span style="font-size:0.9rem; color:#666;">* ${limit}회 이후부터는 일반 가챠와 동일한 확률 곡선을 그리게 됩니다.</span>
+            `;
+        }
+
+        // 2. [수정] 상세 계산 근거 영역 숨기기
+        const logicEl = document.getElementById('globalLogic');
+        if (logicEl) {
+            logicEl.style.display = 'none';
+            logicEl.innerHTML = ''; // 내용도 비워둠
         }
     }
 

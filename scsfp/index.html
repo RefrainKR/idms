@@ -100,6 +100,7 @@
                         <button class="tab-button sub-tab-btn active" data-tab="res-3s-collection">픽업 획득(중복X)</button>
                         <button class="tab-button sub-tab-btn" data-tab="res-3s-total">총 획득(중복O)</button>
                         <button class="tab-button sub-tab-btn" data-tab="res-3s-specific">특정 픽업(날개)</button>
+                        <button class="tab-button sub-tab-btn" data-tab="res-3s-efficiency">일반vs스탭업</button>
                     </div>
 
                     <div class="result-options-header">
@@ -135,6 +136,15 @@
                                 <div class="chart-row">
                                     <div class="chart-container" style="width: 100%; flex: none;"><canvas id="resultChartSpecific3"></canvas></div>
                                 </div>
+                            </div>
+                        </div>
+                        <!-- 결과 4: 일반vs스탭업 -->
+                        <div id="res-3s-efficiency" class="tab-content">
+                            <div class="result-area">
+                                <div class="chart-container" style="width: 100%; height: 400px;">
+                                    <canvas id="efficiencyChart"></canvas>
+                                </div>
+                                <div id="efficiencySummary" class="summary" style="margin-top: 20px;"></div>
                             </div>
                         </div>
                     </div>
