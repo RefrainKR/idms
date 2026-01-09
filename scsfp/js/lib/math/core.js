@@ -89,7 +89,7 @@ export function transformData(dp, mode) {
     return newDP;
 }
 
-// [신규] 총 획득 수 DP: 일반/스탭업 확률 시행
+// 총 획득 수 DP: 일반/스탭업 확률 시행
 // dp[k] = 총 k개 먹을 확률
 export function runTotalCountGacha(currentDP, p_total) {
     const size = currentDP.length;
@@ -109,7 +109,7 @@ export function runTotalCountGacha(currentDP, p_total) {
     return nextDP;
 }
 
-// [신규] 총 획득 수 DP: 확정 획득 (무조건 +1)
+// 총 획득 수 DP: 확정 획득 (무조건 +1)
 export function runGuaranteedTotal(currentDP) {
     const size = currentDP.length;
     let nextDP = new Array(size + 1).fill(0);
@@ -118,6 +118,33 @@ export function runGuaranteedTotal(currentDP) {
         if (currentDP[k] === 0) continue;
         // 무조건 1개 증가 (Shift Right)
         nextDP[k+1] = currentDP[k];
+    }
+    return nextDP;
+}
+
+// 특정 부분 집합(Subset) 랜덤권 로직
+// currentDP: 내 타겟(M개)에 대한 수집 상태 배열
+// totalN: 전체 픽업 캐릭터 수 (Pool Size)
+export function runRandomSubset(currentDP, totalN) {
+    const M = currentDP.length - 1; // 타겟의 수
+    let nextDP = new Array(M + 1).fill(0);
+
+    for (let k = 0; k <= M; k++) {
+        if (currentDP[k] === 0) continue;
+        
+        // 이미 타겟을 다 모았으면 유지
+        if (k === M) {
+            nextDP[M] += currentDP[k];
+        } else {
+            // 새로운 타겟 획득 확률: (남은 타겟 수) / (전체 풀 크기)
+            let p_new = (M - k) / totalN;
+            
+            // 기존 상태 유지(꽝 or 중복) 확률
+            let p_stay = 1.0 - p_new;
+
+            nextDP[k] += currentDP[k] * p_stay;
+            nextDP[k+1] += currentDP[k] * p_new;
+        }
     }
     return nextDP;
 }

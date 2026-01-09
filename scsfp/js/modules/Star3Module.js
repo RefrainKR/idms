@@ -40,13 +40,25 @@ export class Star3Module extends BaseGachaModule {
     calculate() {
         if (this.isInitializing || !this.inputs['pickupCount']) return;
 
-        const N = this.inputs['pickupCount'].getValue();
+        const N = this.inputs['pickupCount'].getValue(); // 전체 픽업 수
+        
+        // [수정] 저격 픽업 수 처리 로직 (0 또는 비어있으면 전체 N으로 간주)
+        let targetVal = this.inputs['targetCount'].getValue();
+        let M = (targetVal === 0 || !targetVal) ? N : targetVal;
+        
+        // 입력값 유효성 보정 (M은 N보다 클 수 없음)
+        if (M > N) {
+            M = N;
+            this.inputs['targetCount'].setValue(N, false);
+        }
+
         const p_indiv_percent = this.inputs['pickupRate'].getValue();
         const p_step4_total_percent = this.inputs['step4Rate'].getValue();
         const normalPulls = this.inputs['normalPulls'].getValue();
         const stepPulls = this.inputs['stepPulls'].getValue();
         const maxLoops = this.inputs['maxLoops'].getValue();
 
+        // 루프 보상 읽기
         let loopRewards = {};
         for (let i = 1; i <= maxLoops; i++) {
             const el = document.getElementById(`rewardLoop${i}`);
@@ -54,44 +66,54 @@ export class Star3Module extends BaseGachaModule {
         }
 
         const p_normal_one = p_indiv_percent / 100;
-        const p_step4_one = (p_step4_total_percent / 100) / N;
-        const p_normal_all = p_normal_one * N;
-        const p_step4_all = p_step4_total_percent / 100;
-        const p_specific_random_ticket = 1.0 / N;
+        const p_step4_one = (p_step4_total_percent / 100) / N; // 개별 확률은 항상 N 기준
+        
+        // DP 배열 초기화: 저격 대상 M명 기준
+        let dp = new Array(M + 1).fill(0); dp[0] = 1.0; 
+        let dpTotal = [1.0]; 
+        let dpSpecific = [1.0]; 
 
-        let dp = new Array(N + 1).fill(0); dp[0] = 1.0;
-        let dpTotal = [1.0], dpSpecific = [1.0];
         let countStep4 = 0, countNormal = normalPulls;
         let randomRewardCount = 0, selectRewardCount = 0;
 
-        // 1. 일반 가챠 시행
+        // 1. 일반 가챠
+        // 저격 대상 M명 중 하나가 나올 확률 = p_normal_one
+        // 총 획득 대상 확률 = p_normal_one * M
+        const p_target_any_normal = p_normal_one * M;
+
         for (let i = 0; i < normalPulls; i++) {
+            // 수집: (M-k) * p_one 확률로 새로운 저격 대상 획득
             dp = MathCore.runGacha(dp, p_normal_one);
-            dpTotal = MathCore.runTotalCountGacha(dpTotal, p_normal_all);
+            dpTotal = MathCore.runTotalCountGacha(dpTotal, p_target_any_normal);
             dpSpecific = MathCore.runTotalCountGacha(dpSpecific, p_normal_one);
         }
 
-        // 2. 스탭업 가챠 시행
+        // 2. 스탭업 가챠
         for (let i = 1; i <= stepPulls; i++) {
             const isStep4 = (i % 40 === 0);
             if (isStep4) countStep4++; else countNormal++;
+            
             const useStep4 = (isStep4 && STEP4_MODE.star3 === 'included');
             const curP1 = useStep4 ? p_step4_one : p_normal_one;
-            const curPall = useStep4 ? p_step4_all : p_normal_all;
+            const curPAny = curP1 * M;
 
             dp = MathCore.runGacha(dp, curP1);
-            dpTotal = MathCore.runTotalCountGacha(dpTotal, curPall);
+            dpTotal = MathCore.runTotalCountGacha(dpTotal, curPAny);
             dpSpecific = MathCore.runTotalCountGacha(dpSpecific, curP1);
 
             if (isStep4) {
                 const loopIdx = i / 40;
-                const reward = document.getElementById(`rewardLoop${loopIdx}`)?.value || 'none';
-                loopRewards[loopIdx] = reward;
-                if (reward === 'random' && RANDOM_MODE.star3 === 'included') {
-                    dp = MathCore.runRandomPickup(dp);
-                    dpTotal = MathCore.runGuaranteedTotal(dpTotal);
-                    dpSpecific = MathCore.runTotalCountGacha(dpSpecific, p_specific_random_ticket);
+                const reward = loopRewards[loopIdx];
+                
+                if (reward === 'random') {
                     randomRewardCount++;
+                    if (RANDOM_MODE.star3 === 'included') {
+                        // [핵심] 랜덤권: 전체 N명 중 저격 대상 M명 수집 확률 (runRandomSubset)
+                        dp = MathCore.runRandomSubset(dp, N);
+                        // 총 획득: M/N 확률로 저격 대상 획득
+                        dpTotal = MathCore.runTotalCountGacha(dpTotal, M / N);
+                        dpSpecific = MathCore.runTotalCountGacha(dpSpecific, 1.0 / N);
+                    }
                 } else if (reward === 'select') {
                     selectRewardCount++;
                 }
@@ -99,24 +121,26 @@ export class Star3Module extends BaseGachaModule {
         }
 
         // 3. 천장 처리
+        // [수정] 변수 선언 위치 문제 해결 (미리 계산)
         const normalCeiling = Math.floor((normalPulls + stepPulls) / 200);
         const totalCeilingCount = selectRewardCount + normalCeiling;
+
         if (CEILING_MODE.star3 === 'included') {
             for (let i = 0; i < totalCeilingCount; i++) {
-                dp = MathCore.runSelectTicket(dp);
-                dpTotal = MathCore.runGuaranteedTotal(dpTotal);
-                dpSpecific = MathCore.runGuaranteedTotal(dpSpecific);
+                dp = MathCore.runSelectTicket(dp); // 없는 저격 대상 확정
+                dpTotal = MathCore.runGuaranteedTotal(dpTotal); // 저격 대상 수 +1
+                dpSpecific = MathCore.runGuaranteedTotal(dpSpecific); // 특정 1명 +1
             }
         }
 
-        // 4. 결과 데이터 셋업
-        this.cache = { N, dp, dpTotal, dpSpecific, context: {
-            N, p_indiv_percent, p_step4_total_percent, countNormal, countStep4,
+        // 캐시 저장 (N, M 모두 저장)
+        this.cache = { N, M, dp, dpTotal, dpSpecific, context: {
+            N, M, p_indiv_percent, p_step4_total_percent, countNormal, countStep4,
             totalPulls: normalPulls + stepPulls, normalPulls, stepPulls,
             randomRewardCount, totalCeilingCount, selectRewardCount, normalCeiling,
             maxLoops, loopRewards
         }};
-
+        
         this.saveData({ loopRewards });
         this.renderUI();
     }
@@ -126,23 +150,25 @@ export class Star3Module extends BaseGachaModule {
         const mainTab = document.getElementById('tab-3star');
         if (!this.cache || (mainTab && !mainTab.classList.contains('active'))) return;
 
-        const { N, dp, dpTotal, dpSpecific, context } = this.cache;
+        const { N, M, dp, dpTotal, dpSpecific, context } = this.cache;
         const activeSubTab = document.querySelector('#sub-tab-system-3star .tab-button.active')?.dataset.tab;
         const ids = { chart: 'resultChart', legend: 'legendList', summary: 'globalSummary', logic: 'globalLogic' };
 
         if (activeSubTab === 'res-3s-collection') {
-            renderResultCommon(N, dp, MathCore.transformData(dp, VIEW_MODE.star3), VIEW_MODE.star3, ids, {
+            renderResultCommon(M, dp, MathCore.transformData(dp, VIEW_MODE.star3), VIEW_MODE.star3, ids, {
                 summary: () => `
-                    가챠 횟수 : ${context.totalPulls}회 (일반 ${context.normalPulls} + 스탭업 ${context.stepPulls})<br>
-                    랜덤 교환(픽업 티켓) : ${context.randomRewardCount}회<br>
-                    천장 교환(셀렉 티켓) : ${context.totalCeilingCount}회 (통합 ${context.normalCeiling} + 스탭업 ${context.selectRewardCount})<br>
-                    <strong>올컴플릿 확률 : ${formatProbability(dp[N])}</strong>
+                    저격(${M}개) 올컴플릿 확률 : <strong>${formatProbability(dp[M])}</strong><br>
+                    <span style="font-size:0.85rem; color:#666;">* 저격 픽업 ${M}개를 모두 모을 확률입니다.</span>
                 `,
                 logic: () => this.generateLogicHtml(context)
             }, this.chartRefs.collection);
-        } else if (activeSubTab === 'res-3s-total') {
+        } 
+        else if (activeSubTab === 'res-3s-total') {
             let expected = dpTotal.reduce((acc, p, i) => acc + i * p, 0);
-            renderTotalBarResult(dpTotal, VIEW_MODE.star3, { chart: 'resultChartTotal3' }, `3성 평균 기대 획득 수: 약 <strong>${expected.toFixed(3)}개</strong>`, this.chartRefs.total);
+            renderTotalBarResult(dpTotal, VIEW_MODE.star3, { chart: 'resultChartTotal3' }, 
+                `저격(${M}개) 총 획득 기대 수: 약 <strong>${expected.toFixed(3)}개</strong><br>
+                 <span style="font-size:0.85rem; color:#666;">* 저격 픽업 ${M}개의 획득 개수 합계입니다.</span>`, 
+                this.chartRefs.total);
         } else if (activeSubTab === 'res-3s-specific') {
             let expected = dpSpecific.reduce((acc, p, i) => acc + i * p, 0);
             renderSpecificBarResult(dpSpecific, VIEW_MODE.star3, { chart: 'resultChartSpecific3' }, `특정 픽업 기대 수: 약 <strong>${expected.toFixed(3)}장</strong><br><span style="font-size:0.85rem; color:#dc3545;">(천장 버튼이 활성화 된 경우 천장은 무조건 특정 픽업을 가져오는 것으로 설정되어 있습니다.)</span>`, this.chartRefs.specific);

@@ -9,7 +9,8 @@ export const CONFIG = {
             { id: 'maxLoops', min: 0, max: 10, def: 2 },
             { id: 'step4Rate', min: 0, max: 100, def: 20 },
             { id: 'normalPulls', min: 0, max: 9999, def: 0 },
-            { id: 'stepPulls', min: 0, max: 120, def: 0 }
+            { id: 'stepPulls', min: 0, max: 120, def: 0 },
+            { id: 'targetCount', min: 0, max: 100, def: 0 }
         ]
     },
     STAR2: {
