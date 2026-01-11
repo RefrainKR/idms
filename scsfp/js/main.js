@@ -59,39 +59,12 @@ window.onload = function() {
         star2.renderUI();
     });
 
-    // 7. 리셋 및 프리셋 버튼 이벤트 연결
+    // 7. 리셋 버튼 이벤트 연결
     document.getElementById('resetBtn3')?.addEventListener('click', () => star3.reset());
     document.getElementById('resetBtn2')?.addEventListener('click', () => star2.reset());
 
-    // 8. 3성 프리셋 버튼 연결
-    // 일반 가챠 프리셋: 2픽업, 1%, 2주회(2주회차 랜덤권)
-    document.getElementById('presetGeneralBtn')?.addEventListener('click', () => {
-        star3.applyPreset({ 
-            pickupCount: 2, pickupRate: 1, maxLoops: 2, step4Rate: 20, 
-            rewards: { 2: 'random' } 
-        });
-    });
-
-    // 9. 마지막 확인: 현재 활성화된 탭의 UI를 다시 한 번 호출하여 초기 화면을 확정함
+    // 8. 마지막 확인: 현재 활성화된 탭의 UI를 다시 한 번 호출하여 초기 화면을 확정함
     const currentMainTab = document.querySelector('.tab-button.active')?.dataset.tab;
     if (currentMainTab === 'tab-3star') star3.renderUI();
     else if (currentMainTab === 'tab-2star') star2.renderUI();
-
-    
-    // 생일 가챠 프리셋: 1픽업, 1.5%, 주회 없음
-    document.getElementById('presetBirthdayBtn')?.addEventListener('click', () => {
-        star3.applyPreset({ 
-            pickupCount: 1, pickupRate: 1.5, maxLoops: 0, step4Rate: 0, 
-            rewards: {} 
-        });
-    });
-
-    // PJ 한정 가챠 프리셋: 4픽업, 1%, 3주회(2주 랜덤, 3주 셀렉)
-    document.getElementById('presetPJBtn')?.addEventListener('click', () => {
-        star3.applyPreset({ 
-            pickupCount: 4, pickupRate: 1, maxLoops: 3, step4Rate: 40, 
-            rewards: { 2: 'random', 3: 'select' } 
-        });
-    });
-
 };

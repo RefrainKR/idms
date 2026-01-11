@@ -12,7 +12,44 @@ export class Star3Module extends BaseGachaModule {
     }
 
     init() {
-        super.initInputs((savedData) => this.updateLoopSettings(savedData.loopRewards || {}));
+        super.initInputs((savedData) => {
+            this.updateLoopSettings(savedData.loopRewards || {});
+            
+            // 프리셋 버튼 동적 생성
+            this.renderPresetButtons();
+            
+            // 타겟 수 입력 이벤트 바인딩 (기존 코드)
+            const targetInput = document.getElementById('targetCount'); // ID 변경 반영
+            if (targetInput) {
+                targetInput.addEventListener('change', () => {
+                    const N = this.inputs['pickupCount'].getValue();
+                    let val = parseInt(targetInput.value) || 0;
+                    if (val > N) { val = N; targetInput.value = N; }
+                    this.renderUI();
+                });
+            }
+        });
+    }
+
+    renderPresetButtons() {
+        const container = document.getElementById('star3PresetContainer');
+        if (!container || !this.config.PRESETS) return;
+
+        container.innerHTML = ''; // 기존 내용 초기화
+
+        this.config.PRESETS.forEach(preset => {
+            const btn = document.createElement('button');
+            btn.className = 'preset-btn';
+            btn.textContent = preset.label;
+            btn.title = preset.title || `${preset.label} 설정 적용`;
+            
+            // 클릭 이벤트 연결
+            btn.addEventListener('click', () => {
+                this.applyPreset(preset.settings);
+            });
+
+            container.appendChild(btn);
+        });
     }
 
     updateLoopSettings(savedRewards = {}) {
@@ -179,6 +216,11 @@ export class Star3Module extends BaseGachaModule {
 
     renderEfficiencyComparison() {
         const N = this.inputs['pickupCount'].getValue();
+        // [수정] 저격 픽업 수 M 가져오기
+        let targetVal = this.inputs['targetCount'].getValue();
+        let M = (targetVal === 0 || !targetVal) ? N : targetVal;
+        if (M > N) M = N;
+
         const p_indiv = this.inputs['pickupRate'].getValue() / 100;
         const p_step4_total = this.inputs['step4Rate'].getValue() / 100;
         const maxLoops = this.inputs['maxLoops'].getValue();
@@ -193,48 +235,58 @@ export class Star3Module extends BaseGachaModule {
         const normalData = [];
         const stepupData = [];
         
-        // 0회 ~ 200회 시뮬레이션
+        // [수정] 타겟 확률 정의
+        const p_target_one = p_indiv; // 일반 개별 확률
+        const p_step4_target_one = (p_step4_total / N); // Step4 개별 확률
+
         for (let pulls = 0; pulls <= 200; pulls++) {
             labels.push(pulls);
 
-            // 1. 일반 가챠 계산
-            let dpN = new Array(N + 1).fill(0); dpN[0] = 1.0;
-            for (let i = 0; i < pulls; i++) dpN = MathCore.runGacha(dpN, p_indiv);
+            // 1. 일반 가챠 시뮬레이션
+            // 배열 크기를 M+1로 설정 (저격 대상 수집 상태)
+            let dpN = new Array(M + 1).fill(0); dpN[0] = 1.0;
             
-            // [수정] 천장 모드가 'included'일 때만 일반 천장(200회) 적용
+            // 일반 가챠에서는 (M-k) * p_target_one 확률로 수집
+            for (let i = 0; i < pulls; i++) dpN = MathCore.runGacha(dpN, p_target_one);
+            
+            // 일반 천장 (200회당 1개)
             if (CEILING_MODE.star3 === 'included') {
                 const nCeil = Math.floor(pulls / 200);
                 for (let i = 0; i < nCeil; i++) dpN = MathCore.runSelectTicket(dpN);
             }
-            
-            normalData.push((dpN[N] * 100).toFixed(2));
+            // [결과] M명 수집 완료 확률
+            normalData.push((dpN[M] * 100).toFixed(2));
 
-            // 2. 스탭업 가챠 계산
-            let dpS = new Array(N + 1).fill(0); dpS[0] = 1.0;
+            // 2. 스탭업 가챠 시뮬레이션
+            let dpS = new Array(M + 1).fill(0); dpS[0] = 1.0;
+            
             for (let i = 1; i <= pulls; i++) {
                 const isStep4 = (i % 40 === 0);
                 const curLoop = Math.ceil(i / 40);
                 const isWithinStepup = (i <= stepupLimit);
                 const useStep4 = (isStep4 && isWithinStepup && STEP4_MODE.star3 === 'included');
                 
-                const p = useStep4 ? (p_step4_total / N) : p_indiv;
+                const p = useStep4 ? p_step4_target_one : p_target_one;
                 dpS = MathCore.runGacha(dpS, p);
 
                 if (isStep4 && isWithinStepup) {
                     const reward = loopRewards[curLoop];
-                    if (reward === 'random' && RANDOM_MODE.star3 === 'included') dpS = MathCore.runRandomPickup(dpS);
-                    // [수정] 천장 모드가 'included'일 때만 주회 보상(셀렉) 적용
-                    else if (reward === 'select' && CEILING_MODE.star3 === 'included') dpS = MathCore.runSelectTicket(dpS);
+                    if (reward === 'random' && RANDOM_MODE.star3 === 'included') {
+                        // [핵심] 전체 N명 중 저격 대상 M명 수집 (runRandomSubset)
+                        dpS = MathCore.runRandomSubset(dpS, N);
+                    }
+                    else if (reward === 'select' && CEILING_MODE.star3 === 'included') {
+                        dpS = MathCore.runSelectTicket(dpS);
+                    }
                 }
             }
             
-            // [수정] 천장 모드가 'included'일 때만 스탭업 중 일반 천장(200회) 적용
             if (CEILING_MODE.star3 === 'included') {
                 const sCeil = Math.floor(pulls / 200);
                 for (let i = 0; i < sCeil; i++) dpS = MathCore.runSelectTicket(dpS);
             }
-            
-            stepupData.push((dpS[N] * 100).toFixed(2));
+            // [결과] M명 수집 완료 확률
+            stepupData.push((dpS[M] * 100).toFixed(2));
         }
 
         this.drawEfficiencyChart(labels, normalData, stepupData, stepupLimit);
@@ -303,7 +355,7 @@ export class Star3Module extends BaseGachaModule {
                 최대 효율 지점(${limit}회)에서 스탭업 가챠의 성공 확률이 일반 가챠보다 
                 <span style="color:#45a247; font-weight:bold;">약 ${gap}%p</span> 더 높습니다.<br>
                 <span style="font-size:0.85rem; color:#dc3545;">검증이 아직 이루어지지 않은 기능입니다.</span><br>
-                <span style="font-size:0.9rem; color:#666;">* 올컴플릿을 기준으로 한 그래프입니다.</span><br>
+                <span style="font-size:0.9rem; color:#666;">* 올컴플릿 기준 => 저격 픽업 수 기준으로 변경</span><br>
                 <span style="font-size:0.9rem; color:#666;">* ${limit}회 이후부터는 일반 가챠와 동일한 확률 곡선을 그리게 됩니다.</span>
             `;
         }
