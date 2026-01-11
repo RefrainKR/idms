@@ -16,8 +16,8 @@ export const CONFIG = {
     STAR2: {
         KEY: 'shani_gacha_2star',
         INPUTS: [
-            { id: 'rate2Star', min: 0, max: 100, def: 28 },
             { id: 'countNormal2', min: 1, max: 100, def: 28 },
+            { id: 'rate2Star', min: 0, max: 100, def: 28 },
             { id: 'pullsNormal2', min: 0, max: 9999, def: 0 },
             { id: 'countStepA', min: 1, max: 100, def: 8 }, { id: 'pullsStepA', min: 0, max: 9999, def: 0 },
             { id: 'countStepB', min: 1, max: 100, def: 7 }, { id: 'pullsStepB', min: 0, max: 9999, def: 0 },
