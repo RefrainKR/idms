@@ -129,16 +129,16 @@ export function renderLineChart(canvasId, labels, datasets, chartInstanceRef) {
             maintainAspectRatio: false,
             animation: false,
             interaction: {
-                mode: 'nearest', 
-                axis: 'x',
-                intersect: true // 중요: 마우스가 HitRadius 안에 들어와야만 툴팁 표시
+                mode: 'index', 
+                intersect: true
             },
             plugins: {
                 legend: { position: 'top', labels: { boxWidth: 12 } },
                 datalabels: { display: false },
                 tooltip: {
-                    // [핵심] 10회 단위가 아니면 툴팁을 아예 렌더링하지 않음
+                    // [핵심 2] 10단위 데이터만 툴팁 허용
                     filter: function(tooltipItem) {
+                        // 라벨이 10의 배수일 때만 표시 (0, 10, 20...)
                         return Number(tooltipItem.label) % 10 === 0;
                     },
                     callbacks: {
@@ -147,14 +147,15 @@ export function renderLineChart(canvasId, labels, datasets, chartInstanceRef) {
                             return ` ${label}: ${context.raw}%`;
                         },
                         footer: function(tooltipItems) {
+                            // 두 데이터가 모두 선택되었을 때만 차이 계산
                             if (tooltipItems.length < 2) return '';
                             const stepVal = parseFloat(tooltipItems[0].raw);
                             const normVal = parseFloat(tooltipItems[1].raw);
                             const diff = (stepVal - normVal).toFixed(2);
-                            return ` 차이: ${diff}%p`;
+                            return `     차이: ${diff}%p`;
                         }
                     },
-                    footerFont: { weight: 'bold' },
+                    footerFont: { weight: 'bold', size: 12 },
                     footerColor: '#45a247'
                 }
             },
