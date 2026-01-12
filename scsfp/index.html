@@ -10,7 +10,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
     
     <!-- CSS -->
-    <link rel="stylesheet" href="css/style.css?v=1.4.2">
+    <link rel="stylesheet" href="css/style.css?v=1.4.3">
 </head>
 <body>
 
@@ -101,7 +101,6 @@
                     <div class="tab-buttons sub-tab-nav">
                         <button class="tab-button sub-tab-btn active" data-tab="res-3s-collection">픽업 획득(중복X)</button>
                         <button class="tab-button sub-tab-btn" data-tab="res-3s-total">총 획득(중복O)</button>
-                        <button class="tab-button sub-tab-btn" data-tab="res-3s-specific">특정 픽업(날개)</button>
                         <button class="tab-button sub-tab-btn" data-tab="res-3s-efficiency">일반vs스탭업</button>
                     </div>
 
@@ -132,19 +131,18 @@
                                 </div>
                             </div>
                         </div>
-                        <!-- 결과 3: 특정 픽업 -->
-                        <div id="res-3s-specific" class="tab-content">
-                            <div class="result-area">
-                                <div class="chart-row">
-                                    <div class="chart-container" style="width: 100%; flex: none;"><canvas id="resultChartSpecific3"></canvas></div>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- 결과 4: 일반vs스탭업 -->
+                        <!-- 결과 3: 일반vs스탭업 -->
                         <div id="res-3s-efficiency" class="tab-content">
                             <div class="result-area">
-                                <div class="chart-container">
-                                    <canvas id="efficiencyChart"></canvas>
+                                <div style="display: flex; justify-content: flex-end; margin-bottom: 10px;">
+                                    <button id="btnToggleEfficiencyMode" class="view-toggle-btn btn-active" style="min-width: 65px;">
+                                        성공(%)
+                                    </button>
+                                </div>
+                                <div class="chart-scroll-wrapper">
+                                    <div class="chart-scroll-inner">
+                                        <canvas id="efficiencyChart"></canvas>
+                                    </div>
                                 </div>
                                 <div id="efficiencySummary" class="summary"></div>
                             </div>
@@ -279,7 +277,7 @@
     </div>
 </div>
 
-<script type="module" src="js/main.js?v=1.4.2"></script>
+<script type="module" src="js/main.js?v=1.4.3"></script>
 
 </body>
 </html>

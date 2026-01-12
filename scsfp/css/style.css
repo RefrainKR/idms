@@ -389,6 +389,21 @@ button { font-family: inherit; }
 .logic-list { margin: 0; padding-left: 20px; }
 .logic-list li { margin-bottom: 5px; }
 
+/* 차트 스크롤 래퍼 */
+.chart-scroll-wrapper {
+    width: 100%;
+    overflow-x: auto; /* 내용이 넘치면 가로 스크롤 */
+    -webkit-overflow-scrolling: touch; /* 부드러운 스크롤 */
+    padding-bottom: 10px; /* 스크롤바 공간 확보 */
+}
+
+/* 내부 차트 영역 */
+.chart-scroll-inner {
+    width: 100%;
+    height: 400px;
+    position: relative;
+}
+
 /* --- 7. Mobile Responsive --- */
 @media (max-width: 650px) {
     .section-content, 
@@ -411,4 +426,10 @@ button { font-family: inherit; }
     
     .group-row { flex-direction: column; align-items: flex-start; gap: 10px; }
     .group-inputs-container { width: 100%; gap: 8px; }
+
+    .chart-scroll-inner {
+        /* [핵심] 화면 너비보다 더 넓게 설정하여 강제 스크롤 유도 */
+        width: 150%; 
+        min-width: 600px; 
+    }
 }

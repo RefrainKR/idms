@@ -129,8 +129,9 @@ export function renderLineChart(canvasId, labels, datasets, chartInstanceRef) {
             maintainAspectRatio: false,
             animation: false,
             interaction: {
-                mode: 'index',
-                intersect: false, // 마우스가 선 근처에만 가도 반응하도록 설정 (단, 아래 필터로 제한됨)
+                mode: 'nearest', 
+                axis: 'x', // X축 기준 가장 가까운 점
+                intersect: false // 점 위에 없어도 반응
             },
             plugins: {
                 legend: { position: 'top', labels: { boxWidth: 12 } },
@@ -158,8 +159,21 @@ export function renderLineChart(canvasId, labels, datasets, chartInstanceRef) {
                 }
             },
             scales: {
-                y: { beginAtZero: true, max: 100, ticks: { callback: (v) => v + '%' } },
-                x: { title: { display: true, text: '가챠 횟수' }, grid: { display: false } }
+                y: {
+                    beginAtZero: true,
+                    max: 100,
+                    ticks: { callback: (value) => value + '%' }
+                },
+                x: {
+                    type: 'linear', // 선형 축 사용 (데이터가 숫자일 때)
+                    min: 0,
+                    max: 200,
+                    ticks: {
+                        stepSize: 20 // 20단위로 눈금 고정 (0, 20, 40...)
+                    },
+                    title: { display: true, text: '가챠 횟수' },
+                    grid: { display: false }
+                }
             }
         }
     });
