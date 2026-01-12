@@ -130,8 +130,8 @@ export function renderLineChart(canvasId, labels, datasets, chartInstanceRef) {
             animation: false,
             interaction: {
                 mode: 'nearest', 
-                axis: 'x', // X축 기준 가장 가까운 점
-                intersect: false // 점 위에 없어도 반응
+                axis: 'x',
+                intersect: true // 중요: 마우스가 HitRadius 안에 들어와야만 툴팁 표시
             },
             plugins: {
                 legend: { position: 'top', labels: { boxWidth: 12 } },

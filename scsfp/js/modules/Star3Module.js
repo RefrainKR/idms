@@ -341,7 +341,9 @@ export class Star3Module extends BaseGachaModule {
         };
         const getHitRadius = (ctx) => {
             const idx = ctx.dataIndex;
-            return (idx % 10 === 0) ? 15 : 0; 
+            // 10단위일 때만 터치 영역을 아주 넓게(30px) 잡음 -> 손가락으로 대충 눌러도 인식됨
+            // 1단위일 때는 0 -> 절대 인식 안 됨
+            return (idx % 10 === 0) ? 30 : 0; 
         };
 
         const datasets = [
@@ -353,7 +355,7 @@ export class Star3Module extends BaseGachaModule {
                 fill: true,
                 tension: 0.1,
                 pointRadius: getPointRadius,
-                pointHoverRadius: (ctx) => getPointRadius(ctx) + 2, 
+                pointHoverRadius: (ctx) => (ctx.dataIndex % 10 === 0 ? 8 : 0), 
                 pointHitRadius: getHitRadius, 
                 pointBackgroundColor: (ctx) => (ctx.dataIndex % 40 === 0 ? mainColor : '#fff'),
                 pointBorderColor: mainColor,
