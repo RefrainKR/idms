@@ -63,5 +63,24 @@ export const TOGGLE_STATES = {
     STEP4: [
         { name: 'included', text: 'Step4', isActive: true },
         { name: 'excluded', text: 'Step4', isActive: false }
+    ],
+    EFFICIENCY: [
+        { 
+            name: 'best', 
+            text: 'Best', 
+            isActive: true 
+            // 기본 스타일(초록색)은 CSS class(.btn-active)가 처리하므로 style 생략 가능
+        },
+        { 
+            name: 'worst', 
+            text: 'Worst', 
+            isActive: false, 
+            style: { 
+                backgroundColor: '#fff',
+                borderColor: '#dc3545',
+                color: '#dc3545',
+                textDecoration: 'none'
+            }
+        }
     ]
 };

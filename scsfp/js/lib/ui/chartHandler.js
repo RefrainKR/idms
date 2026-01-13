@@ -127,18 +127,19 @@ export function renderLineChart(canvasId, labels, datasets, chartInstanceRef) {
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            animation: false,
+            
+            // [최종 확정]
             interaction: {
-                mode: 'index', 
-                intersect: true
+                mode: 'index',   // X축이 같은 모든 데이터 표시 (일반+스탭업 비교용)
+                intersect: true  // 반드시 HitRadius 안에 들어와야 반응 (1단위 터치 무시용)
             },
+            
             plugins: {
                 legend: { position: 'top', labels: { boxWidth: 12 } },
                 datalabels: { display: false },
                 tooltip: {
-                    // [핵심 2] 10단위 데이터만 툴팁 허용
+                    // filter는 이제 없어도 HitRadius로 제어되지만, 안전장치로 유지해도 무방
                     filter: function(tooltipItem) {
-                        // 라벨이 10의 배수일 때만 표시 (0, 10, 20...)
                         return Number(tooltipItem.label) % 10 === 0;
                     },
                     callbacks: {
@@ -147,12 +148,11 @@ export function renderLineChart(canvasId, labels, datasets, chartInstanceRef) {
                             return ` ${label}: ${context.raw}%`;
                         },
                         footer: function(tooltipItems) {
-                            // 두 데이터가 모두 선택되었을 때만 차이 계산
                             if (tooltipItems.length < 2) return '';
                             const stepVal = parseFloat(tooltipItems[0].raw);
                             const normVal = parseFloat(tooltipItems[1].raw);
                             const diff = (stepVal - normVal).toFixed(2);
-                            return `     차이: ${diff}%p`;
+                            return ` 차이: ${diff}%p`;
                         }
                     },
                     footerFont: { weight: 'bold', size: 12 },
@@ -160,20 +160,17 @@ export function renderLineChart(canvasId, labels, datasets, chartInstanceRef) {
                 }
             },
             scales: {
-                y: {
-                    beginAtZero: true,
-                    max: 100,
-                    ticks: { callback: (value) => value + '%' }
-                },
-                x: {
-                    type: 'linear', // 선형 축 사용 (데이터가 숫자일 때)
-                    min: 0,
-                    max: 200,
+                y: { beginAtZero: true, max: 100, ticks: { callback: (v) => v + '%' } },
+                x: { 
+                    title: { display: true, text: '가챠 횟수' }, 
+                    grid: { display: false },
                     ticks: {
-                        stepSize: 20 // 20단위로 눈금 고정 (0, 20, 40...)
-                    },
-                    title: { display: true, text: '가챠 횟수' },
-                    grid: { display: false }
+                        maxTicksLimit: 21,
+                        callback: function(val) {
+                            const label = this.getLabelForValue(val);
+                            return Number(label) % 20 === 0 ? label : '';
+                        }
+                    }
                 }
             }
         }

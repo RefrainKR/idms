@@ -1,9 +1,9 @@
 import { Star3Module } from './modules/Star3Module.js';
 import { Star2Module } from './modules/Star2Module.js';
 import { TabManager } from './lib/utils/TabManager.js';
-import { ToggleButtonElement } from './lib/utils/ToggleButtonElement.js'; // 추가됨
-import { CollapsibleSection } from './lib/utils/CollapsibleSection.js'; // 추가됨
-import { TOGGLE_STATES } from './config.js'; // 추가됨
+import { ToggleButtonElement } from './lib/utils/ToggleButtonElement.js';
+import { CollapsibleSection } from './lib/utils/CollapsibleSection.js';
+import { TOGGLE_STATES } from './config.js';
 import { VIEW_MODE, CEILING_MODE, RANDOM_MODE, STEP4_MODE } from './state.js'; // 추가됨
 
 // Chart.js 플러그인 등록

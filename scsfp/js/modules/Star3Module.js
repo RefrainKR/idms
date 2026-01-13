@@ -1,10 +1,11 @@
 import { BaseGachaModule } from './BaseGachaModule.js';
-import { CONFIG } from '../config.js';
+import { CONFIG, TOGGLE_STATES } from '../config.js';
 import { VIEW_MODE, CEILING_MODE, RANDOM_MODE, STEP4_MODE } from '../state.js';
 import * as MathCore from '../lib/math/core.js';
-import { renderResultCommon, renderTotalBarResult, renderSpecificBarResult } from '../lib/ui/uiHelper.js';
+import { renderResultCommon, renderTotalBarResult } from '../lib/ui/uiHelper.js';
 import { renderLineChart } from '../lib/ui/chartHandler.js';
 import { formatProbability } from '../lib/ui/formatter.js';
+import { ToggleButtonElement } from '../lib/utils/ToggleButtonElement.js';
 
 export class Star3Module extends BaseGachaModule {
     constructor() {
@@ -31,35 +32,12 @@ export class Star3Module extends BaseGachaModule {
                 });
             }
 
-            // [신규] 효율 모드 토글 버튼 이벤트
-            const toggleBtn = document.getElementById('btnToggleEfficiencyMode');
-            if (toggleBtn) {
-                toggleBtn.addEventListener('click', () => {
-                    this.isWorstMode = !this.isWorstMode;
-                    this.updateEfficiencyToggleBtn(toggleBtn);
-                    this.renderEfficiencyComparison(); // 차트 재렌더링
-                });
-            }
+            new ToggleButtonElement('btnToggleEfficiencyMode', TOGGLE_STATES.EFFICIENCY, (name) => {
+                this.isWorstMode = (name === 'worst');
+                this.renderEfficiencyComparison(); // 차트 다시 그리기
+            });
         });
     }
-
-    // 버튼 UI 업데이트 헬퍼
-    updateEfficiencyToggleBtn(btn) {
-        if (this.isWorstMode) {
-            btn.textContent = "실패(%)";
-            btn.classList.remove('btn-active');
-            btn.style.borderColor = '#dc3545';
-            btn.style.color = '#dc3545';
-            btn.style.backgroundColor = '#fff';
-        } else {
-            btn.textContent = "성공(%)";
-            btn.classList.add('btn-active');
-            btn.style.borderColor = '';
-            btn.style.color = '';
-            btn.style.backgroundColor = '';
-        }
-    }
-
 
     renderPresetButtons() {
         const container = document.getElementById('star3PresetContainer');
@@ -239,7 +217,6 @@ export class Star3Module extends BaseGachaModule {
 
     renderEfficiencyComparison() {
         const N = this.inputs['pickupCount'].getValue();
-        // [수정] 저격 픽업 수 M 가져오기
         let targetVal = this.inputs['targetCount'].getValue();
         let M = (targetVal === 0 || !targetVal) ? N : targetVal;
         if (M > N) M = N;
@@ -255,34 +232,31 @@ export class Star3Module extends BaseGachaModule {
         }
 
         const labels = [];
-        const normalData = [];
-        const stepupData = [];
+        const normalData = []; // [{best: 0, worst: 100}, ...]
+        const stepupData = []; // [{best: 0, worst: 100}, ...]
         
-        // [수정] 타겟 확률 정의
-        const p_target_one = p_indiv; // 일반 개별 확률
-        const p_step4_target_one = (p_step4_total / N); // Step4 개별 확률
+        const p_target_one = p_indiv; 
+        const p_step4_target_one = (p_step4_total / N);
 
         for (let pulls = 0; pulls <= 200; pulls++) {
             labels.push(pulls);
 
-            // 1. 일반 가챠 시뮬레이션
-            // 배열 크기를 M+1로 설정 (저격 대상 수집 상태)
+            // --- 1. 일반 가챠 ---
             let dpN = new Array(M + 1).fill(0); dpN[0] = 1.0;
-            
-            // 일반 가챠에서는 (M-k) * p_target_one 확률로 수집
             for (let i = 0; i < pulls; i++) dpN = MathCore.runGacha(dpN, p_target_one);
             
-            // 일반 천장 (200회당 1개)
             if (CEILING_MODE.star3 === 'included') {
                 const nCeil = Math.floor(pulls / 200);
                 for (let i = 0; i < nCeil; i++) dpN = MathCore.runSelectTicket(dpN);
             }
-            // [결과] M명 수집 완료 확률
-            normalData.push((dpN[M] * 100).toFixed(2));
+            // Best: M명 다 모음, Worst: 0명 (하나도 못 모음)
+            normalData.push({ 
+                best: (dpN[M] * 100).toFixed(2), 
+                worst: (dpN[0] * 100).toFixed(2) 
+            });
 
-            // 2. 스탭업 가챠 시뮬레이션
+            // --- 2. 스탭업 가챠 ---
             let dpS = new Array(M + 1).fill(0); dpS[0] = 1.0;
-            
             for (let i = 1; i <= pulls; i++) {
                 const isStep4 = (i % 40 === 0);
                 const curLoop = Math.ceil(i / 40);
@@ -295,56 +269,46 @@ export class Star3Module extends BaseGachaModule {
                 if (isStep4 && isWithinStepup) {
                     const reward = loopRewards[curLoop];
                     if (reward === 'random' && RANDOM_MODE.star3 === 'included') {
-                        // [핵심] 전체 N명 중 저격 대상 M명 수집 (runRandomSubset)
                         dpS = MathCore.runRandomSubset(dpS, N);
-                    }
-                    else if (reward === 'select' && CEILING_MODE.star3 === 'included') {
+                    } else if (reward === 'select' && CEILING_MODE.star3 === 'included') {
                         dpS = MathCore.runSelectTicket(dpS);
                     }
                 }
             }
-            
             if (CEILING_MODE.star3 === 'included') {
                 const sCeil = Math.floor(pulls / 200);
                 for (let i = 0; i < sCeil; i++) dpS = MathCore.runSelectTicket(dpS);
             }
-            // [결과] M명 수집 완료 확률
-            stepupData.push((dpS[M] * 100).toFixed(2));
+            
+            stepupData.push({ 
+                best: (dpS[M] * 100).toFixed(2), 
+                worst: (dpS[0] * 100).toFixed(2) 
+            });
         }
 
-        this.drawEfficiencyChart(labels, normalData, stepupData, stepupLimit);
+        this.drawEfficiencyChart(labels, normalData, stepupData, stepupLimit, M);
     }
 
-    drawEfficiencyChart(labels, normalData, stepupData, limit) {
-        // [핵심] 모드에 따라 데이터 변환
-        let finalStepupData = stepupData;
-        let finalNormalData = normalData;
-        
-        if (this.isWorstMode) {
-            // 실패 확률 = 100 - 성공 확률
-            finalStepupData = stepupData.map(v => (100 - parseFloat(v)).toFixed(2));
-            finalNormalData = normalData.map(v => (100 - parseFloat(v)).toFixed(2));
-        }
+    // [2] 차트 렌더링 로직 수정
+    drawEfficiencyChart(labels, normalData, stepupData, limit, M) {
+        // 현재 모드에 맞는 데이터 추출
+        const modeKey = this.isWorstMode ? 'worst' : 'best';
+        const finalStepupData = stepupData.map(d => d[modeKey]);
+        const finalNormalData = normalData.map(d => d[modeKey]);
 
-        // 색상 설정 (성공: 초록, 실패: 빨강)
-        const mainColor = this.isWorstMode ? '#dc3545' : '#45a247'; // 빨강 / 초록
+        // 스타일 설정
+        const mainColor = this.isWorstMode ? '#dc3545' : '#45a247'; // 빨강 vs 초록
         const subColor = this.isWorstMode ? 'rgba(220, 53, 69, 0.1)' : 'rgba(69, 162, 71, 0.1)';
-        const normalColor = '#283c86'; // 일반 가챠는 파란색 유지
+        const normalColor = '#283c86';
 
-        // 포인트 스타일 함수들 (색상 변수 적용)
         const getPointRadius = (ctx) => {
             const idx = ctx.dataIndex;
             if (idx === 0) return 4;
             if (idx % 40 === 0) return 7;
-            if (idx % 10 === 0) return 5;
+            if (idx % 10 === 0) return 4;
             return 0;
         };
-        const getHitRadius = (ctx) => {
-            const idx = ctx.dataIndex;
-            // 10단위일 때만 터치 영역을 아주 넓게(30px) 잡음 -> 손가락으로 대충 눌러도 인식됨
-            // 1단위일 때는 0 -> 절대 인식 안 됨
-            return (idx % 10 === 0) ? 30 : 0; 
-        };
+        const getHitRadius = (ctx) => (ctx.dataIndex % 10 === 0 ? 30 : 0);
 
         const datasets = [
             {
@@ -355,11 +319,11 @@ export class Star3Module extends BaseGachaModule {
                 fill: true,
                 tension: 0.1,
                 pointRadius: getPointRadius,
-                pointHoverRadius: (ctx) => (ctx.dataIndex % 10 === 0 ? 8 : 0), 
-                pointHitRadius: getHitRadius, 
+                pointHoverRadius: (ctx) => getPointRadius(ctx) + 2,
+                pointHitRadius: getHitRadius,
                 pointBackgroundColor: (ctx) => (ctx.dataIndex % 40 === 0 ? mainColor : '#fff'),
                 pointBorderColor: mainColor,
-                borderWidth: 2,
+                borderWidth: 2
             },
             {
                 label: '일반 가챠',
@@ -377,36 +341,35 @@ export class Star3Module extends BaseGachaModule {
 
         renderLineChart('efficiencyChart', labels, datasets, this.chartRefs.efficiency);
 
-        // 요약 텍스트 업데이트 (Worst 모드 메시지 추가)
+        // 요약 텍스트 업데이트
         const summaryEl = document.getElementById('globalSummary');
         if (summaryEl) {
-            const limitIdx = limit; 
-            const gap = Math.abs(finalStepupData[limitIdx] - finalNormalData[limitIdx]).toFixed(1);
+            const limitIdx = limit;
             
-            // 모드에 따른 메시지 분기
+            // [수정] this.cache.M 대신 전달받은 M 사용 (안전)
+            const targetM = M; 
+            
             if (this.isWorstMode) {
-                 summaryEl.innerHTML = `
-                    <strong>리스크(실패) 분석 결과</strong><br>
-                    최대 효율 지점(${limit}회)에서 스탭업 가챠를 돌릴 경우, 일반 가챠보다 실패 확률이 
-                    <span style="color:#dc3545; font-weight:bold;">약 ${gap}%p</span> 더 낮습니다.<br>
-                    <span style="font-size:0.85rem; color:#666;">* 그래프가 낮을수록 더 안전함(실패 확률이 낮음)을 의미합니다.</span>
+                summaryEl.innerHTML = `
+                    <strong>⚠️ 리스크(폭사) 분석 결과</strong><br>
+                    최대 효율 지점(${limit}회)까지 돌려도, 스탭업 가챠의 경우 
+                    <span style="color:#dc3545; font-weight:bold;">약 ${finalStepupData[limitIdx]}%</span>의 확률로 
+                    저격 픽업(${targetM}종)을 <strong>단 한 명도 얻지 못할 수 있습니다.</strong><br>
+                    <span style="font-size:0.85rem; color:#666;">(일반 가챠 폭사 확률: ${finalNormalData[limitIdx]}%)</span>
                 `;
             } else {
-                 summaryEl.innerHTML = `
-                    <strong>효율(성공) 분석 결과</strong><br>
-                    최대 효율 지점(${limit}회)에서 스탭업 가챠의 성공 확률이 일반 가챠보다 
-                    <span style="color:#45a247; font-weight:bold;">약 ${gap}%p</span> 더 높습니다.<br>
-                    <span style="font-size:0.85rem; color:#666;">* ${limit}회 이후부터는 일반 가챠와 동일한 확률 곡선을 그리게 됩니다.</span>
+                summaryEl.innerHTML = `
+                    <strong>💡 성공(졸업) 분석 결과</strong><br>
+                    최대 효율 지점(${limit}회)에서 스탭업 가챠의 
+                    <strong>저격 ${targetM}종 올컴플릿 확률</strong>은 
+                    <span style="color:#45a247; font-weight:bold;">${finalStepupData[limitIdx]}%</span> 입니다.<br>
+                    <span style="font-size:0.85rem; color:#666;">(일반 가챠 성공 확률: ${finalNormalData[limitIdx]}%)</span>
                 `;
             }
         }
-
-        // 2. [수정] 상세 계산 근거 영역 숨기기
+        
         const logicEl = document.getElementById('globalLogic');
-        if (logicEl) {
-            logicEl.style.display = 'none';
-            logicEl.innerHTML = ''; // 내용도 비워둠
-        }
+        if (logicEl) { logicEl.style.display = 'none'; logicEl.innerHTML = ''; }
     }
 
     generateLogicHtml(ctx) {
