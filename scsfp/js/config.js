@@ -37,14 +37,19 @@ export const CONFIG = {
         INPUTS: [
             { id: 'countNormal2', min: 1, max: 100, def: 28 },
             { id: 'rate2Star', min: 0, max: 100, def: 28 },
-            { id: 'pullsNormal2', min: 0, max: 9999, def: 0 },
-            { id: 'countStepA', min: 1, max: 100, def: 8 }, { id: 'pullsStepA', min: 0, max: 9999, def: 0 },
-            { id: 'countStepB', min: 1, max: 100, def: 7 }, { id: 'pullsStepB', min: 0, max: 9999, def: 0 },
-            { id: 'countStepC', min: 1, max: 100, def: 7 }, { id: 'pullsStepC', min: 0, max: 9999, def: 0 },
-            { id: 'countStepD', min: 1, max: 100, def: 6 }, { id: 'pullsStepD', min: 0, max: 9999, def: 0 }
+            { id: 'pullsNormal2', min: 0, max: 9999, def: 0 }
         ]
     }
 };
+// 반복문으로 그룹별 필드 추가
+const groupDefaults = [8, 7, 7, 6];
+['A', 'B', 'C', 'D'].forEach((grp, idx) => {
+    CONFIG.STAR2.INPUTS.push(
+        { id: `countStep${grp}`, min: 1, max: 100, def: groupDefaults[idx] },
+        { id: `pullsStep${grp}`, min: 0, max: 9999, def: 0 },
+        { id: `targetCount${grp}`, min: 0, max: 100, def: 0 } // [신규] 저격 수
+    );
+});
 
 export const TOGGLE_STATES = {
     VIEW: [
@@ -82,5 +87,12 @@ export const TOGGLE_STATES = {
                 textDecoration: 'none'
             }
         }
+    ], 
+    // 2성 그룹 전환 버튼 상태
+    GROUPS: [
+        { name: 'A', text: 'Group A', isActive: true, style: { color: '#e91e63', borderColor: '#e91e63',  backgroundColor: '#fff' } }, // 핑크
+        { name: 'B', text: 'Group B', isActive: true, style: { color: '#2196f3', borderColor: '#2196f3',  backgroundColor: '#fff' } }, // 블루
+        { name: 'C', text: 'Group C', isActive: true, style: { color: '#ff9800', borderColor: '#ff9800',  backgroundColor: '#fff' } }, // 오렌지
+        { name: 'D', text: 'Group D', isActive: true, style: { color: '#9c27b0', borderColor: '#9c27b0', backgroundColor: '#fff' } }  // 퍼플
     ]
 };

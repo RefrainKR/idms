@@ -10,7 +10,6 @@ import { ToggleButtonElement } from '../lib/utils/ToggleButtonElement.js';
 export class Star3Module extends BaseGachaModule {
     constructor() {
         super('star3', CONFIG.STAR3);
-
         this.isWorstMode = false;
     }
 
@@ -37,6 +36,11 @@ export class Star3Module extends BaseGachaModule {
                 this.renderEfficiencyComparison(); // 차트 다시 그리기
             });
         });
+    }
+
+    onInputChange(id) {
+        if (id === 'maxLoops') this.updateLoopSettings();
+        this.calculate();
     }
 
     renderPresetButtons() {
@@ -75,11 +79,6 @@ export class Star3Module extends BaseGachaModule {
             container.appendChild(wrapper);
         }
         this.inputs['stepPulls'].setMax(maxLoops * 40);
-    }
-
-    onInputChange(id) {
-        if (id === 'maxLoops') this.updateLoopSettings();
-        this.calculate();
     }
 
     calculate() {
