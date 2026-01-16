@@ -318,7 +318,7 @@ export class Star2Module extends BaseGachaModule {
                 해당 그룹의 스탭업 가챠가 일반 가챠보다 ${modeText}이 압도적으로 
                 <span style="color:${mainColor}; font-weight:bold;">${compText} 유리합니다.</span><br>
                 <span style="font-size:0.85rem; color:#666;">
-                (${limit}%회 기준: 스탭업 ${sVal}% vs 일반 ${nVal}%)
+                (${limit}회 기준: 스탭업 ${sVal}% vs 일반 ${nVal}%)
                 </span>
             `;
         }
