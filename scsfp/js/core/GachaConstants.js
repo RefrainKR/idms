@@ -1,3 +1,5 @@
+
+
 export const EXCLUDE_SAVE_IDS = ['normalPulls', 'stepPulls', 'pullsNormal2', 'pullsStepA', 'pullsStepB', 'pullsStepC', 'pullsStepD'];
 
 export const CONFIG = {
@@ -9,8 +11,8 @@ export const CONFIG = {
             { id: 'maxLoops', min: 0, max: 10, def: 2 },
             { id: 'step4Rate', min: 0, max: 100, def: 20 },
             { id: 'normalPulls', min: 0, max: 9999, def: 0 },
-            { id: 'stepPulls', min: 0, max: 120, def: 0 },
-            { id: 'targetCount', min: 0, max: 100, def: 0 }
+            { id: 'stepPulls', min: 0, def: 0 },
+            { id: 'targetCount', min: 0, def: 0 }
         ], PRESETS: [
             {
                 id: 'presetGeneral',
@@ -47,15 +49,22 @@ const groupDefaults = [8, 7, 7, 6];
     CONFIG.STAR2.INPUTS.push(
         { id: `countStep${grp}`, min: 1, max: 100, def: groupDefaults[idx] },
         { id: `pullsStep${grp}`, min: 0, max: 9999, def: 0 },
-        { id: `targetCount${grp}`, min: 0, max: 100, def: 0 } // [신규] 저격 수
+        { id: `targetCount${grp}`, min: 0, def: 0 }
     );
 });
 
+// 확률 모드 상수 정의
+export const PROBABILITY_MODE = {
+    INDIVIDUAL: 'individual',
+    CUMULATIVE_LESS: 'cumulative_less',
+    CUMULATIVE_MORE: 'cumulative_more'
+};
+
 export const TOGGLE_STATES = {
     VIEW: [
-        { name: 'individual', text: '개별', isActive: true },
-        { name: 'cumulative_less', text: '누적(이하)', isActive: true },
-        { name: 'cumulative_more', text: '누적(이상)', isActive: true }
+        { name: PROBABILITY_MODE.INDIVIDUAL, text: '개별', isActive: true },
+        { name: PROBABILITY_MODE.CUMULATIVE_LESS, text: '누적(이하)', isActive: true },
+        { name: PROBABILITY_MODE.CUMULATIVE_MORE, text: '누적(이상)', isActive: true }
     ],
     CEILING: [
         { name: 'included', text: '천장', isActive: true },
@@ -70,29 +79,13 @@ export const TOGGLE_STATES = {
         { name: 'excluded', text: 'Step4', isActive: false }
     ],
     EFFICIENCY: [
-        { 
-            name: 'best', 
-            text: 'Best', 
-            isActive: true 
-            // 기본 스타일(초록색)은 CSS class(.btn-active)가 처리하므로 style 생략 가능
-        },
-        { 
-            name: 'worst', 
-            text: 'Worst', 
-            isActive: false, 
-            style: { 
-                backgroundColor: '#fff',
-                borderColor: '#dc3545',
-                color: '#dc3545',
-                textDecoration: 'none'
-            }
-        }
+        { name: 'best', text: 'Best', isActive: true },
+        { name: 'worst', text: 'Worst', isActive: false }
     ], 
-    // 2성 그룹 전환 버튼 상태
     GROUPS: [
-        { name: 'A', text: 'Group A', isActive: true, style: { color: '#e91e63', borderColor: '#e91e63',  backgroundColor: '#fff' } }, // 핑크
-        { name: 'B', text: 'Group B', isActive: true, style: { color: '#2196f3', borderColor: '#2196f3',  backgroundColor: '#fff' } }, // 블루
-        { name: 'C', text: 'Group C', isActive: true, style: { color: '#ff9800', borderColor: '#ff9800',  backgroundColor: '#fff' } }, // 오렌지
-        { name: 'D', text: 'Group D', isActive: true, style: { color: '#9c27b0', borderColor: '#9c27b0', backgroundColor: '#fff' } }  // 퍼플
+        { name: 'A', text: 'Group A', isActive: true },
+        { name: 'B', text: 'Group B', isActive: true },
+        { name: 'C', text: 'Group C', isActive: true },
+        { name: 'D', text: 'Group D', isActive: true }
     ]
 };

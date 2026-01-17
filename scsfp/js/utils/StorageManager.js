@@ -1,5 +1,5 @@
 
-export const storageManager = {
+export const StorageManager = {
     load(key, defaultValue = null) {
         const item = localStorage.getItem(key);
         if (item === null) {

@@ -267,6 +267,7 @@ button { font-family: inherit; }
 .btn-group { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 5px; }
 
 .view-toggle-btn {
+    transition: all 0.2s;
     padding: 6px 10px;
     border: 1px solid #ccc;
     border-radius: 4px;
@@ -274,24 +275,47 @@ button { font-family: inherit; }
     background-color: #fff;
     color: var(--primary-color);
 }
-.view-toggle-btn:hover { background-color: #f0f4ff; }
 
-.view-toggle-btn.btn-active {
+.view-toggle-btn[data-state="worst"] {
+    background-color: #fff !important;
+    color: #dc3545 !important;
+    border-color: #dc3545 !important;
+    text-decoration: none !important; /* Worst라고 해서 취소선을 긋지는 않음 */
+}
+
+/* --- 1. "활성(On)" 상태들의 공통 스타일 (초록색 계열) --- */
+.view-toggle-btn[data-state="included"],
+.view-toggle-btn[data-state="best"] {
     background-color: var(--primary-color);
     color: white;
     border-color: var(--primary-color);
 }
-.view-toggle-btn.btn-inactive {
+
+/* --- 2. "비활성(Off)" 상태들 중 취소선이 필요한 경우 (회색 계열) --- */
+.view-toggle-btn[data-state="excluded"] {
     background-color: #e9ecef;
     color: #888;
-    border-color: #ccc;
     text-decoration: line-through;
 }
-.view-toggle-btn.btn-mode {
-    background-color: var(--btn-active-bg);
+
+/* --- 3."Worst" 전용 스타일 (빨간색 계열, 취소선 없음) --- */
+.view-toggle-btn[data-state="worst"] {
+    color: #dc3545;
+    border-color: #dc3545;
+}
+
+/* --- 4. 2성 그룹별 전용 색상 --- */
+.view-toggle-btn[data-state="A"] { color: #e91e63; border-color: #e91e63; background-color: #fff; }
+.view-toggle-btn[data-state="B"] { color: #2196f3; border-color: #2196f3; background-color: #fff; }
+.view-toggle-btn[data-state="C"] { color: #ff9800; border-color: #ff9800; background-color: #fff; }
+.view-toggle-btn[data-state="D"] { color: #9c27b0; border-color: #9c27b0; background-color: #fff; }
+
+.view-toggle-btn[data-state="individual"],
+.view-toggle-btn[data-state="cumulative_less"],
+.view-toggle-btn[data-state="cumulative_more"] {
+    background-color: #6c757d;
+    border-color: #6c757d;
     color: white;
-    text-decoration: none;
-    border-color: var(--btn-active-bg);
 }
 
 /* 서브 탭 버튼 */
