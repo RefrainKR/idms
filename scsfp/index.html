@@ -10,7 +10,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
     
     <!-- CSS -->
-    <link rel="stylesheet" href="css/style.css?v=1.6.2">
+    <link rel="stylesheet" href="css/style.css?v=1.6.0">
 </head>
 <body>
 
@@ -20,8 +20,9 @@
     <!-- 메인 탭 시스템 -->
     <div id="main-tab-system">
         <div class="tab-buttons">
-            <button class="tab-button active" data-tab="tab-3star">3성 가챠</button>
-            <button class="tab-button" data-tab="tab-2star">2성 가챠</button>
+            <button class="tab-button active" data-tab="tab-3star">3성</button>
+            <button class="tab-button" data-tab="tab-birthday">생일</button>
+            <button class="tab-button" data-tab="tab-2star">2성</button>
         </div>
 
         <div class="tab-content-wrapper">
@@ -31,7 +32,6 @@
                 
                 <!-- 상단 컨트롤 (프리셋 & 리셋) -->
                 <div class="reset-area">
-                    <!-- 버튼들이 JS에 의해 이곳에 동적으로 생성됩니다 -->
                     <div class="preset-group" id="star3PresetContainer"></div>
                     <button id="resetBtn3" class="reset-btn" title="설정 초기화">↻</button>
                 </div>
@@ -69,7 +69,6 @@
                             <label for="step4Rate">Step4 픽업 확률 (%)</label>
                             <input type="number" id="step4Rate">
                         </div>
-                        <!-- JS에서 동적 생성되는 루프 보상 영역 -->
                         <div class="loop-rewards-container" id="loopRewardsArea"></div>
                     </div>
                 </div>
@@ -105,23 +104,18 @@
                     </div>
 
                     <div class="result-options-header">
-                        <!-- 왼쪽: 상시 노출 또는 일반 옵션 -->
                         <div class="btn-group left-group">
                             <button id="toggleCeilingBtn3" class="view-toggle-btn">천장</button>
                             <button id="toggleRandomBtn3" class="view-toggle-btn" data-role="calc-opt">랜덤</button>
                             <button id="toggleStep4Btn3" class="view-toggle-btn" data-role="calc-opt">Step4</button>
-                            <!-- [동적 제어] 수집/총획득 탭용 -->
                             <button id="toggleViewBtn3" class="view-toggle-btn" data-role="view-mode">개별</button>
                         </div>
-                        <!-- 오른쪽: 효율 탭 전용 -->
                         <div class="btn-group right-group">
-                            <!-- [동적 제어] 효율 탭용 -->
                             <button id="btnEfficiencyToggle3" class="view-toggle-btn" data-role="eff-mode" style="display:none;">Best</button>
                         </div>
                     </div>
 
                     <div class="tab-content-wrapper">
-                        <!-- 결과 1: 수집 -->
                         <div id="res-3s-collection" class="tab-content active">
                             <div class="result-area">
                                 <div class="chart-row">
@@ -130,7 +124,6 @@
                                 </div>
                             </div>
                         </div>
-                        <!-- 결과 2: 총 획득 -->
                         <div id="res-3s-total" class="tab-content">
                             <div class="result-area">
                                 <div class="chart-row">
@@ -138,7 +131,6 @@
                                 </div>
                             </div>
                         </div>
-                        <!-- 결과 3: 일반vs스탭업 -->
                         <div id="res-3s-efficiency" class="tab-content">
                             <div class="result-area">
                                 <div class="chart-scroll-wrapper">
@@ -152,16 +144,105 @@
                 </div>
             </div>
 
-            <!-- [Tab 2] 2성 가챠 -->
+            <!-- [Tab 2] 생일 가챠 -->
+            <div id="tab-birthday" class="tab-content">
+                <div class="reset-area">
+                    <div></div>
+                    <button id="resetBtnBirthday" class="reset-btn" title="설정 초기화">↻</button>
+                </div>
+
+                <div class="collapsible-container">
+                    <div class="section-header">
+                        <p class="section-title">기본 정보</p>
+                        <button class="toggle-btn">▼</button>
+                    </div>
+                    <div class="section-content">
+                        <div class="input-item">
+                            <label>픽업 개수</label>
+                            <input type="number" id="birthdayPickupCount" value="1" disabled>
+                        </div>
+                        <div class="input-item">
+                            <label>일반 픽업 확률 (%)</label>
+                            <input type="number" id="birthdayNormalRate" value="1.5" disabled>
+                        </div>
+                        <div class="input-item">
+                            <label>스탭업 픽업 확률 (%)</label>
+                            <input type="number" id="birthdayStepRate" value="2.0" disabled>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="collapsible-container">
+                    <div class="section-header">
+                        <p class="section-title">사용자 설정</p>
+                    </div>
+                    <div class="section-content">
+                        <div class="input-item">
+                            <label for="birthdayNormalPulls">일반 횟수</label>
+                            <input type="number" id="birthdayNormalPulls">
+                        </div>
+                        <div class="input-item">
+                            <label for="birthdayStepPulls">스탭업 횟수</label>
+                            <input type="number" id="birthdayStepPulls">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 생일 결과 영역 (서브 탭) -->
+                <div id="sub-tab-system-birthday" class="sub-tab-container">
+                    <div class="tab-buttons sub-tab-nav">
+                        <button class="tab-button sub-tab-btn active" data-tab="res-bd-collection">픽업 획득(중복X)</button>
+                        <button class="tab-button sub-tab-btn" data-tab="res-bd-total">총 획득(중복O)</button>
+                        <button class="tab-button sub-tab-btn" data-tab="res-bd-efficiency">일반vs스탭업</button>
+                    </div>
+
+                    <div class="result-options-header">
+                        <div class="btn-group left-group">
+                            <button id="toggleCeilingBtnBirthday" class="view-toggle-btn">천장</button>
+                            <button id="toggleViewBtnBirthday" class="view-toggle-btn" data-role="view-mode">개별</button>
+                        </div>
+                        <div class="btn-group right-group">
+                            <button id="btnEfficiencyToggleBirthday" class="view-toggle-btn" data-role="eff-mode" style="display:none;">Best</button>
+                        </div>
+                    </div>
+
+                    <div class="tab-content-wrapper">
+                        <div id="res-bd-collection" class="tab-content active">
+                            <div class="result-area">
+                                <div class="chart-row">
+                                    <div class="chart-container"><canvas id="resultChartBirthday"></canvas></div>
+                                    <div class="legend-container" id="legendListBirthday"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="res-bd-total" class="tab-content">
+                            <div class="result-area">
+                                <div class="chart-row">
+                                    <div class="chart-container" style="width: 100%; flex: none;"><canvas id="resultChartTotalBirthday"></canvas></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="res-bd-efficiency" class="tab-content">
+                            <div class="result-area">
+                                <div class="chart-scroll-wrapper">
+                                    <div class="chart-scroll-inner">
+                                        <canvas id="efficiencyChartBirthday"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- [Tab 3] 2성 가챠 -->
             <div id="tab-2star" class="tab-content">
                 
-                <!-- 상단 컨트롤 (리셋만 존재) -->
                 <div class="reset-area">
-                    <div></div> <!-- Flex spacer -->
+                    <div></div>
                     <button id="resetBtn2" class="reset-btn" title="설정 초기화">↻</button>
                 </div>
 
-                <!-- 입력 섹션 1: 일반 정보 -->
                 <div class="collapsible-container">
                     <div class="section-header">
                         <p class="section-title">기본 정보</p>
@@ -179,7 +260,6 @@
                     </div>
                 </div>
 
-                <!-- 입력 섹션 2: 스탭업 그룹 정보 -->
                 <div class="collapsible-container">
                     <div class="section-header">
                         <p class="section-title">스탭업 정보</p>
@@ -198,7 +278,6 @@
                     </div>
                 </div>
 
-                <!-- 입력 섹션 3:  -->
                 <div class="collapsible-container">
                     <div class="section-header">
                         <p class="section-title">사용자 설정</p>
@@ -243,23 +322,17 @@
                     <div class="result-options-header">
                         <div class="btn-group left-group">
                             <button id="toggleCeilingBtn2" class="view-toggle-btn">천장</button>
-                            
-                            <!-- [동적 제어] 수집/총획득 탭용 -->
                             <button id="toggleViewBtn2" class="view-toggle-btn" data-role="view-mode">개별</button>
                         </div>
 
                         <div class="btn-group right-group">
-                            <!-- [신규] 효율 탭용 그룹 선택 (ALL 없음) -->
                             <button id="btnGroupEfficiencyMode" class="view-toggle-btn" data-role="group-eff" style="display:none;">A</button>
-                            <!-- [신규] 수집/총획득용 그룹 선택 (ALL 포함) -->
                             <button id="btnGroupViewMode" class="view-toggle-btn" data-role="group-view" style="display:none;">All</button>
-                            <!-- [신규] 효율 탭용 Best/Worst -->
                             <button id="btnEfficiencyToggle2" class="view-toggle-btn" data-role="eff-mode" style="display:none;">Best</button>
                         </div>
                     </div>
 
                     <div class="tab-content-wrapper">
-                        <!-- 결과 1: 수집 -->
                         <div id="res-2s-collection" class="tab-content active">
                             <div class="result-area">
                                 <div class="chart-row">
@@ -268,7 +341,6 @@
                                 </div>
                             </div>
                         </div>
-                        <!-- 결과 2: 총 획득 -->
                         <div id="res-2s-total" class="tab-content">
                             <div class="result-area">
                                 <div class="chart-row">
@@ -276,7 +348,6 @@
                                 </div>
                             </div>
                         </div>
-                        <!-- 2성 효율 비교 탭 콘텐츠 -->
                         <div id="res-2s-efficiency" class="tab-content">
                             <div class="result-area">
                                 <div class="chart-scroll-wrapper">
@@ -300,7 +371,7 @@
     </div>
 </div>
 
-<script type="module" src="js/main.js?v=1.6.2"></script>
+<script type="module" src="js/main.js?v=1.6.0"></script>
 
 </body>
 </html>

@@ -196,6 +196,87 @@ export class GachaResultView extends ResultView {
     }
 
     // ==========================================
+    // 생일 가챠 화면 렌더링
+    // ==========================================
+    static renderBirthday(result, context, model, charts) {
+        const mainTab = document.getElementById('tab-birthday');
+        if (!mainTab || !mainTab.classList.contains('active')) return;
+
+        const activeSubTab = document.querySelector('#sub-tab-system-birthday .tab-button.active')?.dataset.tab;
+        const viewMode = model.viewMode.value;
+        const { N, M, dp, dpTotal } = result;
+
+        // 1. 픽업 획득 (Pie Chart)
+        if (activeSubTab === 'res-bd-collection') {
+            this.renderCollection(M, dp, viewMode,
+                { chart: 'resultChartBirthday', legend: 'legendListBirthday', summary: 'globalSummary', logic: 'globalLogic' },
+                {
+                    summary: () => `
+                        <strong>생일 가챠 결과</strong><br>
+                        가챠 횟수: ${context.totalPulls}회 (일반 ${context.normalPulls} + 스탭업 ${context.stepPulls})<br>
+                        천장 교환: ${context.ceilingCount}회<br>
+                        획득 확률: <strong>${Formatter.formatProbability(dp[M])}</strong>
+                        ${context.stepGuaranteed ? '<br><span style="color:#45a247;">✅ 스탭업 30회 확정 획득!</span>' : ''}
+                    `,
+                    logic: () => this._generateBirthdayLogic(context)
+                },
+                charts.collection
+            );
+        }
+        // 2. 총 획득 (Bar Chart)
+        else if (activeSubTab === 'res-bd-total') {
+            const expected = dpTotal.reduce((acc, p, i) => acc + i * p, 0);
+            this.renderTotalCount(dpTotal, viewMode,
+                { chart: 'resultChartTotalBirthday', summary: 'globalSummary', logic: 'globalLogic' },
+                {
+                    summary: () => `
+                        픽업 총 획득 기대 수: 약 <strong>${expected.toFixed(3)}개</strong><br>
+                        <span style="font-size:0.85rem; color:#666;">* 중복 포함 획득 개수 합계입니다.</span><br>
+                        <span style="font-size:0.85rem; color:#dc3545;">(천장 포함 버튼이 활성화 되어있는지 주의하세요.)</span>
+                    `
+                },
+                charts.total
+            );
+        }
+        // 3. 효율 비교 (Line Chart)
+        else if (activeSubTab === 'res-bd-efficiency') {
+            if (context.efficiencyData) {
+                this.renderEfficiencyChart(
+                    context.efficiencyData,
+                    'efficiencyChartBirthday',
+                    model.efficiencyMode.value === 'worst',
+                    charts.efficiency,
+                    30,  // 스탭업 30회 기준
+                    M,
+                    '',
+                    false
+                );
+            }
+        }
+    }
+
+    static _generateBirthdayLogic(ctx) {
+        const isCeilingOff = ctx.ceilingMode === 'excluded';
+        const strike = (text, cond) => cond ? `<span style="text-decoration:line-through; color:#aaa;">${text}</span>` : text;
+
+        return `
+            <div class="section-header" style="cursor: pointer;">
+                <span class="logic-title">상세 계산 근거</span>
+                <button class="toggle-btn">▼</button>
+            </div>
+            <div class="section-content logic-view">
+                <ul class="logic-list">
+                    <li><strong>일반 가챠:</strong> ${ctx.normalRate}% (${ctx.normalPulls}회)</li>
+                    <li><strong>스탭업 가챠:</strong> ${ctx.stepRate}% (${ctx.stepPulls}회)
+                        ${ctx.stepGuaranteed ? ' <strong style="color:#45a247;">[30회 확정 획득!]</strong>' : ''}
+                    </li>
+                    <li><strong>천장:</strong> ${strike(`${ctx.ceilingCount}회 (200회당 1개)`, isCeilingOff)}</li>
+                    <li>알고리즘: DP (단일 픽업)</li>
+                </ul>
+            </div>`;
+    }
+
+    // ==========================================
     // 공통: 효율 그래프 렌더링 (개선 버전)
     // ==========================================
     static renderEfficiencyChart(data, canvasId, isWorst, chartRef, limit, M, groupName = '', isStar2 = false) {

@@ -166,24 +166,24 @@ export class Star3GachaViewModel extends BaseGachaViewModel {
         let M = (targetVal === 0 || !targetVal) ? N : Number(targetVal);
         if (M > N) M = N;
 
-        const p_indiv = Number(this.model.pickupRate.value) / 100;
+        const p_indiv = Number(this.model.pickupRate.value) / 100;  // 개별 1명 확률
         const p_step4_total = Number(this.model.step4Rate.value) / 100;
         const normalPulls = Number(this.model.normalPulls.value);
         const stepPulls = Number(this.model.stepPulls.value);
         const loopRewards = this.model.loopRewards.value;
 
-        const p_target_one = p_indiv;
-        const p_step4_one = (p_step4_total / N);
+        const p_step4_indiv = (p_step4_total / N);  // Step4 개별 1명 확률
 
         let dp = new Array(M + 1).fill(0); dp[0] = 1.0;
         let dpTotal = [1.0];
 
         // --- 일반 가챠 ---
-        // [개선] 중앙화된 확률 검증 사용
-        const p_any_normal = ProbabilityValidator.getTotalProb(p_target_one, M);
+        // p_indiv: 특정 1명을 얻을 개별 확률
+        // runSinglePull 내부에서 (M-k) × p_indiv 계산
+        const p_any_normal = ProbabilityValidator.getTotalProb(p_indiv, M);
         
         for (let i = 0; i < normalPulls; i++) {
-            dp = ProbabilityEngine.runSinglePull(dp, p_target_one);
+            dp = ProbabilityEngine.runSinglePull(dp, p_indiv);
             dpTotal = ProbabilityEngine.accumulateCountProb(dpTotal, p_any_normal);
         }
 
@@ -197,8 +197,7 @@ export class Star3GachaViewModel extends BaseGachaViewModel {
             
             if (isStep4) countStep4++; else countNormal++;
 
-            const p = useStep4 ? p_step4_one : p_target_one;
-            // [개선] 중앙화된 확률 검증 사용
+            const p = useStep4 ? p_step4_indiv : p_indiv;
             const p_any = ProbabilityValidator.getTotalProb(p, M);
 
             dp = ProbabilityEngine.runSinglePull(dp, p);

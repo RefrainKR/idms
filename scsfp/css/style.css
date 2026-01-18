@@ -141,6 +141,12 @@ input:focus, select:focus {
     box-shadow: 0 0 5px rgba(40, 60, 134, 0.2);
 }
 
+input:disabled {
+    background-color: #f5f5f5;
+    color: #999;
+    cursor: not-allowed;
+}
+
 .input-item {
     display: flex;
     align-items: center;
