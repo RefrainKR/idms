@@ -19,6 +19,9 @@ export class Star2GachaModel {
         // 효율 탭 상태
         this.selectedGroup = new Observable('A');
         this.efficiencyMode = new Observable('best');
+
+        this.viewTargetGroup = new Observable('ALL');
+        this.efficiencyTargetGroup = new Observable('A');
     }
 
     /**

@@ -29,6 +29,11 @@ export class Star2GachaViewModel extends BaseGachaViewModel {
 
         this.bindToggles();
         this.setupDataDependencies();
+
+        const resetBtn = document.getElementById('resetBtn2');
+        if (resetBtn) {
+            resetBtn.addEventListener('click', () => this.reset());
+        }
     }
 
     bindToggles() {
@@ -39,14 +44,39 @@ export class Star2GachaViewModel extends BaseGachaViewModel {
         new ToggleButton('toggleViewBtn2', TOGGLE_STATES.VIEW, (state) => {
             this.model.viewMode.value = state.name;
         }, this.model.viewMode.value);
-        
-        new ToggleButton('btnToggleGroup2', TOGGLE_STATES.GROUPS, (state) => {
-            this.model.selectedGroup.value = state.name;
-        }, this.model.selectedGroup.value);
 
-        new ToggleButton('btnToggleEfficiencyMode2', TOGGLE_STATES.EFFICIENCY, (state) => {
-            this.model.efficiencyMode.value = state.name;
+        new ToggleButton('btnGroupViewMode', TOGGLE_STATES.GROUPS_VIEW, (s) => {
+            this.model.viewTargetGroup.value = s.name;
+            this.calculate();
+        }, this.model.viewTargetGroup.value);
+
+        new ToggleButton('btnGroupEfficiencyMode', TOGGLE_STATES.GROUPS_EFF, (s) => {
+            this.model.efficiencyTargetGroup.value = s.name;
+            this.calculate();
+        }, this.model.efficiencyTargetGroup.value);
+
+        new ToggleButton('btnEfficiencyToggle2', TOGGLE_STATES.EFFICIENCY, (s) => {
+            this.model.efficiencyMode.value = s.name;
+            this.calculate();
         }, this.model.efficiencyMode.value);
+    }
+
+    onTabChange(tabId) {
+        this.calculate();
+
+        const isEff = (tabId === 'res-2s-efficiency');
+        const toggle = (id, show) => {
+            const el = document.getElementById(id);
+            if (el) el.style.display = show ? '' : 'none';
+        };
+
+        // 효율 탭
+        toggle('btnEfficiencyToggle2', isEff);
+        toggle('btnGroupEfficiencyMode', isEff);
+        
+        // 수집/총획득 탭
+        toggle('toggleViewBtn2', !isEff);
+        toggle('btnGroupViewMode', !isEff);
     }
 
     setupDataDependencies() {
@@ -80,15 +110,19 @@ export class Star2GachaViewModel extends BaseGachaViewModel {
         let dpTotal = [1.0];
         if (pulls <= 0) return { dp, dpTotal };
 
-        const p_norm = rate / N;
-        const p_guar = 1.0 / N;
-        const p_norm_any = p_norm * M;
-        const p_guar_any = p_guar * M;
+        const p_normal_one = rate / N; 
+        const p_guar_one = 1.0 / N;
+        const p_normal_any = Math.min(p_normal_one * M, 1.0);
+        const p_guar_any = Math.min(p_guar_one * M, 1.0);
 
         for (let i = 1; i <= pulls; i++) {
             const isGuar = (i === 5 || (i > 5 && (i - 5) % 10 === 0));
-            dp = ProbabilityEngine.runSinglePull(dp, isGuar ? p_guar : p_norm);
-            dpTotal = ProbabilityEngine.accumulateCountProb(dpTotal, isGuar ? p_guar_any : p_norm_any);
+            const p_one = isGuar ? p_guar_one : p_normal_one;
+            const p_any = isGuar ? p_guar_any : p_normal_any;
+
+            // runSinglePull은 ProbabilityEngine 내부에서 이미 보정됨
+            dp = ProbabilityEngine.runSinglePull(dp, p_one);
+            dpTotal = ProbabilityEngine.accumulateCountProb(dpTotal, p_any);
         }
         return { dp, dpTotal };
     }
@@ -103,10 +137,16 @@ export class Star2GachaViewModel extends BaseGachaViewModel {
         const targetInputs = ['A', 'B', 'C', 'D'].map(id => this.model[`targetCount${id}`].value);
         const isAllZero = targetInputs.every(v => v === 0);
 
+        const viewGroup = this.model.viewTargetGroup.value; // 'ALL', 'A'...
+
         const groups = ['A', 'B', 'C', 'D'].map(id => {
             const N = this.model[`countStep${id}`].value;
             let M = this.model[`targetCount${id}`].value;
-
+            
+            // [핵심] ALL 모드가 아니고 내 그룹이 아니면 저격 수 0 처리
+            if (viewGroup !== 'ALL' && viewGroup !== id) {
+                M = 0;
+            }
             if (isAllZero) {
                 // 전부 0이면 기존처럼 전체 수집(M=N)으로 동작
                 M = N;
@@ -124,7 +164,7 @@ export class Star2GachaViewModel extends BaseGachaViewModel {
             return;
         }
 
-        let dp = [1.0], dpTotal = [1.0], dpSpecific = [1.0];
+        let dp = [1.0], dpTotal = [1.0];
         let totalTargets = 0, totalStepPulls = 0;
 
         groups.forEach(g => {
@@ -136,21 +176,32 @@ export class Star2GachaViewModel extends BaseGachaViewModel {
             totalStepPulls += g.pulls;
         });
 
-        const p_norm = rateTotal / N_total;
-        const p_high = 0.95 / N_total;
+        const p_norm_one = rateTotal / N_total;
+        const p_high_one = 0.95 / N_total;
+        
+        // 확률 보정 적용
+        const p_norm_any = Math.min(p_norm_one * totalTargets, 1.0);
+        const p_high_any = Math.min(p_high_one * totalTargets, 1.0);
 
         for (let i = 1; i <= normalPulls; i++) {
             const isHigh = (i % 10 === 0);
-            const p = isHigh ? p_high : p_norm;
-            dp = ProbabilityEngine.runSinglePull(dp, p);
-            dpTotal = ProbabilityEngine.accumulateCountProb(dpTotal, p * totalTargets);
-            dpSpecific = ProbabilityEngine.accumulateCountProb(dpSpecific, p);
+            dp = ProbabilityEngine.runSinglePull(dp, isHigh ? p_high_one : p_norm_one);
+            dpTotal = ProbabilityEngine.accumulateCountProb(dpTotal, isHigh ? p_high_any : p_norm_any);
         }
 
-        const targetGroup = groups.reduce((p, c) => (p.pulls > c.pulls ? p : c), groups[0]);
+        // 스탭업 특정 1명 보정 (가장 많이 돌린 그룹 -> 사용자가 선택한 그룹)
+        // 만약 선택된 그룹이 유효하지 않다면 기존처럼 '가장 많이 돌린 그룹'을 fallback으로 사용
+        const selectedGid = this.model.selectedGroup.value;
+        let targetGroup = groups.find(g => g.id === selectedGid);
+        
+        if (!targetGroup) {
+            // 선택된 그룹이 없거나 잘못된 경우: 가장 많이 돌린 그룹 자동 선택 (Fallback)
+            targetGroup = groups.reduce((p, c) => (p.pulls > c.pulls ? p : c), groups[0]);
+        }
+
         if (targetGroup.pulls > 0) {
+            // 선택된 그룹의 풀에서 1명을 뽑는 확률로 계산
             const res = this._calcGroup(targetGroup.N, 1, targetGroup.pulls, rateTotal);
-            dpSpecific = ProbabilityEngine.convolve(dpSpecific, res.dpTotal);
         }
 
         const totalCeil = Math.floor(normalPulls / 100) + Math.floor(totalStepPulls / 50);
@@ -158,7 +209,6 @@ export class Star2GachaViewModel extends BaseGachaViewModel {
             for (let i = 0; i < totalCeil; i++) {
                 dp = ProbabilityEngine.runGuaranteedPull(dp);
                 dpTotal = ProbabilityEngine.accumulateCountGuaranteed(dpTotal);
-                dpSpecific = ProbabilityEngine.accumulateCountGuaranteed(dpSpecific);
             }
         }
 
@@ -173,16 +223,17 @@ export class Star2GachaViewModel extends BaseGachaViewModel {
         const context = { 
             groups, totalPulls: normalPulls + totalStepPulls, 
             normalPulls, totalStepPulls, totalCeil, rateTotal,
-            efficiencyData: this._calculateEfficiencyData(isAllZero), // 인자 추가
+            efficiencyData: this._calculateEfficiencyData(isAllZero),
             targetGroupInfo, N: N_total, M: totalTargets,
-            ceilingMode: this.model.ceilingMode.value // Logic 표시용
+            ceilingMode: this.model.ceilingMode.value, 
+            specificTargetGroupId: targetGroup.id
         };
 
-        GachaResultView.render2Star({ N: N_total, M: totalTargets, dp, dpTotal, dpSpecific }, context, this.model, this.chartRefs);
+        GachaResultView.render2Star({ N: N_total, M: totalTargets, dp, dpTotal }, context, this.model, this.chartRefs);
     }
 
     _calculateEfficiencyData(isAllZero) {
-        let gid = this.model.selectedGroup.value || 'A';
+        let gid = this.model.efficiencyTargetGroup.value || 'A';
         const N_group = this.model[`countStep${gid}`].value;
         
         let M_group = isAllZero ? N_group : this.model[`targetCount${gid}`].value;

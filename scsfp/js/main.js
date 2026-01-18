@@ -22,10 +22,18 @@ window.onload = function() {
         else star2VM.calculate();
     });
 
-    // 서브 탭들도 연결 (누를 때마다 최신 데이터로 갱신)
+    // 서브 탭 시스템 연결 (탭 ID를 넘겨줌)
     const sub3 = document.getElementById('sub-tab-system-3star');
-    if (sub3) new TabManager(sub3, () => star3VM.calculate());
+    if (sub3) new TabManager(sub3, (tabId) => star3VM.onTabChange(tabId));
 
     const sub2 = document.getElementById('sub-tab-system-2star');
-    if (sub2) new TabManager(sub2, () => star2VM.calculate());
+    if (sub2) new TabManager(sub2, (tabId) => star2VM.onTabChange(tabId));
+    
+    // 초기 로딩 시 현재 활성 탭에 맞춰 UI 설정 (매우 중요!)
+    // (예: 처음에 수집 탭이면 Best 버튼 숨김 등)
+    const initialTab3 = sub3.querySelector('.tab-button.active').dataset.tab;
+    star3VM.onTabChange(initialTab3);
+    
+    const initialTab2 = sub2.querySelector('.tab-button.active').dataset.tab;
+    star2VM.onTabChange(initialTab2);
 };

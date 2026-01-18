@@ -21,7 +21,7 @@ export class GachaResultView extends ResultView {
                 { chart: 'resultChart', legend: 'legendList', summary: 'globalSummary', logic: 'globalLogic' },
                 {
                     summary: () => `
-                        <strong>${M}종 수집 결과</strong> (전체 ${N}종 중)<br>
+                        <strong>수집 결과</strong> (전체 ${N}종 중 ${M}종)<br>
                         가챠 횟수 : ${context.totalPulls}회 (일반 ${context.normalPulls} + 스탭업 ${context.stepPulls})<br>
                         천장 교환 : ${context.totalCeilingCount}회 (통합 ${context.normalCeiling} + 스탭업 ${context.selectRewardCount})<br>
                         목표(${M}종) 올컴플릿 확률 : <strong>${Formatter.formatProbability(dp[M])}</strong>
@@ -98,7 +98,7 @@ export class GachaResultView extends ResultView {
 
         const activeSubTab = document.querySelector('#sub-tab-system-2star .tab-button.active')?.dataset.tab;
         const viewMode = model.viewMode.value;
-        const { N, M, dp, dpTotal, dpSpecific } = result;
+        const { N, M, dp, dpTotal } = result;
 
         // 1. 수집 확률 (Pie)
         if (activeSubTab === 'res-2s-collection') {
@@ -106,9 +106,10 @@ export class GachaResultView extends ResultView {
                 { chart: 'resultChart2', legend: 'legendList2', summary: 'globalSummary', logic: 'globalLogic' },
                 {
                     summary: () => `
-                        <strong>${M}종 수집 결과</strong> (전체 ${N}종 중)<br>
+                        <strong>수집 결과</strong> (전체 ${N}종 중 ${M}종)<br>
                         가챠 횟수 : ${context.totalPulls}회 / 천장 : ${context.totalCeil}회<br>
-                        목표(${M}종) 올컴플릿 확률 : <strong>${Formatter.formatProbability(dp[M])}</strong>
+                        목표(${M}종) 올컴플릿 확률 : <strong>${Formatter.formatProbability(dp[M])}</strong><br>
+                        <span style="font-size:0.85rem; color:#dc3545;">(천장 포함 버튼이 활성화 되어있는지 주의하세요.)</span>
                     `,
                     logic: () => this._generate2StarLogic(context)
                 },
@@ -123,27 +124,14 @@ export class GachaResultView extends ResultView {
                 {
                     summary: () => `
                         타겟(${M}종) 총 획득 기대 수: 약 <strong>${expected.toFixed(3)}개</strong><br>
-                        <span style="font-size:0.85rem; color:#666;">* 타겟 그룹 픽업의 획득 개수 합계입니다.</span>
+                        <span style="font-size:0.85rem; color:#666;">* 타겟 그룹 픽업의 획득 개수 합계입니다.</span><br>
+                        <span style="font-size:0.85rem; color:#dc3545;">(천장 포함 버튼이 활성화 되어있는지 주의하세요.)</span>
                     `
                 },
                 charts.total
             );
         }
-        // 3. 특정 1명 (Bar - dpSpecific 사용)
-        else if (activeSubTab === 'res-2s-specific') {
-            const expected = dpSpecific.reduce((acc, p, i) => acc + i * p, 0);
-            this.renderTotalCount(dpSpecific, viewMode,
-                { chart: 'resultChartSpecific2', summary: 'globalSummary', logic: 'globalLogic' },
-                {
-                    summary: () => `
-                        특정 픽업(1명) 기대 수: 약 <strong>${expected.toFixed(3)}장</strong><br>
-                        <span style="font-size:0.85rem; color:#666;">(가장 많이 돌린 그룹 기준)</span>
-                    `
-                },
-                charts.specific // 차트 인스턴스 주의
-            );
-        }
-        // 4. 효율 비교 (Line)
+        // 3. 효율 비교 (Line)
         else if (activeSubTab === 'res-2s-efficiency') {
             if (context.efficiencyData) {
                 this.renderEfficiencyChart(

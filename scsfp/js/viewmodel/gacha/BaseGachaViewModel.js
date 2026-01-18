@@ -64,6 +64,13 @@ export class BaseGachaViewModel {
         }
     }
 
+    reset() {
+        if (confirm("설정을 초기화하시겠습니까?")) {
+            StorageManager.remove(this.storageKey);
+            location.reload();
+        }
+    }
+
     save() {
         if (this.isInitializing || !this.model) return;
         StorageManager.save(this.storageKey, this.model.toJSON());

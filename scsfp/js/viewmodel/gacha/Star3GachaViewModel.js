@@ -29,11 +29,17 @@ export class Star3GachaViewModel extends BaseGachaViewModel {
 
         this.bindToggles();
         this.renderPresetButtons();
-        this.setupDataDependencies();
-       
-        this.model.maxLoops.subscribe(() => this.updateLoopUI());
-
+        
+        // 데이터 관계 설정 (maxLoops -> stepMax 등)
+        this.setupDataDependencies(); 
+        
+        // 초기 UI 렌더링 (데이터 바인딩 직후 1회 실행 보장)
         this.updateLoopUI(this.model.loopRewards.value);
+
+        const resetBtn = document.getElementById('resetBtn3');
+        if (resetBtn) {
+            resetBtn.addEventListener('click', () => this.reset());
+        }
     }
 
     bindToggles() {
@@ -42,7 +48,25 @@ export class Star3GachaViewModel extends BaseGachaViewModel {
         new ToggleButton('toggleRandomBtn3', TOGGLE_STATES.RANDOM, (s) => this.model.randomMode.value = s.name, this.model.randomMode.value);
         new ToggleButton('toggleStep4Btn3', TOGGLE_STATES.STEP4, (s) => this.model.step4Mode.value = s.name, this.model.step4Mode.value);
         new ToggleButton('toggleViewBtn3', TOGGLE_STATES.VIEW, (s) => this.model.viewMode.value = s.name, this.model.viewMode.value);
-        new ToggleButton('btnToggleEfficiencyMode', TOGGLE_STATES.EFFICIENCY, (s) => this.model.efficiencyMode.value = s.name, this.model.efficiencyMode.value);
+        new ToggleButton('btnEfficiencyToggle3', TOGGLE_STATES.EFFICIENCY, (s) => {
+            this.model.efficiencyMode.value = s.name;
+        }, this.model.efficiencyMode.value);
+    }
+
+    onTabChange(tabId) {
+        this.calculate();
+
+        const isEff = (tabId === 'res-3s-efficiency');
+        const toggle = (id, show) => {
+            const el = document.getElementById(id);
+            if (el) el.style.display = show ? '' : 'none';
+        };
+
+        // 효율 탭 전용 버튼 노출 제어
+        toggle('btnEfficiencyToggle3', isEff);
+        
+        // 수집/총획득 탭 전용 버튼 숨김
+        toggle('toggleViewBtn3', !isEff);
     }
         
     renderPresetButtons() {
@@ -62,8 +86,11 @@ export class Star3GachaViewModel extends BaseGachaViewModel {
 
 
     setupDataDependencies() {
-        // 1. 루프 UI 바인딩
-        this.model.maxLoops.subscribe(() => this.updateLoopUI());
+        // 1. maxLoops 변경 시 -> stepMax 업데이트 및 루프 UI 갱신
+        this.model.maxLoops.subscribe((val) => {
+            this.model.stepMax.value = val * 40; // Computed 값 업데이트
+            this.updateLoopUI();
+        });
 
         // 2. N(전체) -> M(저격) 종속성 관리
         this.model.pickupCount.subscribe((newN) => {
@@ -84,6 +111,11 @@ export class Star3GachaViewModel extends BaseGachaViewModel {
         if (id === 'targetCount') {
             return { maxObserver: this.model.pickupCount };
         }
+        if (id === 'stepPulls') {
+            // [핵심] stepPulls는 stepMax를 자신의 한계로 삼는다.
+            return { maxObserver: this.model.stepMax }; 
+        }
+
         return null;
     }
 
@@ -116,17 +148,6 @@ export class Star3GachaViewModel extends BaseGachaViewModel {
                 this.save();
             });
             container.appendChild(wrapper);
-        }
-        
-        // 스탭업 횟수 최대치 조정
-        const stepInput = document.getElementById('stepPulls');
-        if (stepInput) {
-            const newMax = maxLoops * 40;
-            stepInput.max = newMax;
-            
-            if (this.model.stepPulls.value > newMax) {
-                this.model.stepPulls.value = newMax;
-            }
         }
     }
 
@@ -174,7 +195,9 @@ export class Star3GachaViewModel extends BaseGachaViewModel {
         let dpTotal = [1.0];
 
         // --- 일반 가챠 ---
-        const p_any_normal = p_target_one * M;
+
+        // 총 획득 확률(p * M)이 1.0(100%)을 넘지 않도록 보정
+        const p_any_normal = Math.min(p_target_one * M, 1.0);
         for (let i = 0; i < normalPulls; i++) {
             dp = ProbabilityEngine.runSinglePull(dp, p_target_one);
             dpTotal = ProbabilityEngine.accumulateCountProb(dpTotal, p_any_normal);
@@ -191,7 +214,8 @@ export class Star3GachaViewModel extends BaseGachaViewModel {
             if (isStep4) countStep4++; else countNormal++;
 
             const p = useStep4 ? p_step4_one : p_target_one;
-            const p_any = p * M;
+            // 스탭업에서도 총 획득 확률 제한
+            const p_any = Math.min(p * M, 1.0);
 
             dp = ProbabilityEngine.runSinglePull(dp, p);
             dpTotal = ProbabilityEngine.accumulateCountProb(dpTotal, p_any);

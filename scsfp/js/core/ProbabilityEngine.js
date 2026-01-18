@@ -1,17 +1,11 @@
 import { PROBABILITY_MODE } from './GachaConstants.js';
 
-/**
- * js/core/ProbabilityEngine.js
- * 가챠 확률 계산을 담당하는 순수 수학 클래스 (Static)
- */
 export class ProbabilityEngine {
+    
     // ==========================================
-    // 1. 상태 전이 (Transition) - 수집(Collection)
+    // 1. 상태 전이 (Transition) - 수집
     // ==========================================
 
-    /**
-     * 일반 가챠 시행 (수집 확률 DP)
-     */
     static runSinglePull(dp, prob) {
         const size = dp.length - 1; 
         let nextDP = new Array(size + 1).fill(0);
@@ -20,10 +14,10 @@ export class ProbabilityEngine {
             if (dp[k] === 0) continue;
             
             if (k === size) {
-                nextDP[k] += dp[k]; 
+                nextDP[k] += dp[k];
             } else {
-                let p_new = (size - k) * prob;
-                if (p_new > 1) p_new = 1; // 확률 보정
+                // [방어 코드] 100% 초과 방지
+                let p_new = Math.min((size - k) * prob, 1.0);
                 
                 nextDP[k] += dp[k] * (1.0 - p_new);
                 nextDP[k + 1] += dp[k] * p_new;
@@ -32,32 +26,18 @@ export class ProbabilityEngine {
         return nextDP;
     }
 
-    /**
-     * 확정권/천장 시행 (무조건 1개 획득)
-     * k -> k+1로 확률 100% 이동
-     */
     static runGuaranteedPull(dp) {
         const size = dp.length - 1;
         let nextDP = new Array(size + 1).fill(0);
 
         for (let k = 0; k <= size; k++) {
             if (dp[k] === 0) continue;
-            
-            // 아직 덜 모았으면 +1
-            if (k < size) {
-                nextDP[k + 1] += dp[k];
-            } 
-            // 이미 다 모았으면 유지
-            else {
-                nextDP[size] += dp[k];
-            }
+            if (k < size) nextDP[k + 1] += dp[k];
+            else nextDP[size] += dp[k];
         }
         return nextDP;
     }
 
-    /**
-     * 랜덤 티켓 시행
-     */
     static runRandomTicket(dp, poolSize) {
         const size = dp.length - 1; 
         let nextDP = new Array(size + 1).fill(0);
@@ -67,7 +47,9 @@ export class ProbabilityEngine {
             if (k === size) {
                 nextDP[size] += dp[k];
             } else {
-                let p_new = (size - k) / poolSize;
+                // [방어 코드] 극단적 파라미터 방지
+                let p_new = Math.min((size - k) / poolSize, 1.0);
+                
                 nextDP[k] += dp[k] * (1.0 - p_new);
                 nextDP[k + 1] += dp[k] * p_new;
             }
@@ -82,11 +64,14 @@ export class ProbabilityEngine {
     static accumulateCountProb(dp, prob) {
         const size = dp.length;
         let nextDP = new Array(size + 1).fill(0);
+        
+        // [방어 코드] 확률이 0~1 사이인지 강제 검증 (음수 방지)
+        const validProb = Math.min(Math.max(prob, 0), 1.0);
 
         for (let k = 0; k < size; k++) {
             if (dp[k] === 0) continue;
-            nextDP[k] += dp[k] * (1 - prob);
-            nextDP[k + 1] += dp[k] * prob;
+            nextDP[k] += dp[k] * (1 - validProb);
+            nextDP[k + 1] += dp[k] * validProb;
         }
         return nextDP;
     }
@@ -132,11 +117,15 @@ export class ProbabilityEngine {
                 sum += dp[i];
                 newDP[i] = Math.min(sum, 1.0);
             }
+            // [방어 코드] 부동소수점 오차로 0.999...가 되는 것 방지
+            newDP[N] = 1.0; 
         } else if (mode === PROBABILITY_MODE.CUMULATIVE_MORE) {
             for (let i = N; i >= 0; i--) {
                 sum += dp[i];
                 newDP[i] = Math.min(sum, 1.0);
             }
+            // [방어 코드] 0개 이상은 무조건 100%
+            newDP[0] = 1.0; 
         }
         return newDP;
     }

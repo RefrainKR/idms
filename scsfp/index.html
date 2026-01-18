@@ -105,11 +105,18 @@
                     </div>
 
                     <div class="result-options-header">
-                        <div class="btn-group">
+                        <!-- 왼쪽: 상시 노출 또는 일반 옵션 -->
+                        <div class="btn-group left-group">
                             <button id="toggleCeilingBtn3" class="view-toggle-btn">천장</button>
-                            <button id="toggleRandomBtn3" class="view-toggle-btn">랜덤</button>
-                            <button id="toggleStep4Btn3" class="view-toggle-btn">Step4</button>
-                            <button id="toggleViewBtn3" class="view-toggle-btn">개별</button>
+                            <button id="toggleRandomBtn3" class="view-toggle-btn" data-role="calc-opt">랜덤</button>
+                            <button id="toggleStep4Btn3" class="view-toggle-btn" data-role="calc-opt">Step4</button>
+                            <!-- [동적 제어] 수집/총획득 탭용 -->
+                            <button id="toggleViewBtn3" class="view-toggle-btn" data-role="view-mode">개별</button>
+                        </div>
+                        <!-- 오른쪽: 효율 탭 전용 -->
+                        <div class="btn-group right-group">
+                            <!-- [동적 제어] 효율 탭용 -->
+                            <button id="btnEfficiencyToggle3" class="view-toggle-btn" data-role="eff-mode" style="display:none;">Best</button>
                         </div>
                     </div>
 
@@ -134,9 +141,6 @@
                         <!-- 결과 3: 일반vs스탭업 -->
                         <div id="res-3s-efficiency" class="tab-content">
                             <div class="result-area">
-                                <div style="display: flex; justify-content: flex-end; margin-bottom: 10px;">
-                                    <button id="btnToggleEfficiencyMode" class="view-toggle-btn btn-active" style="min-width: 65px;">Best</button>
-                                </div>
                                 <div class="chart-scroll-wrapper">
                                     <div class="chart-scroll-inner">
                                         <canvas id="efficiencyChart"></canvas>
@@ -233,14 +237,24 @@
                     <div class="tab-buttons sub-tab-nav">
                         <button class="tab-button sub-tab-btn active" data-tab="res-2s-collection">픽업 획득(중복X)</button>
                         <button class="tab-button sub-tab-btn" data-tab="res-2s-total">총 획득(중복O)</button>
-                        <button class="tab-button sub-tab-btn" data-tab="res-2s-specific">특정 픽업(날개)</button>
                         <button class="tab-button sub-tab-btn" data-tab="res-2s-efficiency">일반 vs 스탭업</button>
                     </div>
 
                     <div class="result-options-header">
-                        <div class="btn-group">
+                        <div class="btn-group left-group">
                             <button id="toggleCeilingBtn2" class="view-toggle-btn">천장</button>
-                            <button id="toggleViewBtn2" class="view-toggle-btn">개별</button>
+                            
+                            <!-- [동적 제어] 수집/총획득 탭용 -->
+                            <button id="toggleViewBtn2" class="view-toggle-btn" data-role="view-mode">개별</button>
+                        </div>
+
+                        <div class="btn-group right-group">
+                            <!-- [신규] 효율 탭용 그룹 선택 (ALL 없음) -->
+                            <button id="btnGroupEfficiencyMode" class="view-toggle-btn" data-role="group-eff" style="display:none;">A</button>
+                            <!-- [신규] 수집/총획득용 그룹 선택 (ALL 포함) -->
+                            <button id="btnGroupViewMode" class="view-toggle-btn" data-role="group-view" style="display:none;">All</button>
+                            <!-- [신규] 효율 탭용 Best/Worst -->
+                            <button id="btnEfficiencyToggle2" class="view-toggle-btn" data-role="eff-mode" style="display:none;">Best</button>
                         </div>
                     </div>
 
@@ -262,21 +276,9 @@
                                 </div>
                             </div>
                         </div>
-                        <!-- 결과 3: 특정 픽업 -->
-                        <div id="res-2s-specific" class="tab-content">
-                            <div class="result-area">
-                                <div class="chart-row">
-                                    <div class="chart-container" style="width: 100%; flex: none;"><canvas id="resultChartSpecific2"></canvas></div>
-                                </div>
-                            </div>
-                        </div>
                         <!-- 2성 효율 비교 탭 콘텐츠 -->
                         <div id="res-2s-efficiency" class="tab-content">
                             <div class="result-area">
-                                <div style="display: flex; justify-content: flex-end; margin-bottom: 10px;">
-                                    <button id="btnToggleGroup2" class="view-toggle-btn btn-active" style="min-width: 100px;">Group A</button>
-                                    <button id="btnToggleEfficiencyMode2" class="view-toggle-btn btn-active" style="min-width: 80px;">Best</button>
-                                </div>
                                 <div class="chart-scroll-wrapper">
                                     <div class="chart-scroll-inner">
                                         <canvas id="efficiencyChart2"></canvas>

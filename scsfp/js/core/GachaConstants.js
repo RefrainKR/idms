@@ -1,7 +1,4 @@
 
-
-export const EXCLUDE_SAVE_IDS = ['normalPulls', 'stepPulls', 'pullsNormal2', 'pullsStepA', 'pullsStepB', 'pullsStepC', 'pullsStepD'];
-
 export const CONFIG = {
     STAR3: {
         KEY: 'shani_gacha_3star',
@@ -9,7 +6,7 @@ export const CONFIG = {
             { id: 'pickupCount', min: 1, max: 100, def: 2 },
             { id: 'pickupRate', min: 0, max: 100, def: 1 },
             { id: 'maxLoops', min: 0, max: 10, def: 2 },
-            { id: 'step4Rate', min: 0, max: 100, def: 20 },
+            { id: 'step4Rate', min: 0, max: 100, def: 40 },
             { id: 'normalPulls', min: 0, max: 9999, def: 0 },
             { id: 'stepPulls', min: 0, def: 0 },
             { id: 'targetCount', min: 0, def: 0 }
@@ -81,11 +78,18 @@ export const TOGGLE_STATES = {
     EFFICIENCY: [
         { name: 'best', text: 'Best', isActive: true },
         { name: 'worst', text: 'Worst', isActive: false }
-    ], 
-    GROUPS: [
-        { name: 'A', text: 'Group A', isActive: true },
-        { name: 'B', text: 'Group B', isActive: true },
-        { name: 'C', text: 'Group C', isActive: true },
-        { name: 'D', text: 'Group D', isActive: true }
+    ],  
+    GROUPS_VIEW: [
+        { name: 'ALL', text: 'All', isActive: true },
+        { name: 'A', text: 'A', isActive: true },
+        { name: 'B', text: 'B', isActive: true },
+        { name: 'C', text: 'C', isActive: true },
+        { name: 'D', text: 'D', isActive: true }
+    ],
+    GROUPS_EFF: [
+        { name: 'A', text: 'A', isActive: true },
+        { name: 'B', text: 'B', isActive: true },
+        { name: 'C', text: 'C', isActive: true },
+        { name: 'D', text: 'D', isActive: true }
     ]
 };

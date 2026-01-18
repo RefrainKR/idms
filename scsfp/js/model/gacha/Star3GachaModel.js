@@ -7,7 +7,8 @@ export class Star3GachaModel {
         this.targetCount = new Observable(0);
         
         this.maxLoops = new Observable(2);
-        this.step4Rate = new Observable(20.0);
+        this.stepMax = new Observable(80);
+        this.step4Rate = new Observable(40.0);
         this.loopRewards = new Observable({});
 
         this.normalPulls = new Observable(0);
