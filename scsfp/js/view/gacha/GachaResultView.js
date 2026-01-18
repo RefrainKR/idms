@@ -1,6 +1,7 @@
-import { ResultView } from '../ResultView.js'; // 공통 부모 뷰
+import { ResultView } from '../ResultView.js';
 import { Formatter } from '../../utils/Formatter.js';
 import { ChartAdapter } from '../../utils/ChartAdapter.js';
+import { ChartUtils } from '../../utils/ChartUtils.js';
 
 export class GachaResultView extends ResultView {
 
@@ -31,14 +32,14 @@ export class GachaResultView extends ResultView {
                 charts.collection
             );
         } 
-        // 2. 총 획득 수 (Bar Chart)
+        // 2. 이 획득 수 (Bar Chart)
         else if (activeSubTab === 'res-3s-total') {
             const expected = dpTotal.reduce((acc, p, i) => acc + i * p, 0);
             this.renderTotalCount(dpTotal, viewMode, 
                 { chart: 'resultChartTotal3', summary: 'globalSummary', logic: 'globalLogic' },
                 {
                     summary: () => `
-                        타겟(${M}종) 총 획득 기대 수: 약 <strong>${expected.toFixed(3)}개</strong><br>
+                        타겟(${M}종) 이 획득 기대 수: 약 <strong>${expected.toFixed(3)}개</strong><br>
                         <span style="font-size:0.85rem; color:#666;">* 유효 픽업 ${M}종의 획득 개수 합계입니다.</span><br>
                         <span style="font-size:0.85rem; color:#dc3545;">(천장 포함 버튼이 활성화 되어있는지 주의하세요.)</span>
                     `
@@ -46,7 +47,7 @@ export class GachaResultView extends ResultView {
                 charts.total
             );
         }
-        // 3. 효율 비교 (Line Chart) - 데이터는 이미 ViewModel에서 계산되어 context에 담겨 와야 함
+        // 3. 효율 비교 (Line Chart)
         else if (activeSubTab === 'res-3s-efficiency') {
             if (context.efficiencyData) {
                 this.renderEfficiencyChart(
@@ -54,14 +55,16 @@ export class GachaResultView extends ResultView {
                     'efficiencyChart', 
                     model.efficiencyMode.value === 'worst', 
                     charts.efficiency,
-                    context.efficiencyLimit, // 최적 효율 지점 (예: 80회)
-                    M
+                    context.efficiencyLimit,
+                    M,
+                    '',
+                    false
                 );
             }
         }
     }
 
-    // 3성 상세 로직 HTML 생성 (Helper)
+    // 3성 상세 로직 HTML 생성
     static _generate3StarLogic(ctx) {
         const strike = (text, cond) => cond ? `<span style="text-decoration:line-through; color:#aaa;">${text}</span>` : text;
         
@@ -69,7 +72,6 @@ export class GachaResultView extends ResultView {
         for (let i = 1; i <= ctx.maxLoops; i++) {
             let rType = ctx.loopRewards[i];
             let rText = rType === 'random' ? '픽업 티켓' : (rType === 'select' ? '셀렉 티켓' : '없음');
-            // 아직 도달하지 못한 주차는 취소선
             rewardHistory += strike(`[${i}주: ${rText}]`, i * 40 > ctx.stepPulls) + " ";
         }
 
@@ -87,7 +89,6 @@ export class GachaResultView extends ResultView {
                 </ul>
             </div>`;
     }
-
 
     // ==========================================
     // 2성 가챠 화면 렌더링
@@ -116,14 +117,14 @@ export class GachaResultView extends ResultView {
                 charts.collection
             );
         }
-        // 2. 총 획득 (Bar)
+        // 2. 이 획득 (Bar)
         else if (activeSubTab === 'res-2s-total') {
             const expected = dpTotal.reduce((acc, p, i) => acc + i * p, 0);
             this.renderTotalCount(dpTotal, viewMode,
                 { chart: 'resultChartTotal2', summary: 'globalSummary', logic: 'globalLogic' },
                 {
                     summary: () => `
-                        타겟(${M}종) 총 획득 기대 수: 약 <strong>${expected.toFixed(3)}개</strong><br>
+                        타겟(${M}종) 이 획득 기대 수: 약 <strong>${expected.toFixed(3)}개</strong><br>
                         <span style="font-size:0.85rem; color:#666;">* 타겟 그룹 픽업의 획득 개수 합계입니다.</span><br>
                         <span style="font-size:0.85rem; color:#dc3545;">(천장 포함 버튼이 활성화 되어있는지 주의하세요.)</span>
                     `
@@ -139,7 +140,7 @@ export class GachaResultView extends ResultView {
                     'efficiencyChart2',
                     model.efficiencyMode.value === 'worst',
                     charts.efficiency,
-                    100, // 2성은 100회 기준 비교
+                    100,
                     context.targetGroupInfo ? context.targetGroupInfo.M : M,
                     context.targetGroupInfo ? context.targetGroupInfo.id : '',
                     true
@@ -150,7 +151,7 @@ export class GachaResultView extends ResultView {
 
     static _generate2StarLogic(ctx) {
         const strike = (text, cond) => cond ? `<span style="text-decoration:line-through; color:#aaa;">${text}</span>` : text;
-        const isCeilingOff = ctx.ceilingMode === 'excluded'; // 모델에서 상태를 가져오거나 별도 전달 필요
+        const isCeilingOff = ctx.ceilingMode === 'excluded';
 
         // 1. 일반 가챠 통계
         let normalHigh = 0, normalBase = 0;
@@ -195,7 +196,7 @@ export class GachaResultView extends ResultView {
     }
 
     // ==========================================
-    // 공통: 효율 그래프 렌더링 (Line Chart)
+    // 공통: 효율 그래프 렌더링 (개선 버전)
     // ==========================================
     static renderEfficiencyChart(data, canvasId, isWorst, chartRef, limit, M, groupName = '', isStar2 = false) {
         const { labels, normalData, stepupData } = data;
@@ -204,31 +205,15 @@ export class GachaResultView extends ResultView {
         const finalStep = stepupData.map(v => parseFloat(v[modeKey]).toFixed(3));
         const finalNorm = normalData.map(v => parseFloat(v[modeKey]).toFixed(3));
 
-        const getPointRadius2 = (ctx) => {
-            const idx = ctx.dataIndex;
-            if (idx === 0) return 4;
-            if (idx % 50 === 0) return 7; // 천장(50, 100...) 강조 (가장 큼)
-            if (idx % 10 === 0) return 4; // 10단위 기본 표시
-            if (idx % 5 === 0) return 3;  // 5단위(확정 슬롯) 작게 표시
-            return 0; 
+        // [개선] ChartUtils 사용으로 중복 제거
+        const getPointRadius = (ctx) => {
+            return isStar2 
+                ? ChartUtils.getPointRadius2Star(ctx.dataIndex)
+                : ChartUtils.getPointRadius3Star(ctx.dataIndex);
         };
-
-        const getPointRadius3 = (ctx) => {
-            const idx = ctx.dataIndex;
-            if (idx === 0) return 4;
-            if (idx % 40 === 0) return 7; // 주회(40) 강조
-            if (idx % 10 === 0) return 4; 
-            return 0;
-        };
-        
-        const getPointRadius = isStar2 ? getPointRadius2 : getPointRadius3;
 
         const getHitRadius = (ctx) => {
-            const idx = ctx.dataIndex;
-            if (isStar2) {
-                return (idx % 5 === 0) ? 15 : 0; 
-            }
-            return (idx % 10 === 0) ? 30 : 0;
+            return ChartUtils.getHitRadius(ctx.dataIndex, isStar2);
         };
 
         // 색상 및 스타일 정의
@@ -246,36 +231,29 @@ export class GachaResultView extends ResultView {
                 pointRadius: getPointRadius,
                 pointHoverRadius: (ctx) => getPointRadius(ctx) + 2,
                 pointHitRadius: getHitRadius,
-                // 강조 색상 로직도 분기
-                pointBackgroundColor: (ctx) => {
-                    const idx = ctx.dataIndex;
-                    const isHighlight = isStar2 ? (idx % 50 === 0) : (idx % 40 === 0);
-                    return isHighlight ? mainColor : '#fff';
-                },
+                pointBackgroundColor: (ctx) => ChartUtils.getPointBackgroundColor(ctx.dataIndex, mainColor, isStar2),
                 pointBorderColor: mainColor,
                 borderWidth: 2
             },
             {
-                // 일반 가챠는 심플하게 유지 (10단위만)
                 label: '일반 가챠',
                 data: finalNorm,
                 borderColor: '#283c86',
                 borderDash: [5, 5],
                 tension: 0.1,
                 pointRadius: (ctx) => (ctx.dataIndex % 10 === 0 ? 3.5 : 0),
-                pointHitRadius: getHitRadius, // 같이 반응하도록 맞춤
+                pointHitRadius: getHitRadius,
                 pointBackgroundColor: '#283c86',
                 borderWidth: 1.5
             }
         ];
 
-        // ChartAdapter 호출
-        ChartAdapter.renderLineChart(canvasId, labels, datasets, chartRef); // ResultView 상속 메서드 활용
+        ChartAdapter.renderLineChart(canvasId, labels, datasets, chartRef);
 
         // 요약 텍스트
         const summaryEl = document.getElementById('globalSummary');
         if (summaryEl) {
-            const limitIdx = limit; // 1단위이므로 index = limit
+            const limitIdx = limit;
             const sVal = finalStep[limitIdx];
             const nVal = finalNorm[limitIdx];
             const modeText = isWorst ? '실패(폭사) 확률' : '성공(졸업) 확률';

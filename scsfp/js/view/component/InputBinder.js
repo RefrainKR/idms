@@ -8,13 +8,22 @@ export class InputBinder {
         if (!element || !observable) return;
 
         const isInt = options.type === 'int';
-        let currentMax = options.max !== undefined ? options.max : Infinity; // 내부 관리용 Max
+        let currentMax = options.max !== undefined ? options.max : Infinity;
         
-        // [신규] 동적 Max 감지 로직
+        // [수정] 동적 Max 감지 로직 - HTML 속성 변경 없이 내부 변수만 관리
         if (options.maxObserver) {
+            // 초기값 설정
+            currentMax = options.maxObserver.value;
+            
+            // 초기 값이 Max를 초과하면 즉시 보정
+            if (observable.value > currentMax) {
+                observable.value = currentMax;
+                element.value = currentMax;
+            }
+            
+            // 이후 변경사항 감지
             options.maxObserver.subscribe((newMax) => {
                 currentMax = newMax;
-                element.max = newMax; // HTML 속성도 업데이트 (UI용)
                 
                 // 현재 값이 새 Max보다 크다면 즉시 깎음
                 if (observable.value > newMax) {
@@ -22,12 +31,8 @@ export class InputBinder {
                     element.value = newMax;
                 }
             });
-            // 초기값 반영
-            currentMax = options.maxObserver.value;
-            element.max = currentMax;
         }
 
-        // ... (기본 바인딩 로직) ...
         let previousValue = observable.value;
 
         observable.subscribe((val) => {
@@ -53,7 +58,7 @@ export class InputBinder {
             const min = options.min !== undefined ? options.min : -Infinity;
             
             if (val < min) val = min;
-            if (val > currentMax) val = currentMax; // [핵심]
+            if (val > currentMax) val = currentMax;
 
             element.value = val;
             if (observable.value !== val) {

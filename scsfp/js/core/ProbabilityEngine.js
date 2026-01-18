@@ -1,4 +1,5 @@
 import { PROBABILITY_MODE } from './GachaConstants.js';
+import { ProbabilityValidator } from '../utils/ProbabilityValidator.js';
 
 export class ProbabilityEngine {
     
@@ -10,14 +11,17 @@ export class ProbabilityEngine {
         const size = dp.length - 1; 
         let nextDP = new Array(size + 1).fill(0);
 
+        // [개선] 중앙화된 확률 검증
+        const validProb = ProbabilityValidator.clamp(prob);
+
         for (let k = 0; k <= size; k++) {
             if (dp[k] === 0) continue;
             
             if (k === size) {
                 nextDP[k] += dp[k];
             } else {
-                // [방어 코드] 100% 초과 방지
-                let p_new = Math.min((size - k) * prob, 1.0);
+                // [개선] getTotalProb 사용으로 안전성 강화
+                const p_new = ProbabilityValidator.getTotalProb(validProb, size - k);
                 
                 nextDP[k] += dp[k] * (1.0 - p_new);
                 nextDP[k + 1] += dp[k] * p_new;
@@ -47,8 +51,9 @@ export class ProbabilityEngine {
             if (k === size) {
                 nextDP[size] += dp[k];
             } else {
-                // [방어 코드] 극단적 파라미터 방지
-                let p_new = Math.min((size - k) / poolSize, 1.0);
+                // [개선] 확률 계산 안전성 강화
+                const individualProb = 1.0 / poolSize;
+                const p_new = ProbabilityValidator.getTotalProb(individualProb, size - k);
                 
                 nextDP[k] += dp[k] * (1.0 - p_new);
                 nextDP[k + 1] += dp[k] * p_new;
@@ -58,15 +63,15 @@ export class ProbabilityEngine {
     }
 
     // ==========================================
-    // 2. 총 획득 수 계산
+    // 2. 이 획득 수 계산
     // ==========================================
 
     static accumulateCountProb(dp, prob) {
         const size = dp.length;
         let nextDP = new Array(size + 1).fill(0);
         
-        // [방어 코드] 확률이 0~1 사이인지 강제 검증 (음수 방지)
-        const validProb = Math.min(Math.max(prob, 0), 1.0);
+        // [개선] 중앙화된 확률 검증
+        const validProb = ProbabilityValidator.clamp(prob);
 
         for (let k = 0; k < size; k++) {
             if (dp[k] === 0) continue;
@@ -117,15 +122,15 @@ export class ProbabilityEngine {
                 sum += dp[i];
                 newDP[i] = Math.min(sum, 1.0);
             }
-            // [방어 코드] 부동소수점 오차로 0.999...가 되는 것 방지
-            newDP[N] = 1.0; 
+            // [개선] 부동소수점 오차 보정
+            newDP = ProbabilityValidator.fixCumulativeEnd(newDP);
         } else if (mode === PROBABILITY_MODE.CUMULATIVE_MORE) {
             for (let i = N; i >= 0; i--) {
                 sum += dp[i];
                 newDP[i] = Math.min(sum, 1.0);
             }
-            // [방어 코드] 0개 이상은 무조건 100%
-            newDP[0] = 1.0; 
+            // [개선] 0개 이상은 무조건 100%
+            newDP[0] = 1.0;
         }
         return newDP;
     }

@@ -4,10 +4,11 @@ import { ProbabilityEngine } from '../../core/ProbabilityEngine.js';
 import { GachaResultView } from '../../view/gacha/GachaResultView.js';
 import { ToggleButton } from '../../view/component/ToggleButton.js';
 import { CONFIG, TOGGLE_STATES } from '../../core/GachaConstants.js';
+import { ProbabilityValidator } from '../../utils/ProbabilityValidator.js';
 
 export class Star2GachaViewModel extends BaseGachaViewModel {
     constructor() {
-        super(CONFIG.STAR2.KEY, CONFIG.STAR2); // config 인자 추가 확인
+        super(CONFIG.STAR2.KEY, CONFIG.STAR2);
         this.model = new Star2GachaModel();
         
         this.inputsMap = {
@@ -74,7 +75,7 @@ export class Star2GachaViewModel extends BaseGachaViewModel {
         toggle('btnEfficiencyToggle2', isEff);
         toggle('btnGroupEfficiencyMode', isEff);
         
-        // 수집/총획득 탭
+        // 수집/이획득 탭
         toggle('toggleViewBtn2', !isEff);
         toggle('btnGroupViewMode', !isEff);
     }
@@ -82,13 +83,7 @@ export class Star2GachaViewModel extends BaseGachaViewModel {
     setupDataDependencies() {
         ['A', 'B', 'C', 'D'].forEach(id => {
             this.model[`countStep${id}`].subscribe((newN) => {
-                // UI: Max 속성 업데이트
-                const targetInput = document.getElementById(`targetCount${id}`);
-                if (targetInput) {
-                    targetInput.max = newN;
-                }
-                
-                // Model: 데이터 보정
+                // [수정] HTML 속성 변경 제거 - 로직만 처리
                 if (this.model[`targetCount${id}`].value > newN) {
                     this.model[`targetCount${id}`].value = newN;
                 }
@@ -112,15 +107,16 @@ export class Star2GachaViewModel extends BaseGachaViewModel {
 
         const p_normal_one = rate / N; 
         const p_guar_one = 1.0 / N;
-        const p_normal_any = Math.min(p_normal_one * M, 1.0);
-        const p_guar_any = Math.min(p_guar_one * M, 1.0);
+        
+        // [개선] 중앙화된 확률 검증 사용
+        const p_normal_any = ProbabilityValidator.getTotalProb(p_normal_one, M);
+        const p_guar_any = ProbabilityValidator.getTotalProb(p_guar_one, M);
 
         for (let i = 1; i <= pulls; i++) {
             const isGuar = (i === 5 || (i > 5 && (i - 5) % 10 === 0));
             const p_one = isGuar ? p_guar_one : p_normal_one;
             const p_any = isGuar ? p_guar_any : p_normal_any;
 
-            // runSinglePull은 ProbabilityEngine 내부에서 이미 보정됨
             dp = ProbabilityEngine.runSinglePull(dp, p_one);
             dpTotal = ProbabilityEngine.accumulateCountProb(dpTotal, p_any);
         }
@@ -179,9 +175,9 @@ export class Star2GachaViewModel extends BaseGachaViewModel {
         const p_norm_one = rateTotal / N_total;
         const p_high_one = 0.95 / N_total;
         
-        // 확률 보정 적용
-        const p_norm_any = Math.min(p_norm_one * totalTargets, 1.0);
-        const p_high_any = Math.min(p_high_one * totalTargets, 1.0);
+        // [개선] 중앙화된 확률 검증 사용
+        const p_norm_any = ProbabilityValidator.getTotalProb(p_norm_one, totalTargets);
+        const p_high_any = ProbabilityValidator.getTotalProb(p_high_one, totalTargets);
 
         for (let i = 1; i <= normalPulls; i++) {
             const isHigh = (i % 10 === 0);
@@ -189,16 +185,7 @@ export class Star2GachaViewModel extends BaseGachaViewModel {
             dpTotal = ProbabilityEngine.accumulateCountProb(dpTotal, isHigh ? p_high_any : p_norm_any);
         }
 
-        // 스탭업 특정 1명 보정 (가장 많이 돌린 그룹 -> 사용자가 선택한 그룹)
-        // 만약 선택된 그룹이 유효하지 않다면 기존처럼 '가장 많이 돌린 그룹'을 fallback으로 사용
-        const selectedGid = this.model.selectedGroup.value;
-        let targetGroup = groups.find(g => g.id === selectedGid);
-        
-        if (!targetGroup) {
-            // 선택된 그룹이 없거나 잘못된 경우: 가장 많이 돌린 그룹 자동 선택 (Fallback)
-            targetGroup = groups.reduce((p, c) => (p.pulls > c.pulls ? p : c), groups[0]);
-        }
-
+        // 천장 처리
         const totalCeil = Math.floor(normalPulls / 100) + Math.floor(totalStepPulls / 50);
         if (this.model.ceilingMode.value === 'included') {
             for (let i = 0; i < totalCeil; i++) {
@@ -207,6 +194,7 @@ export class Star2GachaViewModel extends BaseGachaViewModel {
             }
         }
 
+        // 타겟 그룹 정보 설정
         let gid = this.model.selectedGroup.value;
         if (!gid || !['A', 'B', 'C', 'D'].includes(gid)) gid = 'A';
         
@@ -220,8 +208,7 @@ export class Star2GachaViewModel extends BaseGachaViewModel {
             normalPulls, totalStepPulls, totalCeil, rateTotal,
             efficiencyData: this._calculateEfficiencyData(isAllZero),
             targetGroupInfo, N: N_total, M: totalTargets,
-            ceilingMode: this.model.ceilingMode.value, 
-            specificTargetGroupId: targetGroup.id
+            ceilingMode: this.model.ceilingMode.value
         };
 
         GachaResultView.render2Star({ N: N_total, M: totalTargets, dp, dpTotal }, context, this.model, this.chartRefs);

@@ -3,14 +3,14 @@ import { Star3GachaModel } from '../../model/gacha/Star3GachaModel.js';
 import { ProbabilityEngine } from '../../core/ProbabilityEngine.js';
 import { GachaResultView } from '../../view/gacha/GachaResultView.js';
 import { ToggleButton } from '../../view/component/ToggleButton.js';
-import { CONFIG, TOGGLE_STATES } from '../../core/GachaConstants.js'; // (구 config.js)
+import { CONFIG, TOGGLE_STATES } from '../../core/GachaConstants.js';
+import { ProbabilityValidator } from '../../utils/ProbabilityValidator.js';
 
 export class Star3GachaViewModel extends BaseGachaViewModel {
     constructor() {
         super(CONFIG.STAR3.KEY, CONFIG.STAR3); 
         this.model = new Star3GachaModel();
         
-        // HTML ID와 Model 속성 매핑
         this.inputsMap = {
             'pickupCount': this.model.pickupCount,
             'pickupRate': this.model.pickupRate,
@@ -25,15 +25,14 @@ export class Star3GachaViewModel extends BaseGachaViewModel {
     }
 
     init() {
-        super.init();
+        // [수정] setupDataDependencies를 super.init() 전에 호출하여
+        // InputBinder가 올바른 maxObserver를 받을 수 있도록 함
+        this.setupDataDependencies();
+        
+        super.init(); // 여기서 bindInputs()가 호출됨
 
         this.bindToggles();
         this.renderPresetButtons();
-        
-        // 데이터 관계 설정 (maxLoops -> stepMax 등)
-        this.setupDataDependencies(); 
-        
-        // 초기 UI 렌더링 (데이터 바인딩 직후 1회 실행 보장)
         this.updateLoopUI(this.model.loopRewards.value);
 
         const resetBtn = document.getElementById('resetBtn3');
@@ -43,7 +42,6 @@ export class Star3GachaViewModel extends BaseGachaViewModel {
     }
 
     bindToggles() {
-        // 이제 콜백에서 this.calculate()를 직접 부를 필요가 없습니다. (Base에서 자동 감지)
         new ToggleButton('toggleCeilingBtn3', TOGGLE_STATES.CEILING, (s) => this.model.ceilingMode.value = s.name, this.model.ceilingMode.value);
         new ToggleButton('toggleRandomBtn3', TOGGLE_STATES.RANDOM, (s) => this.model.randomMode.value = s.name, this.model.randomMode.value);
         new ToggleButton('toggleStep4Btn3', TOGGLE_STATES.STEP4, (s) => this.model.step4Mode.value = s.name, this.model.step4Mode.value);
@@ -62,10 +60,7 @@ export class Star3GachaViewModel extends BaseGachaViewModel {
             if (el) el.style.display = show ? '' : 'none';
         };
 
-        // 효율 탭 전용 버튼 노출 제어
         toggle('btnEfficiencyToggle3', isEff);
-        
-        // 수집/총획득 탭 전용 버튼 숨김
         toggle('toggleViewBtn3', !isEff);
     }
         
@@ -84,23 +79,18 @@ export class Star3GachaViewModel extends BaseGachaViewModel {
         });
     }
 
-
     setupDataDependencies() {
-        // 1. maxLoops 변경 시 -> stepMax 업데이트 및 루프 UI 갱신
         this.model.maxLoops.subscribe((val) => {
-            this.model.stepMax.value = val * 40; // Computed 값 업데이트
+            this.model.stepMax.value = val * 40;
             this.updateLoopUI();
         });
 
-        // 2. N(전체) -> M(저격) 종속성 관리
         this.model.pickupCount.subscribe((newN) => {
-            // [UI Logic] HTML 속성 제어 (ViewModel이 DOM을 아는 것이 100% 순수하진 않지만, 바닐라 JS에선 실용적임)
             const targetInput = document.getElementById('targetCount');
             if (targetInput) {
                 targetInput.max = newN;
             }
 
-            // [Business Logic] 데이터 무결성 보장
             if (this.model.targetCount.value > newN) {
                 this.model.targetCount.value = newN;
             }
@@ -112,10 +102,8 @@ export class Star3GachaViewModel extends BaseGachaViewModel {
             return { maxObserver: this.model.pickupCount };
         }
         if (id === 'stepPulls') {
-            // [핵심] stepPulls는 stepMax를 자신의 한계로 삼는다.
             return { maxObserver: this.model.stepMax }; 
         }
-
         return null;
     }
 
@@ -154,17 +142,14 @@ export class Star3GachaViewModel extends BaseGachaViewModel {
     applyPreset(settings) {
         if (this.isInitializing) return;
 
-        // 1. 주요 설정
         if (settings.pickupCount !== undefined) this.model.pickupCount.value = settings.pickupCount;
         if (settings.pickupRate !== undefined) this.model.pickupRate.value = settings.pickupRate;
         if (settings.maxLoops !== undefined) this.model.maxLoops.value = settings.maxLoops;
         if (settings.step4Rate !== undefined) this.model.step4Rate.value = settings.step4Rate;
         
-        // 2. 횟수 초기화
         this.model.normalPulls.value = 0;
         this.model.stepPulls.value = 0;
 
-        // 3. 보상 설정 (UI 갱신 포함)
         if (settings.rewards) {
             this.model.loopRewards.value = settings.rewards;
             this.updateLoopUI(settings.rewards);
@@ -176,7 +161,6 @@ export class Star3GachaViewModel extends BaseGachaViewModel {
     calculate() {
         if (this.isInitializing) return;
 
-        // 1. Model에서 데이터 추출
         const N = Number(this.model.pickupCount.value);
         let targetVal = this.model.targetCount.value;
         let M = (targetVal === 0 || !targetVal) ? N : Number(targetVal);
@@ -195,9 +179,9 @@ export class Star3GachaViewModel extends BaseGachaViewModel {
         let dpTotal = [1.0];
 
         // --- 일반 가챠 ---
-
-        // 총 획득 확률(p * M)이 1.0(100%)을 넘지 않도록 보정
-        const p_any_normal = Math.min(p_target_one * M, 1.0);
+        // [개선] 중앙화된 확률 검증 사용
+        const p_any_normal = ProbabilityValidator.getTotalProb(p_target_one, M);
+        
         for (let i = 0; i < normalPulls; i++) {
             dp = ProbabilityEngine.runSinglePull(dp, p_target_one);
             dpTotal = ProbabilityEngine.accumulateCountProb(dpTotal, p_any_normal);
@@ -214,13 +198,12 @@ export class Star3GachaViewModel extends BaseGachaViewModel {
             if (isStep4) countStep4++; else countNormal++;
 
             const p = useStep4 ? p_step4_one : p_target_one;
-            // 스탭업에서도 총 획득 확률 제한
-            const p_any = Math.min(p * M, 1.0);
+            // [개선] 중앙화된 확률 검증 사용
+            const p_any = ProbabilityValidator.getTotalProb(p, M);
 
             dp = ProbabilityEngine.runSinglePull(dp, p);
             dpTotal = ProbabilityEngine.accumulateCountProb(dpTotal, p_any);
 
-            // 보상 처리
             if (isStep4) {
                 const reward = loopRewards[curLoop];
                 if (reward === 'random') {
@@ -237,7 +220,6 @@ export class Star3GachaViewModel extends BaseGachaViewModel {
 
         // --- 천장 처리 ---
         const normalCeil = Math.floor((normalPulls + stepPulls) / 200);
-        // selectCnt(selectRewardCount)는 위 스탭업 루프에서 계산됨
         const totalCeil = selectCnt + normalCeil;
 
         if (this.model.ceilingMode.value === 'included' && totalCeil > 0) {
@@ -247,7 +229,6 @@ export class Star3GachaViewModel extends BaseGachaViewModel {
             }
         }
 
-        // [수정] 효율 비교 데이터 생성 시 Best/Worst를 모두 계산해서 전달
         const efficiencyData = this._calculateEfficiencyData(N, M, p_indiv, p_step4_total);
 
         const context = {
@@ -262,7 +243,7 @@ export class Star3GachaViewModel extends BaseGachaViewModel {
         GachaResultView.render3Star({ N, M, dp, dpTotal }, context, this.model, this.chartRefs);
     }
 
-	_calculateEfficiencyData(N, M, p_indiv, p_step4_total) {
+    _calculateEfficiencyData(N, M, p_indiv, p_step4_total) {
         const labels = [];
         const normalData = [];
         const stepupData = [];
@@ -279,7 +260,6 @@ export class Star3GachaViewModel extends BaseGachaViewModel {
                 const nCeil = Math.floor(pulls / 200);
                 for (let i = 0; i < nCeil; i++) dpN = ProbabilityEngine.runGuaranteedPull(dpN);
             }
-            // Best(성공)와 Worst(폭사) 데이터를 객체로 저장하여 전달
             normalData.push({ best: dpN[M] * 100, worst: dpN[0] * 100 });
 
             // 스탭업 가챠 시뮬레이션
