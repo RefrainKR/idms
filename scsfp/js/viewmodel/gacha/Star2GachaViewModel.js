@@ -199,11 +199,6 @@ export class Star2GachaViewModel extends BaseGachaViewModel {
             targetGroup = groups.reduce((p, c) => (p.pulls > c.pulls ? p : c), groups[0]);
         }
 
-        if (targetGroup.pulls > 0) {
-            // 선택된 그룹의 풀에서 1명을 뽑는 확률로 계산
-            const res = this._calcGroup(targetGroup.N, 1, targetGroup.pulls, rateTotal);
-        }
-
         const totalCeil = Math.floor(normalPulls / 100) + Math.floor(totalStepPulls / 50);
         if (this.model.ceilingMode.value === 'included') {
             for (let i = 0; i < totalCeil; i++) {

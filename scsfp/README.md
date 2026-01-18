@@ -1,1 +1,2 @@
-- https://aistudio.google.com/ 의 도움에 의해 만들어졌습니다.
+- https://aistudio.google.com/ + https://claude.ai/ 의 도움에 의해 만들어졌습니다.
+- Gemini 3 Pro/Flash Preview, Sonnet 4.5
