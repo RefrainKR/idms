@@ -10,7 +10,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
     
     <!-- CSS -->
-    <link rel="stylesheet" href="css/style.css?v=1.6.2">
+    <link rel="stylesheet" href="css/style.css?v=1.6.0">
 </head>
 <body>
 
@@ -101,16 +101,22 @@
                         <button class="tab-button sub-tab-btn active" data-tab="res-3s-collection">픽업 획득(중복X)</button>
                         <button class="tab-button sub-tab-btn" data-tab="res-3s-total">총 획득(중복O)</button>
                         <button class="tab-button sub-tab-btn" data-tab="res-3s-efficiency">일반vs스탭업</button>
+                        <button class="tab-button sub-tab-btn" data-tab="res-3s-cdf">역추적</button>
                     </div>
 
                     <div class="result-options-header">
+                        <!-- 왼쪽: 상시 노출 또는 일반 옵션 -->
                         <div class="btn-group left-group">
                             <button id="toggleCeilingBtn3" class="view-toggle-btn">천장</button>
                             <button id="toggleRandomBtn3" class="view-toggle-btn" data-role="calc-opt">랜덤</button>
                             <button id="toggleStep4Btn3" class="view-toggle-btn" data-role="calc-opt">Step4</button>
+                            <!-- [동적 제어] 수집/총획득 탭용 -->
                             <button id="toggleViewBtn3" class="view-toggle-btn" data-role="view-mode">개별</button>
                         </div>
+                        <!-- 오른쪽: 효율 탭 전용 -->
                         <div class="btn-group right-group">
+                            <!-- [동적 제어] 효율 탭용 -->
+                            <button id="btnEfficiencyModeToggle3" class="view-toggle-btn" data-role="eff-chart-mode" style="display:none;">비교</button>
                             <button id="btnEfficiencyToggle3" class="view-toggle-btn" data-role="eff-mode" style="display:none;">Best</button>
                         </div>
                     </div>
@@ -137,6 +143,21 @@
                                     <div class="chart-scroll-inner">
                                         <canvas id="efficiencyChart"></canvas>
                                     </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="res-3s-cdf" class="tab-content">
+                            <div class="result-area">
+                                <div class="chart-scroll-wrapper">
+                                    <div class="chart-scroll-inner">
+                                        <canvas id="cdfChart"></canvas>
+                                    </div>
+                                    <div class="section-content">
+                                        <div class="input-item" style="margin-bottom: 15px;">
+                                        <label for="targetProbability3">목표 확률 (%)</label>
+                                        <input type="number" id="targetProbability3">
+                                        </div>
+                                </div>
                                 </div>
                             </div>
                         </div>
@@ -371,7 +392,7 @@
     </div>
 </div>
 
-<script type="module" src="js/main.js?v=1.6.2"></script>
+<script type="module" src="js/main.js?v=1.6.0"></script>
 
 </body>
 </html>

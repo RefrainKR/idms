@@ -1,9 +1,10 @@
 import { BaseGachaViewModel } from './BaseGachaViewModel.js';
 import { Star2GachaModel } from '../../model/gacha/Star2GachaModel.js';
 import { ProbabilityEngine } from '../../core/ProbabilityEngine.js';
+import { EfficiencyCalculator } from '../../core/EfficiencyCalculator.js';
 import { GachaResultView } from '../../view/gacha/GachaResultView.js';
 import { ToggleButton } from '../../view/component/ToggleButton.js';
-import { CONFIG, TOGGLE_STATES } from '../../core/GachaConstants.js';
+import { CONFIG, TOGGLE_STATES, GACHA_RULES } from '../../core/GachaConstants.js';
 import { ProbabilityValidator } from '../../utils/ProbabilityValidator.js';
 
 export class Star2GachaViewModel extends BaseGachaViewModel {
@@ -113,7 +114,9 @@ export class Star2GachaViewModel extends BaseGachaViewModel {
         const p_guar_any = ProbabilityValidator.getTotalProb(p_guar_one, M);
 
         for (let i = 1; i <= pulls; i++) {
-            const isGuar = (i === 5 || (i > 5 && (i - 5) % 10 === 0));
+            const isGuar = (i === GACHA_RULES.STAR2.STEPUP_GUARANTEE_FIRST ||
+                           (i > GACHA_RULES.STAR2.STEPUP_GUARANTEE_FIRST &&
+                            (i - GACHA_RULES.STAR2.STEPUP_GUARANTEE_FIRST) % GACHA_RULES.STAR2.STEPUP_GUARANTEE_INTERVAL === 0));
             const p_one = isGuar ? p_guar_one : p_normal_one;
             const p_any = isGuar ? p_guar_any : p_normal_any;
 
@@ -180,13 +183,13 @@ export class Star2GachaViewModel extends BaseGachaViewModel {
         const p_high_any = ProbabilityValidator.getTotalProb(p_high_one, totalTargets);
 
         for (let i = 1; i <= normalPulls; i++) {
-            const isHigh = (i % 10 === 0);
+            const isHigh = (i % GACHA_RULES.STAR2.HIGH_RATE_INTERVAL === 0);
             dp = ProbabilityEngine.runSinglePull(dp, isHigh ? p_high_one : p_norm_one);
             dpTotal = ProbabilityEngine.accumulateCountProb(dpTotal, isHigh ? p_high_any : p_norm_any);
         }
 
         // 천장 처리
-        const totalCeil = Math.floor(normalPulls / 100) + Math.floor(totalStepPulls / 50);
+        const totalCeil = Math.floor(normalPulls / GACHA_RULES.STAR2.NORMAL_CEILING_INTERVAL) + Math.floor(totalStepPulls / GACHA_RULES.STAR2.STEPUP_CEILING_INTERVAL);
         if (this.model.ceilingMode.value === 'included') {
             for (let i = 0; i < totalCeil; i++) {
                 dp = ProbabilityEngine.runGuaranteedPull(dp);
@@ -217,38 +220,19 @@ export class Star2GachaViewModel extends BaseGachaViewModel {
     _calculateEfficiencyData(isAllZero) {
         let gid = this.model.efficiencyTargetGroup.value || 'A';
         const N_group = this.model[`countStep${gid}`].value;
-        
+
         let M_group = isAllZero ? N_group : this.model[`targetCount${gid}`].value;
         if (M_group > N_group) M_group = N_group;
 
         const N_total = this.model.countNormal.value;
         const rateTotal = this.model.rateTotal.value / 100;
 
-        const labels = [], normalData = [], stepupData = [];
-
-        for (let pulls = 0; pulls <= 200; pulls++) {
-            labels.push(pulls);
-            // 일반 가챠 시뮬레이션
-            let dpN = new Array(M_group + 1).fill(0); dpN[0] = 1.0;
-            for (let i = 1; i <= pulls; i++) dpN = ProbabilityEngine.runSinglePull(dpN, (i % 10 === 0 ? 0.95 : rateTotal) / N_total);
-            if (this.model.ceilingMode.value === 'included') {
-                const ceil = Math.floor(pulls / 100);
-                for (let i = 0; i < ceil; i++) dpN = ProbabilityEngine.runGuaranteedPull(dpN);
-            }
-            normalData.push({ best: dpN[M_group] * 100, worst: dpN[0] * 100 });
-
-            // 스탭업 가챠 시뮬레이션
-            let dpS = new Array(M_group + 1).fill(0); dpS[0] = 1.0;
-            for (let i = 1; i <= pulls; i++) {
-                const isGuar = (i === 5 || (i > 5 && (i - 5) % 10 === 0));
-                dpS = ProbabilityEngine.runSinglePull(dpS, isGuar ? (1.0 / N_group) : (rateTotal / N_group));
-            }
-            if (this.model.ceilingMode.value === 'included') {
-                const ceil = Math.floor(pulls / 50);
-                for (let i = 0; i < ceil; i++) dpS = ProbabilityEngine.runGuaranteedPull(dpS);
-            }
-            stepupData.push({ best: dpS[M_group] * 100, worst: dpS[0] * 100 });
-        }
-        return { labels, normalData, stepupData };
+        return EfficiencyCalculator.calculate2Star({
+            N_group,
+            M_group,
+            N_total,
+            rateTotal,
+            ceilingMode: this.model.ceilingMode.value
+        });
     }
 }

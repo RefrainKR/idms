@@ -290,7 +290,8 @@ button { font-family: inherit; }
 
 .view-toggle-btn {
     transition: all 0.2s;
-    padding: 6px 10px;
+    padding: 6px 8px;
+    min-width: 50px;
     border: 1px solid #ccc;
     border-radius: 4px;
     font-size: 0.85rem;
@@ -450,6 +451,19 @@ button { font-family: inherit; }
     position: relative;
 }
 
+.cdf-input-section {
+    background-color: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    border: 1px solid var(--border-light);
+}
+
+.cdf-input-section .input-item {
+    max-width: 300px;
+    margin: 0 auto;
+}
+
 /* --- 7. Mobile Responsive --- */
 @media (max-width: 650px) {
     .section-content, 
@@ -485,7 +499,6 @@ button { font-family: inherit; }
     }
     .right-group {
         margin-left: 0;
-        justify-content: flex-start;
         width: 100%; /* 버튼 많을 때 줄바꿈 유연하게 */
     }
 }

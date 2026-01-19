@@ -4,6 +4,9 @@ import { BirthdayGachaViewModel } from './viewmodel/gacha/BirthdayGachaViewModel
 import { TabManager } from './view/component/TabManager.js';
 import { CollapsibleSection } from './view/component/CollapsibleSection.js';
 
+// Chart.js and ChartDataLabels are loaded as global variables via CDN (see index.html)
+// Chart.js: https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js
+// ChartDataLabels: https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0
 Chart.register(ChartDataLabels);
 
 window.onload = function() {

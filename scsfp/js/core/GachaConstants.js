@@ -8,7 +8,8 @@ export const CONFIG = {
             { id: 'step4Rate', min: 0, max: 100, def: 40 },
             { id: 'normalPulls', min: 0, max: 9999, def: 0 },
             { id: 'stepPulls', min: 0, def: 0 },
-            { id: 'targetCount', min: 0, def: 0 }
+            { id: 'targetCount', min: 0, def: 0 },
+            { id: 'targetProbability3', min: 0, max: 100, def: 90 }
         ], 
         PRESETS: [
             {
@@ -55,6 +56,27 @@ const groupDefaults = [8, 7, 7, 6];
     );
 });
 
+// 가챠 규칙 상수 정의
+export const GACHA_RULES = {
+    STAR3: {
+        STEPUP_CYCLE: 40,              // Step4가 나오는 주기 (40회마다)
+        CEILING_INTERVAL: 200,         // 천장 발동 횟수 (일반+스탭업 합산)
+        STEPUP_CEILING_INTERVAL: 200   // 스탭업 천장 (통합)
+    },
+    STAR2: {
+        HIGH_RATE_INTERVAL: 10,        // 95% 보정 주기 (일반 가챠)
+        STEPUP_GUARANTEE_FIRST: 5,     // 첫 확정 (5회)
+        STEPUP_GUARANTEE_INTERVAL: 10, // 확정 간격 (이후 10회마다)
+        NORMAL_CEILING_INTERVAL: 100,  // 일반 천장 (100회당)
+        STEPUP_CEILING_INTERVAL: 50    // 스탭업 천장 (50회당)
+    },
+    BIRTHDAY: {
+        STEPUP_MAX: 30,                // 스탭업 최대 횟수
+        STEPUP_GUARANTEE: 30,          // 30회째 확정 획득
+        CEILING_INTERVAL: 200          // 천장 (일반+스탭업 합산)
+    }
+};
+
 // 확률 모드 상수 정의
 export const PROBABILITY_MODE = {
     INDIVIDUAL: 'individual',
@@ -83,7 +105,11 @@ export const TOGGLE_STATES = {
     EFFICIENCY: [
         { name: 'best', text: 'Best', isActive: true },
         { name: 'worst', text: 'Worst', isActive: false }
-    ],  
+    ],
+    EFFICIENCY_MODE: [
+        { name: 'comparison', text: '비교', isActive: true },
+        { name: 'cdf', text: '역추적', isActive: false }
+    ],
     GROUPS_VIEW: [
         { name: 'ALL', text: 'All', isActive: true },
         { name: 'A', text: 'A', isActive: true },

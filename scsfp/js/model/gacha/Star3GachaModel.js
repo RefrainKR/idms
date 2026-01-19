@@ -19,6 +19,9 @@ export class Star3GachaModel {
         this.step4Mode = new Observable('included');
         this.viewMode = new Observable('individual');
         this.efficiencyMode = new Observable('best');
+
+        // CDF 역추적용 목표 확률
+        this.targetProbability = new Observable(90);
     }
 
     toJSON() {

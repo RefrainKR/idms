@@ -1,9 +1,10 @@
 import { BaseGachaViewModel } from './BaseGachaViewModel.js';
 import { Star3GachaModel } from '../../model/gacha/Star3GachaModel.js';
 import { ProbabilityEngine } from '../../core/ProbabilityEngine.js';
+import { EfficiencyCalculator } from '../../core/EfficiencyCalculator.js';
 import { GachaResultView } from '../../view/gacha/GachaResultView.js';
 import { ToggleButton } from '../../view/component/ToggleButton.js';
-import { CONFIG, TOGGLE_STATES } from '../../core/GachaConstants.js';
+import { CONFIG, TOGGLE_STATES, GACHA_RULES } from '../../core/GachaConstants.js';
 import { ProbabilityValidator } from '../../utils/ProbabilityValidator.js';
 
 export class Star3GachaViewModel extends BaseGachaViewModel {
@@ -18,10 +19,11 @@ export class Star3GachaViewModel extends BaseGachaViewModel {
             'maxLoops': this.model.maxLoops,
             'step4Rate': this.model.step4Rate,
             'normalPulls': this.model.normalPulls,
-            'stepPulls': this.model.stepPulls
+            'stepPulls': this.model.stepPulls,
+            'targetProbability3': this.model.targetProbability
         };
         
-        this.chartRefs = { collection: { current: null }, total: { current: null }, efficiency: { current: null } };
+        this.chartRefs = { collection: { current: null }, total: { current: null }, efficiency: { current: null }, cdf: { current: null } };
     }
 
     init() {
@@ -55,13 +57,14 @@ export class Star3GachaViewModel extends BaseGachaViewModel {
         this.calculate();
 
         const isEff = (tabId === 'res-3s-efficiency');
+        const isCdf = (tabId === 'res-3s-cdf');
         const toggle = (id, show) => {
             const el = document.getElementById(id);
             if (el) el.style.display = show ? '' : 'none';
         };
 
         toggle('btnEfficiencyToggle3', isEff);
-        toggle('toggleViewBtn3', !isEff);
+        toggle('toggleViewBtn3', !isEff && !isCdf);
     }
         
     renderPresetButtons() {
@@ -81,16 +84,11 @@ export class Star3GachaViewModel extends BaseGachaViewModel {
 
     setupDataDependencies() {
         this.model.maxLoops.subscribe((val) => {
-            this.model.stepMax.value = val * 40;
+            this.model.stepMax.value = val * GACHA_RULES.STAR3.STEPUP_CYCLE;
             this.updateLoopUI();
         });
 
         this.model.pickupCount.subscribe((newN) => {
-            const targetInput = document.getElementById('targetCount');
-            if (targetInput) {
-                targetInput.max = newN;
-            }
-
             if (this.model.targetCount.value > newN) {
                 this.model.targetCount.value = newN;
             }
@@ -191,8 +189,8 @@ export class Star3GachaViewModel extends BaseGachaViewModel {
         let countStep4 = 0, countNormal = 0, randomCnt = 0, selectCnt = 0;
         
         for (let i = 1; i <= stepPulls; i++) {
-            const isStep4 = (i % 40 === 0);
-            const curLoop = Math.ceil(i / 40);
+            const isStep4 = (i % GACHA_RULES.STAR3.STEPUP_CYCLE === 0);
+            const curLoop = Math.ceil(i / GACHA_RULES.STAR3.STEPUP_CYCLE);
             const useStep4 = (isStep4 && this.model.step4Mode.value === 'included');
             
             if (isStep4) countStep4++; else countNormal++;
@@ -218,7 +216,7 @@ export class Star3GachaViewModel extends BaseGachaViewModel {
         }
 
         // --- 천장 처리 ---
-        const normalCeil = Math.floor((normalPulls + stepPulls) / 200);
+        const normalCeil = Math.floor((normalPulls + stepPulls) / GACHA_RULES.STAR3.CEILING_INTERVAL);
         const totalCeil = selectCnt + normalCeil;
 
         if (this.model.ceilingMode.value === 'included' && totalCeil > 0) {
@@ -229,6 +227,7 @@ export class Star3GachaViewModel extends BaseGachaViewModel {
         }
 
         const efficiencyData = this._calculateEfficiencyData(N, M, p_indiv, p_step4_total);
+        const cdfData = this._calculateCDFData(N, M, p_indiv, p_step4_total);
 
         const context = {
             N, M, p_indiv: p_indiv * 100, p_step4_total: p_step4_total * 100,
@@ -236,52 +235,99 @@ export class Star3GachaViewModel extends BaseGachaViewModel {
             normalPulls, stepPulls, randomRewardCount: randomCnt,
             totalCeilingCount: totalCeil, selectRewardCount: selectCnt,
             normalCeiling: normalCeil, maxLoops: this.model.maxLoops.value,
-            loopRewards, efficiencyData, efficiencyLimit: this.model.maxLoops.value * 40
+            loopRewards, efficiencyData, efficiencyLimit: this.model.maxLoops.value * GACHA_RULES.STAR3.STEPUP_CYCLE,
+            cdfData
         };
 
         GachaResultView.render3Star({ N, M, dp, dpTotal }, context, this.model, this.chartRefs);
     }
 
     _calculateEfficiencyData(N, M, p_indiv, p_step4_total) {
+        return EfficiencyCalculator.calculate3Star({
+            N,
+            M,
+            p_indiv,
+            p_step4_total,
+            maxLoops: this.model.maxLoops.value,
+            loopRewards: this.model.loopRewards.value,
+            ceilingMode: this.model.ceilingMode.value,
+            step4Mode: this.model.step4Mode.value,
+            randomMode: this.model.randomMode.value
+        });
+    }
+    
+    _calculateCDFData(N, M, p_indiv, p_step4_total) {
         const labels = [];
-        const normalData = [];
-        const stepupData = [];
-        const stepupLimit = this.model.maxLoops.value * 40;
+        const cdfDataStepup = [];
+        const cdfDataNormal = [];
+        const maxPulls = 200;
+        const stepupLimit = this.model.maxLoops.value * GACHA_RULES.STAR3.STEPUP_CYCLE;
         const loopRewards = this.model.loopRewards.value;
 
-        for (let pulls = 0; pulls <= 200; pulls++) {
+        for (let pulls = 0; pulls <= maxPulls; pulls++) {
             labels.push(pulls);
 
-            // 일반 가챠 시뮬레이션
-            let dpN = new Array(M + 1).fill(0); dpN[0] = 1.0;
-            for (let i = 0; i < pulls; i++) dpN = ProbabilityEngine.runSinglePull(dpN, p_indiv);
-            if (this.model.ceilingMode.value === 'included') {
-                const nCeil = Math.floor(pulls / 200);
-                for (let i = 0; i < nCeil; i++) dpN = ProbabilityEngine.runGuaranteedPull(dpN);
-            }
-            normalData.push({ best: dpN[M] * 100, worst: dpN[0] * 100 });
+            // 1. 스탭업 가챠 + 일반 가챠 (스탭업 한도 초과 시)
+            let dpS = new Array(M + 1).fill(0);
+            dpS[0] = 1.0;
 
-            // 스탭업 가챠 시뮬레이션
-            let dpS = new Array(M + 1).fill(0); dpS[0] = 1.0;
             let sSelectCnt = 0;
-            for (let i = 1; i <= pulls; i++) {
-                const isStep4 = (i % 40 === 0);
-                const curLoop = Math.ceil(i / 40);
-                const useStep4 = (isStep4 && i <= stepupLimit && this.model.step4Mode.value === 'included');
+            const actualStepPulls = Math.min(pulls, stepupLimit);
+
+            for (let i = 1; i <= actualStepPulls; i++) {
+                const isStep4 = (i % GACHA_RULES.STAR3.STEPUP_CYCLE === 0);
+                const curLoop = Math.ceil(i / GACHA_RULES.STAR3.STEPUP_CYCLE);
+                const useStep4 = (isStep4 && this.model.step4Mode.value === 'included');
+
                 dpS = ProbabilityEngine.runSinglePull(dpS, useStep4 ? (p_step4_total/N) : p_indiv);
-                
-                if (isStep4 && i <= stepupLimit) {
+
+                if (isStep4) {
                     const reward = loopRewards[curLoop];
-                    if (reward === 'random' && this.model.randomMode.value === 'included') dpS = ProbabilityEngine.runRandomTicket(dpS, N);
-                    else if (reward === 'select') sSelectCnt++;
+                    if (reward === 'random' && this.model.randomMode.value === 'included') {
+                        dpS = ProbabilityEngine.runRandomTicket(dpS, N);
+                    } else if (reward === 'select') {
+                        sSelectCnt++;
+                    }
                 }
             }
-            if (this.model.ceilingMode.value === 'included') {
-                const sCeil = sSelectCnt + Math.floor(pulls / 200);
-                for (let i = 0; i < sCeil; i++) dpS = ProbabilityEngine.runGuaranteedPull(dpS);
+
+            // 스탭업 초과분은 일반 가챠로 처리
+            if (pulls > stepupLimit) {
+                const extraPulls = pulls - stepupLimit;
+                for (let i = 0; i < extraPulls; i++) {
+                    dpS = ProbabilityEngine.runSinglePull(dpS, p_indiv);
+                }
             }
-            stepupData.push({ best: dpS[M] * 100, worst: dpS[0] * 100 });
+
+            // 천장 처리 (스탭업)
+            if (this.model.ceilingMode.value === 'included') {
+                const sCeil = sSelectCnt + Math.floor(pulls / GACHA_RULES.STAR3.CEILING_INTERVAL);
+                for (let i = 0; i < sCeil; i++) {
+                    dpS = ProbabilityEngine.runGuaranteedPull(dpS);
+                }
+            }
+
+            cdfDataStepup.push(dpS[M] * 100);
+
+            // 2. 일반 가챠만
+            let dpN = new Array(M + 1).fill(0);
+            dpN[0] = 1.0;
+
+            for (let i = 0; i < pulls; i++) {
+                dpN = ProbabilityEngine.runSinglePull(dpN, p_indiv);
+            }
+
+            // 천장 처리 (일반)
+            if (this.model.ceilingMode.value === 'included') {
+                const nCeil = Math.floor(pulls / GACHA_RULES.STAR3.CEILING_INTERVAL);
+                for (let i = 0; i < nCeil; i++) {
+                    dpN = ProbabilityEngine.runGuaranteedPull(dpN);
+                }
+            }
+
+            cdfDataNormal.push(dpN[M] * 100);
         }
-        return { labels, normalData, stepupData };
+
+        return { labels, cdfDataStepup, cdfDataNormal };
     }
 }

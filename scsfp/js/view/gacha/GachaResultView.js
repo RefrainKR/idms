@@ -18,7 +18,7 @@ export class GachaResultView extends ResultView {
 
         // 1. 수집 확률 (Pie Chart)
         if (activeSubTab === 'res-3s-collection') {
-            this.renderCollection(M, dp, viewMode, 
+            this.renderCollection(M, dp, viewMode,
                 { chart: 'resultChart', legend: 'legendList', summary: 'globalSummary', logic: 'globalLogic' },
                 {
                     summary: () => `
@@ -28,14 +28,14 @@ export class GachaResultView extends ResultView {
                         목표(${M}종) 올컴플릿 확률 : <strong>${Formatter.formatProbability(dp[M])}</strong>
                     `,
                     logic: () => this._generate3StarLogic(context)
-                }, 
+                },
                 charts.collection
             );
-        } 
+        }
         // 2. 이 획득 수 (Bar Chart)
         else if (activeSubTab === 'res-3s-total') {
             const expected = dpTotal.reduce((acc, p, i) => acc + i * p, 0);
-            this.renderTotalCount(dpTotal, viewMode, 
+            this.renderTotalCount(dpTotal, viewMode,
                 { chart: 'resultChartTotal3', summary: 'globalSummary', logic: 'globalLogic' },
                 {
                     summary: () => `
@@ -43,7 +43,7 @@ export class GachaResultView extends ResultView {
                         <span style="font-size:0.85rem; color:#666;">* 유효 픽업 ${M}종의 획득 개수 합계입니다.</span><br>
                         <span style="font-size:0.85rem; color:#dc3545;">(천장 포함 버튼이 활성화 되어있는지 주의하세요.)</span>
                     `
-                }, 
+                },
                 charts.total
             );
         }
@@ -51,14 +51,26 @@ export class GachaResultView extends ResultView {
         else if (activeSubTab === 'res-3s-efficiency') {
             if (context.efficiencyData) {
                 this.renderEfficiencyChart(
-                    context.efficiencyData, 
-                    'efficiencyChart', 
-                    model.efficiencyMode.value === 'worst', 
+                    context.efficiencyData,
+                    'efficiencyChart',
+                    model.efficiencyMode.value === 'worst',
                     charts.efficiency,
                     context.efficiencyLimit,
                     M,
                     '',
                     false
+                );
+            }
+        }
+        // 4. CDF 역추적 (Line Chart)
+        else if (activeSubTab === 'res-3s-cdf') {
+            if (context.cdfData) {
+                this.renderCDFChart(
+                    context.cdfData,
+                    'cdfChart',
+                    charts.cdf,
+                    model.targetProbability.value,
+                    M
                 );
             }
         }
@@ -86,6 +98,87 @@ export class GachaResultView extends ResultView {
                     <li>주회 보상: ${rewardHistory}</li>
                     <li>랜덤 교환(${ctx.randomRewardCount}회), 천장 교환(${ctx.totalCeilingCount}회)</li>
                     <li>알고리즘: DP (Coupon Collector)</li>
+                </ul>
+            </div>`;
+    }
+
+    // ==========================================
+    // 생일 가챠 화면 렌더링
+    // ==========================================
+    static renderBirthday(result, context, model, charts) {
+        const mainTab = document.getElementById('tab-birthday');
+        if (!mainTab || !mainTab.classList.contains('active')) return;
+
+        const activeSubTab = document.querySelector('#sub-tab-system-birthday .tab-button.active')?.dataset.tab;
+        const viewMode = model.viewMode.value;
+        const { N, M, dp, dpTotal } = result;
+
+        // 1. 픽업 획득 (Pie Chart)
+        if (activeSubTab === 'res-bd-collection') {
+            this.renderCollection(M, dp, viewMode,
+                { chart: 'resultChartBirthday', legend: 'legendListBirthday', summary: 'globalSummary', logic: 'globalLogic' },
+                {
+                    summary: () => `
+                        <strong>생일 가챠 결과</strong><br>
+                        가챠 횟수: ${context.totalPulls}회 (일반 ${context.normalPulls} + 스탭업 ${context.stepPulls})<br>
+                        천장 교환: ${context.ceilingCount}회<br>
+                        획득 확률: <strong>${Formatter.formatProbability(dp[M])}</strong>
+                        ${context.stepGuaranteed ? '<br><span style="color:#45a247;">✅ 스탭업 30회 확정 획득!</span>' : ''}
+                    `,
+                    logic: () => this._generateBirthdayLogic(context)
+                },
+                charts.collection
+            );
+        }
+        // 2. 총 획득 (Bar Chart)
+        else if (activeSubTab === 'res-bd-total') {
+            const expected = dpTotal.reduce((acc, p, i) => acc + i * p, 0);
+            this.renderTotalCount(dpTotal, viewMode,
+                { chart: 'resultChartTotalBirthday', summary: 'globalSummary', logic: 'globalLogic' },
+                {
+                    summary: () => `
+                        픽업 총 획득 기대 수: 약 <strong>${expected.toFixed(3)}개</strong><br>
+                        <span style="font-size:0.85rem; color:#666;">* 중복 포함 획득 개수 합계입니다.</span><br>
+                        <span style="font-size:0.85rem; color:#dc3545;">(천장 포함 버튼이 활성화 되어있는지 주의하세요.)</span>
+                    `
+                },
+                charts.total
+            );
+        }
+        // 3. 효율 비교 (Line Chart)
+        else if (activeSubTab === 'res-bd-efficiency') {
+            if (context.efficiencyData) {
+                this.renderEfficiencyChart(
+                    context.efficiencyData,
+                    'efficiencyChartBirthday',
+                    model.efficiencyMode.value === 'worst',
+                    charts.efficiency,
+                    30,  // 스탭업 30회 기준
+                    M,
+                    '',
+                    false
+                );
+            }
+        }
+    }
+
+    static _generateBirthdayLogic(ctx) {
+        const isCeilingOff = ctx.ceilingMode === 'excluded';
+        const strike = (text, cond) => cond ? `<span style="text-decoration:line-through; color:#aaa;">${text}</span>` : text;
+
+        return `
+            <div class="section-header" style="cursor: pointer;">
+                <span class="logic-title">상세 계산 근거</span>
+                <button class="toggle-btn">▼</button>
+            </div>
+            <div class="section-content logic-view">
+                <ul class="logic-list">
+                    <li><strong>일반 가챠:</strong> ${ctx.normalRate}% (${ctx.normalPulls}회)</li>
+                    <li><strong>스탭업 가챠:</strong> ${ctx.stepRate}% (${ctx.stepPulls}회)
+                        ${ctx.stepGuaranteed ? ' <strong style="color:#45a247;">[30회 확정 획득!]</strong>' : ''}
+                    </li>
+                    <li><strong>천장:</strong> ${strike(`${ctx.ceilingCount}회 (200회당 1개)`, isCeilingOff)}</li>
+                    <li>알고리즘: DP (단일 픽업)</li>
                 </ul>
             </div>`;
     }
@@ -196,87 +289,6 @@ export class GachaResultView extends ResultView {
     }
 
     // ==========================================
-    // 생일 가챠 화면 렌더링
-    // ==========================================
-    static renderBirthday(result, context, model, charts) {
-        const mainTab = document.getElementById('tab-birthday');
-        if (!mainTab || !mainTab.classList.contains('active')) return;
-
-        const activeSubTab = document.querySelector('#sub-tab-system-birthday .tab-button.active')?.dataset.tab;
-        const viewMode = model.viewMode.value;
-        const { N, M, dp, dpTotal } = result;
-
-        // 1. 픽업 획득 (Pie Chart)
-        if (activeSubTab === 'res-bd-collection') {
-            this.renderCollection(M, dp, viewMode,
-                { chart: 'resultChartBirthday', legend: 'legendListBirthday', summary: 'globalSummary', logic: 'globalLogic' },
-                {
-                    summary: () => `
-                        <strong>생일 가챠 결과</strong><br>
-                        가챠 횟수: ${context.totalPulls}회 (일반 ${context.normalPulls} + 스탭업 ${context.stepPulls})<br>
-                        천장 교환: ${context.ceilingCount}회<br>
-                        획득 확률: <strong>${Formatter.formatProbability(dp[M])}</strong>
-                        ${context.stepGuaranteed ? '<br><span style="color:#45a247;">✅ 스탭업 30회 확정 획득!</span>' : ''}
-                    `,
-                    logic: () => this._generateBirthdayLogic(context)
-                },
-                charts.collection
-            );
-        }
-        // 2. 총 획득 (Bar Chart)
-        else if (activeSubTab === 'res-bd-total') {
-            const expected = dpTotal.reduce((acc, p, i) => acc + i * p, 0);
-            this.renderTotalCount(dpTotal, viewMode,
-                { chart: 'resultChartTotalBirthday', summary: 'globalSummary', logic: 'globalLogic' },
-                {
-                    summary: () => `
-                        픽업 총 획득 기대 수: 약 <strong>${expected.toFixed(3)}개</strong><br>
-                        <span style="font-size:0.85rem; color:#666;">* 중복 포함 획득 개수 합계입니다.</span><br>
-                        <span style="font-size:0.85rem; color:#dc3545;">(천장 포함 버튼이 활성화 되어있는지 주의하세요.)</span>
-                    `
-                },
-                charts.total
-            );
-        }
-        // 3. 효율 비교 (Line Chart)
-        else if (activeSubTab === 'res-bd-efficiency') {
-            if (context.efficiencyData) {
-                this.renderEfficiencyChart(
-                    context.efficiencyData,
-                    'efficiencyChartBirthday',
-                    model.efficiencyMode.value === 'worst',
-                    charts.efficiency,
-                    30,  // 스탭업 30회 기준
-                    M,
-                    '',
-                    false
-                );
-            }
-        }
-    }
-
-    static _generateBirthdayLogic(ctx) {
-        const isCeilingOff = ctx.ceilingMode === 'excluded';
-        const strike = (text, cond) => cond ? `<span style="text-decoration:line-through; color:#aaa;">${text}</span>` : text;
-
-        return `
-            <div class="section-header" style="cursor: pointer;">
-                <span class="logic-title">상세 계산 근거</span>
-                <button class="toggle-btn">▼</button>
-            </div>
-            <div class="section-content logic-view">
-                <ul class="logic-list">
-                    <li><strong>일반 가챠:</strong> ${ctx.normalRate}% (${ctx.normalPulls}회)</li>
-                    <li><strong>스탭업 가챠:</strong> ${ctx.stepRate}% (${ctx.stepPulls}회)
-                        ${ctx.stepGuaranteed ? ' <strong style="color:#45a247;">[30회 확정 획득!]</strong>' : ''}
-                    </li>
-                    <li><strong>천장:</strong> ${strike(`${ctx.ceilingCount}회 (200회당 1개)`, isCeilingOff)}</li>
-                    <li>알고리즘: DP (단일 픽업)</li>
-                </ul>
-            </div>`;
-    }
-
-    // ==========================================
     // 공통: 효율 그래프 렌더링 (개선 버전)
     // ==========================================
     static renderEfficiencyChart(data, canvasId, isWorst, chartRef, limit, M, groupName = '', isStar2 = false) {
@@ -348,6 +360,201 @@ export class GachaResultView extends ResultView {
             `;
         }
         
+        const logicEl = document.getElementById('globalLogic');
+        if (logicEl) { logicEl.style.display = 'none'; logicEl.innerHTML = ''; }
+    }
+    
+    // ==========================================
+    // CDF 누적 확률 차트 렌더링
+    // ==========================================
+    static renderCDFChart(data, canvasId, chartRef, targetProb, M) {
+        const { labels, cdfDataStepup, cdfDataNormal } = data;
+
+        // 목표 확률에 도달하는 지점 찾기 (스탭업 기준)
+        let targetPullsStepup = labels.length - 1;
+        for (let i = 0; i < cdfDataStepup.length; i++) {
+            if (cdfDataStepup[i] >= targetProb) {
+                targetPullsStepup = labels[i];
+                break;
+            }
+        }
+
+        // 목표 확률에 도달하는 지점 찾기 (일반 기준)
+        let targetPullsNormal = labels.length - 1;
+        for (let i = 0; i < cdfDataNormal.length; i++) {
+            if (cdfDataNormal[i] >= targetProb) {
+                targetPullsNormal = labels[i];
+                break;
+            }
+        }
+
+        const datasets = [
+            {
+                label: `스탭업 가챠 (목표 ${M}명)`,
+                data: cdfDataStepup,
+                borderColor: '#45a247',
+                backgroundColor: 'rgba(69, 162, 71, 0.1)',
+                fill: true,
+                tension: 0.3,
+                pointRadius: 0,
+                pointHoverRadius: 5,
+                pointHitRadius: 10,
+                borderWidth: 2
+            },
+            {
+                label: `일반 가챠 (목표 ${M}명)`,
+                data: cdfDataNormal,
+                borderColor: '#283c86',
+                backgroundColor: 'rgba(40, 60, 134, 0.1)',
+                fill: true,
+                tension: 0.3,
+                pointRadius: 0,
+                pointHoverRadius: 5,
+                pointHitRadius: 10,
+                borderWidth: 2,
+                borderDash: [5, 5]
+            }
+        ];
+
+        // 목표 지점 마커 추가 (스탭업)
+        if (targetProb > 0 && targetProb <= 100) {
+            datasets.push({
+                label: `스탭업 목표 지점 (${targetProb}%)`,
+                data: labels.map((x, i) => x === targetPullsStepup ? cdfDataStepup[i] : null),
+                borderColor: '#45a247',
+                backgroundColor: '#45a247',
+                pointRadius: 8,
+                pointHoverRadius: 10,
+                showLine: false,
+                pointStyle: 'circle'
+            });
+
+            datasets.push({
+                label: `일반 목표 지점 (${targetProb}%)`,
+                data: labels.map((x, i) => x === targetPullsNormal ? cdfDataNormal[i] : null),
+                borderColor: '#283c86',
+                backgroundColor: '#283c86',
+                pointRadius: 8,
+                pointHoverRadius: 10,
+                showLine: false,
+                pointStyle: 'circle'
+            });
+        }
+        
+        const canvas = document.getElementById(canvasId);
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+
+        if (chartRef && chartRef.current) {
+            chartRef.current.destroy();
+            chartRef.current = null;
+        }
+
+        chartRef.current = new Chart(ctx, {
+            type: 'line',
+            data: { labels, datasets },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: false,
+                interaction: {
+                    mode: 'index',
+                    intersect: false
+                },
+                plugins: {
+                    legend: { 
+                        position: 'top',
+                        labels: { boxWidth: 12 }
+                    },
+                    datalabels: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: (context) => {
+                                if (context.datasetIndex === 0 || context.datasetIndex === 1) {
+                                    return ` ${context.dataset.label}: ${context.raw.toFixed(2)}%`;
+                                } else {
+                                    return ` ${context.dataset.label}`;
+                                }
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        title: { display: true, text: '목표 달성 확률 (%)' },
+                        ticks: { callback: (v) => v + '%' }
+                    },
+                    x: {
+                        title: { display: true, text: '가챠 횟수' },
+                        ticks: {
+                            maxTicksLimit: 21,
+                            callback: function(val) {
+                                const label = this.getLabelForValue(val);
+                                return Number(label) % 50 === 0 ? label : '';
+                            }
+                        }
+                    }
+                }
+            },
+            plugins: [{
+                id: 'targetLine',
+                afterDatasetsDraw: (chart) => {
+                    if (targetProb <= 0 || targetProb > 100) return;
+
+                    const ctx = chart.ctx;
+                    const xAxis = chart.scales.x;
+                    const yAxis = chart.scales.y;
+
+                    // 가로선 (목표 확률)
+                    const yPos = yAxis.getPixelForValue(targetProb);
+
+                    ctx.save();
+                    ctx.setLineDash([5, 5]);
+                    ctx.strokeStyle = '#999';
+                    ctx.lineWidth = 1.5;
+
+                    ctx.beginPath();
+                    ctx.moveTo(xAxis.left, yPos);
+                    ctx.lineTo(xAxis.right, yPos);
+                    ctx.stroke();
+
+                    // 세로선 (스탭업 목표 지점)
+                    const xPosStepup = xAxis.getPixelForValue(targetPullsStepup);
+                    ctx.strokeStyle = '#45a247';
+                    ctx.beginPath();
+                    ctx.moveTo(xPosStepup, yAxis.top);
+                    ctx.lineTo(xPosStepup, yAxis.bottom);
+                    ctx.stroke();
+
+                    // 세로선 (일반 목표 지점)
+                    const xPosNormal = xAxis.getPixelForValue(targetPullsNormal);
+                    ctx.strokeStyle = '#283c86';
+                    ctx.beginPath();
+                    ctx.moveTo(xPosNormal, yAxis.top);
+                    ctx.lineTo(xPosNormal, yAxis.bottom);
+                    ctx.stroke();
+
+                    ctx.restore();
+                }
+            }]
+        });
+        
+        // 요약 정보 업데이트
+        const summaryEl = document.getElementById('globalSummary');
+        if (summaryEl) {
+            const actualProbStepup = cdfDataStepup[targetPullsStepup] || 0;
+            const actualProbNormal = cdfDataNormal[targetPullsNormal] || 0;
+
+            summaryEl.innerHTML = `
+                <strong>🎯 목표 확률 역추적 분석 (목표 ${M}명)</strong><br>
+                목표 달성 확률: <strong>${targetProb}%</strong><br><br>
+                <span style="color:#45a247; font-weight:bold;">스탭업 가챠:</span> 약 <strong>${targetPullsStepup}회</strong> 필요 (실제 ${actualProbStepup.toFixed(2)}%)<br>
+                <span style="color:#283c86; font-weight:bold;">일반 가챠:</span> 약 <strong>${targetPullsNormal}회</strong> 필요 (실제 ${actualProbNormal.toFixed(2)}%)
+            `;
+        }
+
         const logicEl = document.getElementById('globalLogic');
         if (logicEl) { logicEl.style.display = 'none'; logicEl.innerHTML = ''; }
     }
