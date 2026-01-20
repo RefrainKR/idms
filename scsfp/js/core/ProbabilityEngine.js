@@ -1,4 +1,4 @@
-import { PROBABILITY_MODE } from './GachaConstants.js';
+import { PROBABILITY_MODE, GACHA_RULES } from './GachaConstants.js';
 import { ProbabilityValidator } from '../utils/ProbabilityValidator.js';
 
 export class ProbabilityEngine {
@@ -108,6 +108,41 @@ export class ProbabilityEngine {
             }
         }
         return result;
+    }
+
+    /**
+     * 2성 스탭업 그룹 계산
+     * @param {number} N - 그룹 내 픽업 수
+     * @param {number} M - 목표 수집 수
+     * @param {number} pulls - 가챠 횟수
+     * @param {number} rate - 총 픽업 확률 (0~1)
+     * @returns {Object} { dp, dpTotal }
+     */
+    static calcStepupGroup(N, M, pulls, rate) {
+        let dp = new Array(M + 1).fill(0);
+        dp[0] = 1.0;
+        let dpTotal = [1.0];
+
+        if (pulls <= 0) return { dp, dpTotal };
+
+        const p_normal_one = rate / N;
+        const p_guar_one = 1.0 / N;
+
+        const p_normal_any = ProbabilityValidator.getTotalProb(p_normal_one, M);
+        const p_guar_any = ProbabilityValidator.getTotalProb(p_guar_one, M);
+
+        for (let i = 1; i <= pulls; i++) {
+            const isGuar = (i === GACHA_RULES.STAR2.STEPUP_GUARANTEE_FIRST ||
+                           (i > GACHA_RULES.STAR2.STEPUP_GUARANTEE_FIRST &&
+                            (i - GACHA_RULES.STAR2.STEPUP_GUARANTEE_FIRST) % GACHA_RULES.STAR2.STEPUP_GUARANTEE_INTERVAL === 0));
+            const p_one = isGuar ? p_guar_one : p_normal_one;
+            const p_any = isGuar ? p_guar_any : p_normal_any;
+
+            dp = ProbabilityEngine.runSinglePull(dp, p_one);
+            dpTotal = ProbabilityEngine.accumulateCountProb(dpTotal, p_any);
+        }
+
+        return { dp, dpTotal };
     }
 
     static transformData(dp, mode) {

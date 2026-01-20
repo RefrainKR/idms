@@ -1,17 +1,29 @@
 /**
  * js/utils/ChartAdapter.js
  * Chart.js 라이브러리 래퍼 클래스
+ *
+ * [개선] destroy/recreate 대신 update() 사용으로 성능 최적화
  */
 export class ChartAdapter {
-    
+
     // 파이 차트 (수집 확률)
     static renderPieChart(canvasId, labels, data, colors, tooltipValues, chartInstanceRef) {
         const canvas = document.getElementById(canvasId);
         if (!canvas) return;
+
+        // [개선] 기존 차트가 있으면 데이터만 업데이트
+        if (chartInstanceRef.current) {
+            const chart = chartInstanceRef.current;
+            chart.data.labels = labels;
+            chart.data.datasets[0].data = data;
+            chart.data.datasets[0].backgroundColor = colors;
+            // tooltipValues는 옵션 콜백에서 참조하므로 저장
+            chart._tooltipValues = tooltipValues;
+            chart.update('none'); // 애니메이션 없이 업데이트
+            return chart;
+        }
+
         const ctx = canvas.getContext('2d');
-
-        if (chartInstanceRef.current) chartInstanceRef.current.destroy();
-
         chartInstanceRef.current = new Chart(ctx, {
             type: 'pie',
             data: {
@@ -44,12 +56,17 @@ export class ChartAdapter {
                     },
                     tooltip: {
                         callbacks: {
-                            label: (context) => ` ${context.label}: ${tooltipValues[context.dataIndex]}`
+                            label: (context) => {
+                                const vals = context.chart._tooltipValues || tooltipValues;
+                                return ` ${context.label}: ${vals[context.dataIndex]}`;
+                            }
                         }
                     }
                 }
             }
         });
+        // tooltipValues 저장
+        chartInstanceRef.current._tooltipValues = tooltipValues;
         return chartInstanceRef.current;
     }
 
@@ -57,10 +74,19 @@ export class ChartAdapter {
     static renderBarChart(canvasId, labels, data, colors, tooltipValues, chartInstanceRef) {
         const canvas = document.getElementById(canvasId);
         if (!canvas) return;
+
+        // [개선] 기존 차트가 있으면 데이터만 업데이트
+        if (chartInstanceRef.current) {
+            const chart = chartInstanceRef.current;
+            chart.data.labels = labels;
+            chart.data.datasets[0].data = data;
+            chart.data.datasets[0].backgroundColor = colors;
+            chart._tooltipValues = tooltipValues;
+            chart.update('none');
+            return chart;
+        }
+
         const ctx = canvas.getContext('2d');
-
-        if (chartInstanceRef.current) chartInstanceRef.current.destroy();
-
         chartInstanceRef.current = new Chart(ctx, {
             type: 'bar',
             data: {
@@ -68,7 +94,7 @@ export class ChartAdapter {
                 datasets: [{
                     data: data,
                     backgroundColor: colors,
-                    borderColor: '#bbdefb', // 디자인 통일 색상
+                    borderColor: '#bbdefb',
                     borderWidth: 1
                 }]
             },
@@ -88,7 +114,10 @@ export class ChartAdapter {
                     },
                     tooltip: {
                         callbacks: {
-                            label: (context) => ` 확률: ${tooltipValues[context.dataIndex]}`
+                            label: (context) => {
+                                const vals = context.chart._tooltipValues || tooltipValues;
+                                return ` 확률: ${vals[context.dataIndex]}`;
+                            }
                         }
                     }
                 },
@@ -98,6 +127,7 @@ export class ChartAdapter {
                 }
             }
         });
+        chartInstanceRef.current._tooltipValues = tooltipValues;
         return chartInstanceRef.current;
     }
 
@@ -105,13 +135,17 @@ export class ChartAdapter {
     static renderLineChart(canvasId, labels, datasets, chartInstanceRef) {
         const canvas = document.getElementById(canvasId);
         if (!canvas) return;
-        const ctx = canvas.getContext('2d');
 
+        // [개선] 기존 차트가 있으면 데이터만 업데이트
         if (chartInstanceRef && chartInstanceRef.current) {
-            chartInstanceRef.current.destroy();
-            chartInstanceRef.current = null; // 명시적 초기화
+            const chart = chartInstanceRef.current;
+            chart.data.labels = labels;
+            chart.data.datasets = datasets;
+            chart.update('none');
+            return chart;
         }
 
+        const ctx = canvas.getContext('2d');
         chartInstanceRef.current = new Chart(ctx, {
             type: 'line',
             data: { labels, datasets },
@@ -119,13 +153,13 @@ export class ChartAdapter {
                 responsive: true,
                 maintainAspectRatio: false,
                 animation: false,
-                
+
                 // [핵심] 10단위 터치 최적화 (Intersect + Index 모드)
                 interaction: {
-                    mode: 'index',   // X축이 같은 모든 데이터 표시
-                    intersect: true  // 반드시 HitRadius(30px) 안에 들어와야 반응
+                    mode: 'index',
+                    intersect: true
                 },
-                
+
                 plugins: {
                     legend: { position: 'top', labels: { boxWidth: 12 } },
                     datalabels: { display: false },
@@ -150,13 +184,12 @@ export class ChartAdapter {
                 },
                 scales: {
                     y: { beginAtZero: true, max: 100, ticks: { callback: (v) => v + '%' } },
-                    x: { 
-                        title: { display: true, text: '가챠 횟수' }, 
+                    x: {
+                        title: { display: true, text: '가챠 횟수' },
                         grid: { display: false },
                         ticks: {
                             maxTicksLimit: 21,
                             callback: function(val) {
-                                // this.getLabelForValue가 안전함
                                 const label = this.getLabelForValue(val);
                                 return Number(label) % 20 === 0 ? label : '';
                             }

@@ -101,31 +101,6 @@ export class Star2GachaViewModel extends BaseGachaViewModel {
         return null;
     }
 
-    _calcGroup(N, M, pulls, rate) {
-        let dp = new Array(M + 1).fill(0); dp[0] = 1.0;
-        let dpTotal = [1.0];
-        if (pulls <= 0) return { dp, dpTotal };
-
-        const p_normal_one = rate / N; 
-        const p_guar_one = 1.0 / N;
-        
-        // [개선] 중앙화된 확률 검증 사용
-        const p_normal_any = ProbabilityValidator.getTotalProb(p_normal_one, M);
-        const p_guar_any = ProbabilityValidator.getTotalProb(p_guar_one, M);
-
-        for (let i = 1; i <= pulls; i++) {
-            const isGuar = (i === GACHA_RULES.STAR2.STEPUP_GUARANTEE_FIRST ||
-                           (i > GACHA_RULES.STAR2.STEPUP_GUARANTEE_FIRST &&
-                            (i - GACHA_RULES.STAR2.STEPUP_GUARANTEE_FIRST) % GACHA_RULES.STAR2.STEPUP_GUARANTEE_INTERVAL === 0));
-            const p_one = isGuar ? p_guar_one : p_normal_one;
-            const p_any = isGuar ? p_guar_any : p_normal_any;
-
-            dp = ProbabilityEngine.runSinglePull(dp, p_one);
-            dpTotal = ProbabilityEngine.accumulateCountProb(dpTotal, p_any);
-        }
-        return { dp, dpTotal };
-    }
-
     calculate() {
         if (this.isInitializing) return;
 
@@ -167,7 +142,8 @@ export class Star2GachaViewModel extends BaseGachaViewModel {
         let totalTargets = 0, totalStepPulls = 0;
 
         groups.forEach(g => {
-            const res = this._calcGroup(g.N, g.M, g.pulls, rateTotal);
+            // [개선] ProbabilityEngine.calcStepupGroup으로 이동
+            const res = ProbabilityEngine.calcStepupGroup(g.N, g.M, g.pulls, rateTotal);
             dp = ProbabilityEngine.convolve(dp, res.dp);
             dpTotal = ProbabilityEngine.convolve(dpTotal, res.dpTotal);
             

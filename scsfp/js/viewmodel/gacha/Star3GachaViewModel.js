@@ -257,77 +257,17 @@ export class Star3GachaViewModel extends BaseGachaViewModel {
     }
     
     _calculateCDFData(N, M, p_indiv, p_step4_total) {
-        const labels = [];
-        const cdfDataStepup = [];
-        const cdfDataNormal = [];
-        const maxPulls = 200;
-        const stepupLimit = this.model.maxLoops.value * GACHA_RULES.STAR3.STEPUP_CYCLE;
-        const loopRewards = this.model.loopRewards.value;
-
-        for (let pulls = 0; pulls <= maxPulls; pulls++) {
-            labels.push(pulls);
-
-            // 1. 스탭업 가챠 + 일반 가챠 (스탭업 한도 초과 시)
-            let dpS = new Array(M + 1).fill(0);
-            dpS[0] = 1.0;
-
-            let sSelectCnt = 0;
-            const actualStepPulls = Math.min(pulls, stepupLimit);
-
-            for (let i = 1; i <= actualStepPulls; i++) {
-                const isStep4 = (i % GACHA_RULES.STAR3.STEPUP_CYCLE === 0);
-                const curLoop = Math.ceil(i / GACHA_RULES.STAR3.STEPUP_CYCLE);
-                const useStep4 = (isStep4 && this.model.step4Mode.value === 'included');
-
-                dpS = ProbabilityEngine.runSinglePull(dpS, useStep4 ? (p_step4_total/N) : p_indiv);
-
-                if (isStep4) {
-                    const reward = loopRewards[curLoop];
-                    if (reward === 'random' && this.model.randomMode.value === 'included') {
-                        dpS = ProbabilityEngine.runRandomTicket(dpS, N);
-                    } else if (reward === 'select') {
-                        sSelectCnt++;
-                    }
-                }
-            }
-
-            // 스탭업 초과분은 일반 가챠로 처리
-            if (pulls > stepupLimit) {
-                const extraPulls = pulls - stepupLimit;
-                for (let i = 0; i < extraPulls; i++) {
-                    dpS = ProbabilityEngine.runSinglePull(dpS, p_indiv);
-                }
-            }
-
-            // 천장 처리 (스탭업)
-            if (this.model.ceilingMode.value === 'included') {
-                const sCeil = sSelectCnt + Math.floor(pulls / GACHA_RULES.STAR3.CEILING_INTERVAL);
-                for (let i = 0; i < sCeil; i++) {
-                    dpS = ProbabilityEngine.runGuaranteedPull(dpS);
-                }
-            }
-
-            cdfDataStepup.push(dpS[M] * 100);
-
-            // 2. 일반 가챠만
-            let dpN = new Array(M + 1).fill(0);
-            dpN[0] = 1.0;
-
-            for (let i = 0; i < pulls; i++) {
-                dpN = ProbabilityEngine.runSinglePull(dpN, p_indiv);
-            }
-
-            // 천장 처리 (일반)
-            if (this.model.ceilingMode.value === 'included') {
-                const nCeil = Math.floor(pulls / GACHA_RULES.STAR3.CEILING_INTERVAL);
-                for (let i = 0; i < nCeil; i++) {
-                    dpN = ProbabilityEngine.runGuaranteedPull(dpN);
-                }
-            }
-
-            cdfDataNormal.push(dpN[M] * 100);
-        }
-
-        return { labels, cdfDataStepup, cdfDataNormal };
+        // [개선] EfficiencyCalculator로 위임하여 중복 제거
+        return EfficiencyCalculator.calculate3StarCDF({
+            N,
+            M,
+            p_indiv,
+            p_step4_total,
+            maxLoops: this.model.maxLoops.value,
+            loopRewards: this.model.loopRewards.value,
+            ceilingMode: this.model.ceilingMode.value,
+            step4Mode: this.model.step4Mode.value,
+            randomMode: this.model.randomMode.value
+        });
     }
 }

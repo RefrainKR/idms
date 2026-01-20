@@ -132,6 +132,94 @@ export class EfficiencyCalculator {
     }
 
     /**
+     * 3성 가챠 CDF(누적분포함수) 데이터 계산
+     * @param {Object} params - 계산 파라미터
+     * @param {number} params.N - 픽업 총 인원 수
+     * @param {number} params.M - 목표 인원 수
+     * @param {number} params.p_indiv - 개별 확률 (0~1)
+     * @param {number} params.p_step4_total - Step4 총 확률 (0~1)
+     * @param {number} params.maxLoops - 최대 루프 수
+     * @param {Object} params.loopRewards - 루프 보상 설정
+     * @param {string} params.ceilingMode - 천장 모드 ('included' | 'excluded')
+     * @param {string} params.step4Mode - Step4 모드 ('included' | 'excluded')
+     * @param {string} params.randomMode - 랜덤 모드 ('included' | 'excluded')
+     * @returns {Object} { labels, cdfDataStepup, cdfDataNormal }
+     */
+    static calculate3StarCDF({ N, M, p_indiv, p_step4_total, maxLoops, loopRewards, ceilingMode, step4Mode, randomMode }) {
+        const labels = [];
+        const cdfDataStepup = [];
+        const cdfDataNormal = [];
+        const maxPulls = 200;
+        const stepupLimit = maxLoops * GACHA_RULES.STAR3.STEPUP_CYCLE;
+
+        for (let pulls = 0; pulls <= maxPulls; pulls++) {
+            labels.push(pulls);
+
+            // 1. 스탭업 가챠 + 일반 가챠 (스탭업 한도 초과 시)
+            let dpS = new Array(M + 1).fill(0);
+            dpS[0] = 1.0;
+
+            let sSelectCnt = 0;
+            const actualStepPulls = Math.min(pulls, stepupLimit);
+
+            for (let i = 1; i <= actualStepPulls; i++) {
+                const isStep4 = (i % GACHA_RULES.STAR3.STEPUP_CYCLE === 0);
+                const curLoop = Math.ceil(i / GACHA_RULES.STAR3.STEPUP_CYCLE);
+                const useStep4 = (isStep4 && step4Mode === 'included');
+
+                dpS = ProbabilityEngine.runSinglePull(dpS, useStep4 ? (p_step4_total / N) : p_indiv);
+
+                if (isStep4) {
+                    const reward = loopRewards[curLoop];
+                    if (reward === 'random' && randomMode === 'included') {
+                        dpS = ProbabilityEngine.runRandomTicket(dpS, N);
+                    } else if (reward === 'select') {
+                        sSelectCnt++;
+                    }
+                }
+            }
+
+            // 스탭업 초과분은 일반 가챠로 처리
+            if (pulls > stepupLimit) {
+                const extraPulls = pulls - stepupLimit;
+                for (let i = 0; i < extraPulls; i++) {
+                    dpS = ProbabilityEngine.runSinglePull(dpS, p_indiv);
+                }
+            }
+
+            // 천장 처리 (스탭업)
+            if (ceilingMode === 'included') {
+                const sCeil = sSelectCnt + Math.floor(pulls / GACHA_RULES.STAR3.CEILING_INTERVAL);
+                for (let i = 0; i < sCeil; i++) {
+                    dpS = ProbabilityEngine.runGuaranteedPull(dpS);
+                }
+            }
+
+            cdfDataStepup.push(dpS[M] * 100);
+
+            // 2. 일반 가챠만
+            let dpN = new Array(M + 1).fill(0);
+            dpN[0] = 1.0;
+
+            for (let i = 0; i < pulls; i++) {
+                dpN = ProbabilityEngine.runSinglePull(dpN, p_indiv);
+            }
+
+            // 천장 처리 (일반)
+            if (ceilingMode === 'included') {
+                const nCeil = Math.floor(pulls / GACHA_RULES.STAR3.CEILING_INTERVAL);
+                for (let i = 0; i < nCeil; i++) {
+                    dpN = ProbabilityEngine.runGuaranteedPull(dpN);
+                }
+            }
+
+            cdfDataNormal.push(dpN[M] * 100);
+        }
+
+        return { labels, cdfDataStepup, cdfDataNormal };
+    }
+
+    /**
      * 생일 가챠 효율 데이터 계산
      * @param {Object} params - 계산 파라미터
      * @param {number} params.normalRate - 일반 확률 (0~1)
