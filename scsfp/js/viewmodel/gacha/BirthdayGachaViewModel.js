@@ -29,22 +29,22 @@ export class BirthdayGachaViewModel extends BaseGachaViewModel {
 
         this.bindToggles();
 
-        const resetBtn = document.getElementById('resetBtnBirthday');
+        const resetBtn = document.getElementById('birthday-reset-btn');
         if (resetBtn) {
             resetBtn.addEventListener('click', () => this.reset());
         }
     }
 
     bindToggles() {
-        new ToggleButton('toggleCeilingBtnBirthday', TOGGLE_STATES.CEILING, (s) => {
+        new ToggleButton('birthday-toggle-ceiling', TOGGLE_STATES.CEILING, (s) => {
             this.model.ceilingMode.value = s.name;
         }, this.model.ceilingMode.value);
 
-        new ToggleButton('toggleViewBtnBirthday', TOGGLE_STATES.VIEW, (s) => {
+        new ToggleButton('birthday-toggle-view', TOGGLE_STATES.VIEW, (s) => {
             this.model.viewMode.value = s.name;
         }, this.model.viewMode.value);
 
-        new ToggleButton('btnEfficiencyToggleBirthday', TOGGLE_STATES.EFFICIENCY, (s) => {
+        new ToggleButton('birthday-efficiency-toggle', TOGGLE_STATES.EFFICIENCY, (s) => {
             this.model.efficiencyMode.value = s.name;
         }, this.model.efficiencyMode.value);
     }
@@ -59,10 +59,10 @@ export class BirthdayGachaViewModel extends BaseGachaViewModel {
         };
 
         // 효율 탭 전용 버튼
-        toggle('btnEfficiencyToggleBirthday', isEff);
-        
+        toggle('birthday-efficiency-toggle', isEff);
+
         // 수집/총획득 탭 전용 버튼
-        toggle('toggleViewBtnBirthday', !isEff);
+        toggle('birthday-toggle-view', !isEff);
     }
 
     calculate() {

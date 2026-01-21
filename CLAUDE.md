@@ -238,21 +238,23 @@ calculate() {
 7. **GACHA_RULES 상수 사용** - 하드코딩된 마법 숫자 (40, 200, 50 등) 대신
 8. **EfficiencyCalculator 사용** - ViewModel에 효율 계산 로직 중복 대신
 
-## 최근 업데이트 (2026-01-20)
+## 최근 업데이트
 
-### 코드 품질 개선 (Phase 1 완료)
+### 2026-01-21: HTML/CSS 리팩토링 완료
+- **ID 네이밍 통일화**: 모든 ID를 `{type}-{element}` 패턴으로 통일 (예: `star3-reset-btn`, `birthday-toggle-ceiling`)
+- **Div Depth 축소**: 11단계 → 8단계로 단순화
+- **시멘틱 HTML**: `<header>`, `<main>`, `<section>`, `<aside>`, `<footer>` 적용
+- **CSS 최적화**: 중복 규칙 제거, !important 제거, 색상 변수화, 11개 섹션으로 구조화
+- **TabManager.js 개선**: `tab-content-wrapper` 없이도 동작하도록 개선
+
+### 2026-01-20: 코드 품질 개선
 - **마법 숫자 상수화**: 모든 가챠 규칙이 `GACHA_RULES` 객체 사용
 - **DOM 조작 제거**: ViewModel에서 DOM 요소 직접 접근 제거
-- **Chart.js import 명시화**: CDN 기반 전역 변수 설명 주석 추가
+- **EfficiencyCalculator**: 3개 ViewModel에서 ~135줄 중복 코드 제거
+- **ProbabilityEngine**: `calcStepupGroup()` 메서드 추가로 2성 그룹 계산 중앙화
+- **Chart.js 최적화**: `chart.update('none')` 사용으로 재렌더링 성능 개선
 
-### 서비스 클래스 분리 (Phase 3.1 완료)
-- **EfficiencyCalculator**: [js/core/EfficiencyCalculator.js](scsfp/js/core/EfficiencyCalculator.js) 신규 서비스 클래스
-  - `calculate3Star(params)`: 3성 가챠 효율 계산
-  - `calculate2Star(params)`: 2성 가챠 효율 계산
-  - `calculateBirthday(params)`: 생일 가챠 효율 계산
-  - 3개 ViewModel에서 ~135줄 중복 코드 제거
-
-### 기능 추가 (2026-01-19)
+### 2026-01-19: 기능 추가
 - **CDF 역추적**: 3성 가챠에 목표 확률 달성 필요 횟수 계산 서브탭 추가
 
 ## 개선 로드맵
@@ -281,42 +283,64 @@ calculate() {
 ### 미래 검토 사항
 - [ ] ProbabilityEngine 단위 테스트 작성 (빌드 시스템 도입 시 검토)
 
-## HTML/CSS 기술 부채
+## HTML/CSS 개선 내역 (2026-01-21)
 
-### ID 네이밍 불일치
-| 요소 | 3성 | 생일 | 2성 | 문제 |
-|------|-----|------|-----|------|
-| 리셋 버튼 | `resetBtn3` | `resetBtnBirthday` | `resetBtn2` | 숫자 vs 문자열 혼용 |
-| 천장 토글 | `toggleCeilingBtn3` | `toggleCeilingBtnBirthday` | `toggleCeilingBtn2` | 동일 |
-| 뷰 토글 | `toggleViewBtn3` | `toggleViewBtnBirthday` | `toggleViewBtn2` | 동일 |
-| 효율 토글 | `btnEfficiencyToggle3` | `btnEfficiencyToggleBirthday` | `btnEfficiencyToggle2` | 동일 |
-| 수집 차트 | `resultChart` | `resultChartBirthday` | `resultChart2` | 3성만 접미사 없음 |
-| 서브탭 ID | `res-3s-*` | `res-bd-*` | `res-2s-*` | 접두사 불일치 |
+### ✅ 해결 완료
 
-**권장**: 통일된 규칙 적용 (예: `star3-*`, `birthday-*`, `star2-*`)
+#### 1. ID 네이밍 통일화
+**문제**: 3성(`resetBtn3`), 생일(`resetBtnBirthday`), 2성(`resetBtn2`) 간 네이밍 규칙 불일치
 
-### Div Depth 과다
+**해결**: 모든 ID를 `{type}-{element}` 패턴으로 통일
+| 요소 | 이전 (3성 / 생일 / 2성) | 현재 |
+|------|----------------------|------|
+| 리셋 버튼 | `resetBtn3` / `resetBtnBirthday` / `resetBtn2` | `star3-reset-btn` / `birthday-reset-btn` / `star2-reset-btn` |
+| 천장 토글 | `toggleCeilingBtn3` / `toggleCeilingBtnBirthday` / `toggleCeilingBtn2` | `star3-toggle-ceiling` / `birthday-toggle-ceiling` / `star2-toggle-ceiling` |
+| 뷰 토글 | `toggleViewBtn3` / `toggleViewBtnBirthday` / `toggleViewBtn2` | `star3-toggle-view` / `birthday-toggle-view` / `star2-toggle-view` |
+| 효율 토글 | `btnEfficiencyToggle3` / `btnEfficiencyToggleBirthday` / `btnEfficiencyToggle2` | `star3-efficiency-toggle` / `birthday-efficiency-toggle` / `star2-efficiency-toggle` |
+| 프리셋 컨테이너 | `star3PresetContainer` | `star3-preset-container` |
+| 2성 그룹 버튼 | `btnGroupViewMode` / `btnGroupEfficiencyMode` | `star2-group-view-mode` / `star2-group-efficiency-mode` |
+
+**영향 파일**: [index.html](scsfp/index.html), [Star3GachaViewModel.js](scsfp/js/viewmodel/gacha/Star3GachaViewModel.js), [BirthdayGachaViewModel.js](scsfp/js/viewmodel/gacha/BirthdayGachaViewModel.js), [Star2GachaViewModel.js](scsfp/js/viewmodel/gacha/Star2GachaViewModel.js)
+
+#### 2. Div Depth 축소 (11단계 → 8단계)
+**문제**: 과도한 중첩 구조 (`container` → ... → `canvas` 11단계)
+
+**해결**:
+- 시멘틱 HTML 태그 적용 (`<header>`, `<main>`, `<section>`, `<aside>`, `<footer>`)
+- 서브탭에서 불필요한 `tab-content-wrapper` 제거
+- `result-area` 래퍼 제거
+
+**최종 구조** (8단계):
 ```
-container (1) → main-tab-system (2) → tab-content-wrapper (3) → tab-3star (4)
-→ sub-tab-container (5) → tab-content-wrapper (6) → res-3s-collection (7)
-→ result-area (8) → chart-row (9) → chart-container (10) → canvas (11)
+container (1) → main (2) → section[tab-3star] (3)
+→ sub-tab-container (4) → div[res-3s-collection] (5)
+→ chart-row (6) → chart-container (7) → canvas (8)
 ```
-- **최대 11단계** - 목표 7단계 이하로 축소
-- `tab-content-wrapper` 클래스명이 메인/서브 탭에서 중복 사용
-- `result-area > chart-row > chart-container` 3단계가 단순 레이아웃에 과함
 
-### 인라인 스타일 남용
-```html
-<div class="chart-container" style="width: 100%; flex: none;">  <!-- 3곳 반복 -->
-<div style="display: grid; grid-template-columns: 1fr 1fr; ...">
-```
-**권장**: CSS 클래스로 분리
+#### 3. 인라인 스타일 정리
+**해결**: 반복되는 인라인 스타일을 CSS 클래스로 추출
+- `.chart-full`: `width: 100%; flex: none;`
+- `.input-hint`: 입력 힌트 텍스트 스타일
+- `.input-row-half`: 반너비 입력 행
+- `.cdf-input-area`: CDF 입력 영역 스타일
 
-### CSS 문제점
-1. **중복 규칙**: `.view-toggle-btn[data-state="worst"]` 2회 선언 (302줄, 325줄)
-2. **!important 남용**: 4곳 - specificity 개선으로 제거 필요
-3. **미사용 클래스**: `.cdf-input-section` (HTML에서 미사용)
-4. **유사 색상 반복**: `#f0f4f8`, `#fafafa`, `#f8f9fa` 등 변수화 필요
+**예외**: JavaScript로 동적 제어하는 `style="display:none;"` 유지 (의도된 설계)
 
-### 기타
-- 프리셋 없는 탭에서 정렬용 빈 `<div></div>` 사용 → flexbox로 대체 가능
+#### 4. CSS 개선
+- **중복 규칙 제거**: `.view-toggle-btn[data-state="worst"]` 2회 선언 통합
+- **!important 제거**: specificity 개선으로 4곳 모두 제거
+- **미사용 클래스 제거**: `.cdf-input-section` 제거
+- **색상 변수화**: `:root`에 `--surface-light`, `--surface-medium`, `--surface-blue` 변수 추가
+- **11개 섹션으로 구조화**: Base Layout, Tab System, Inputs, ... 주석으로 구분
+
+#### 5. 시멘틱 HTML 적용
+- `<header>`: 타이틀 영역
+- `<main>`: 메인 탭 시스템
+- `<section>`: 각 가챠 타입 탭 (`tab-3star`, `tab-birthday`, `tab-2star`)
+- `<aside>`: 공유 결과 요약 영역
+- `<footer>`: 향후 확장 예정 (더미)
+
+**의도**: `<nav>`는 향후 다른 게임 기능 추가 시 사용 예정 (현재 미사용)
+
+### 남은 개선 사항
+- 현재 없음 (모든 HTML/CSS 기술 부채 해결 완료)

@@ -32,32 +32,32 @@ export class Star2GachaViewModel extends BaseGachaViewModel {
         this.bindToggles();
         this.setupDataDependencies();
 
-        const resetBtn = document.getElementById('resetBtn2');
+        const resetBtn = document.getElementById('star2-reset-btn');
         if (resetBtn) {
             resetBtn.addEventListener('click', () => this.reset());
         }
     }
 
     bindToggles() {
-        new ToggleButton('toggleCeilingBtn2', TOGGLE_STATES.CEILING, (state) => {
+        new ToggleButton('star2-toggle-ceiling', TOGGLE_STATES.CEILING, (state) => {
             this.model.ceilingMode.value = state.name;
         }, this.model.ceilingMode.value);
 
-        new ToggleButton('toggleViewBtn2', TOGGLE_STATES.VIEW, (state) => {
+        new ToggleButton('star2-toggle-view', TOGGLE_STATES.VIEW, (state) => {
             this.model.viewMode.value = state.name;
         }, this.model.viewMode.value);
 
-        new ToggleButton('btnGroupViewMode', TOGGLE_STATES.GROUPS_VIEW, (s) => {
+        new ToggleButton('star2-group-view-mode', TOGGLE_STATES.GROUPS_VIEW, (s) => {
             this.model.viewTargetGroup.value = s.name;
             this.calculate();
         }, this.model.viewTargetGroup.value);
 
-        new ToggleButton('btnGroupEfficiencyMode', TOGGLE_STATES.GROUPS_EFF, (s) => {
+        new ToggleButton('star2-group-efficiency-mode', TOGGLE_STATES.GROUPS_EFF, (s) => {
             this.model.efficiencyTargetGroup.value = s.name;
             this.calculate();
         }, this.model.efficiencyTargetGroup.value);
 
-        new ToggleButton('btnEfficiencyToggle2', TOGGLE_STATES.EFFICIENCY, (s) => {
+        new ToggleButton('star2-efficiency-toggle', TOGGLE_STATES.EFFICIENCY, (s) => {
             this.model.efficiencyMode.value = s.name;
             this.calculate();
         }, this.model.efficiencyMode.value);
@@ -73,12 +73,12 @@ export class Star2GachaViewModel extends BaseGachaViewModel {
         };
 
         // 효율 탭
-        toggle('btnEfficiencyToggle2', isEff);
-        toggle('btnGroupEfficiencyMode', isEff);
-        
+        toggle('star2-efficiency-toggle', isEff);
+        toggle('star2-group-efficiency-mode', isEff);
+
         // 수집/이획득 탭
-        toggle('toggleViewBtn2', !isEff);
-        toggle('btnGroupViewMode', !isEff);
+        toggle('star2-toggle-view', !isEff);
+        toggle('star2-group-view-mode', !isEff);
     }
 
     setupDataDependencies() {

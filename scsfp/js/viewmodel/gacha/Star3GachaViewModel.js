@@ -37,18 +37,18 @@ export class Star3GachaViewModel extends BaseGachaViewModel {
         this.renderPresetButtons();
         this.updateLoopUI(this.model.loopRewards.value);
 
-        const resetBtn = document.getElementById('resetBtn3');
+        const resetBtn = document.getElementById('star3-reset-btn');
         if (resetBtn) {
             resetBtn.addEventListener('click', () => this.reset());
         }
     }
 
     bindToggles() {
-        new ToggleButton('toggleCeilingBtn3', TOGGLE_STATES.CEILING, (s) => this.model.ceilingMode.value = s.name, this.model.ceilingMode.value);
-        new ToggleButton('toggleRandomBtn3', TOGGLE_STATES.RANDOM, (s) => this.model.randomMode.value = s.name, this.model.randomMode.value);
-        new ToggleButton('toggleStep4Btn3', TOGGLE_STATES.STEP4, (s) => this.model.step4Mode.value = s.name, this.model.step4Mode.value);
-        new ToggleButton('toggleViewBtn3', TOGGLE_STATES.VIEW, (s) => this.model.viewMode.value = s.name, this.model.viewMode.value);
-        new ToggleButton('btnEfficiencyToggle3', TOGGLE_STATES.EFFICIENCY, (s) => {
+        new ToggleButton('star3-toggle-ceiling', TOGGLE_STATES.CEILING, (s) => this.model.ceilingMode.value = s.name, this.model.ceilingMode.value);
+        new ToggleButton('star3-toggle-random', TOGGLE_STATES.RANDOM, (s) => this.model.randomMode.value = s.name, this.model.randomMode.value);
+        new ToggleButton('star3-toggle-step4', TOGGLE_STATES.STEP4, (s) => this.model.step4Mode.value = s.name, this.model.step4Mode.value);
+        new ToggleButton('star3-toggle-view', TOGGLE_STATES.VIEW, (s) => this.model.viewMode.value = s.name, this.model.viewMode.value);
+        new ToggleButton('star3-efficiency-toggle', TOGGLE_STATES.EFFICIENCY, (s) => {
             this.model.efficiencyMode.value = s.name;
         }, this.model.efficiencyMode.value);
     }
@@ -63,12 +63,12 @@ export class Star3GachaViewModel extends BaseGachaViewModel {
             if (el) el.style.display = show ? '' : 'none';
         };
 
-        toggle('btnEfficiencyToggle3', isEff);
-        toggle('toggleViewBtn3', !isEff && !isCdf);
+        toggle('star3-efficiency-toggle', isEff);
+        toggle('star3-toggle-view', !isEff && !isCdf);
     }
         
     renderPresetButtons() {
-        const container = document.getElementById('star3PresetContainer');
+        const container = document.getElementById('star3-preset-container');
         if (!container || !CONFIG.STAR3.PRESETS) return;
         
         container.innerHTML = '';
