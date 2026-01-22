@@ -6,9 +6,94 @@
 
 **샤니송 가챠 확률 시뮬레이터** - THE IDOLM@STER Shiny Colors Song for Prism의 가챠(뽑기) 확률 계산기. 동적 계획법(DP)과 쿠폰 컬렉터 알고리즘을 활용하여 3성/2성/생일 가챠 시스템의 수집 확률을 시뮬레이션합니다.
 
-**버전**: 1.7.1
+**버전**: 1.7.2
 **언어**: Vanilla JavaScript (ES6 modules)
 **기술 스택**: HTML5, CSS3, Chart.js 4.4.1
+
+## 게임 시스템 이해
+
+### 카드 종류
+- **프로듀스 카드 (P카드)**: 1성 ~ 3성 등급
+- **서포트 카드 (S카드)**: U → UR → SSR 등급
+- **리뉴얼 이후**: 가챠에서 P카드와 S카드가 동시 배출
+  - 3성 가챠: 픽업 획득 시 P카드(3성) + S카드(SSR) 동시 획득
+  - 2성/생일 가챠: S카드 없음 (P카드만 배출)
+
+### 재화 종류
+- **무료돌**: 일반 가챠에만 사용 가능
+- **유료돌**: 일반 가챠 + 스탭업 가챠 모두 사용 가능
+
+### 가챠 공통 개념
+- **픽업**: 해당 가챠의 특정 목표 카드들
+  - 3성 가챠: 최고 등급(3성)이 나와도 픽업이 아닐 수 있음 (픽뚫 발생)
+  - 2성 가챠: 2성이 나오면 100% 픽업 (픽뚫 없음)
+  - 생일 가챠: 픽업 1개 고정
+- **천장 (셀렉 티켓)**: 일정 횟수 도달 시 원하는 픽업 카드 선택 가능
+- **랜덤 티켓 (픽업 티켓)**: 픽업 중 랜덤으로 1개 획득 (천장의 너프 버전)
+- **주(周)**: 스탭업 가챠의 특정 단위 (3성: Step1~4 = 40회)
+
+### 3성 가챠 시스템
+
+#### 일반 가챠
+- 확률 조정 없는 기본 가챠
+- 픽업 확률: 사용자 설정 (일반적으로 1.0% 내외)
+
+#### 스탭업 가챠 (유료돌 전용)
+- **Step 구조**: Step1 ~ Step4, 각 Step은 10회
+  - Step1: 기본 확률
+  - Step2: 10회째에 3성+SSR 확률 2배 (픽업 확률은 불변)
+  - Step3: 1~10회 전부 3성+SSR 확률 2배 (픽업 확률은 불변)
+  - Step4: 10회째에 3성(60%) + SSR(40%) 확정, 픽업 확률은 사용자 설정
+- **주(周) 개념**: Step1~4 (40회) = 1주
+- **횟수 제한**: 최대 주회 수가 정해져 있음 (가챠마다 다름, 사용자 설정)
+  - 예: 최대 3주 = 120회까지만 가능
+  - UI: "최대 주회(周回) 수" 입력 필드
+- **주회 보상**: 각 주 완료 시 보상 1개 (사전 설정)
+  - 없음: 보상 없음
+  - random: 랜덤 티켓 (픽업 중 랜덤 1개)
+  - select: 셀렉 티켓 (원하는 픽업 1개)
+
+#### 천장 시스템
+- 일반 + 스탭업 합산 200회마다 천장 1회 (셀렉 티켓)
+- 횟수는 가챠 간 공유됨
+
+#### 시뮬레이터 단순화
+- Step2/Step3의 확률 증가는 **픽업 확률과 무관**하므로 시뮬레이션에서 무시
+- 오직 **픽업 획득 확률**에만 집중
+
+### 2성 가챠 시스템
+
+#### 일반 가챠
+- **픽뚫 없음**: 2성이 나오면 100% 픽업
+- **확률 계산**: `개별 픽업 확률 = 전체 2성 확률 / 픽업 개수`
+- **10회 보정**: 10회째에 2성 확률 95%
+- **천장**: 100회마다 1회 (일반 가챠 전용)
+
+#### 스탭업 가챠 (유료돌 전용, 그룹별)
+- **그룹 구성**: 보통 4개 그룹 (A, B, C, D)으로 분할
+- **확률 계산**: `개별 픽업 확률 = 전체 2성 확률 / 그룹별 픽업 개수`
+- **Step 구조**:
+  - Step1: 5회 (1번만 가능), 5회째 2성 100% 확정
+  - Step2: 10회 (무한 반복), 10회째 2성 100% 확정
+- **천장**: 그룹별 합산 50회마다 1회 (스탭업 가챠 전용)
+- **독립성**: 일반 가챠와 천장 횟수 공유 안 함
+
+### 생일 가챠 시스템
+
+#### 일반 가챠
+- 픽업 1개 고정
+- 픽업 확률: 1.5% (고정)
+- 천장: 200회마다 1회
+
+#### 스탭업 가챠 (유료돌 전용)
+- 픽업 확률: 2.0% (고정, 일반보다 높음)
+- **Step 구조**: Step1~3, 각 10회 (총 30회)
+  - Step1 (1~10회): 2.0% 확률
+  - Step2 (11~20회): 2.0% 확률
+  - Step3 (21~30회): 2.0% 확률
+  - **30회째**: 픽업 100% 확정
+- **횟수 제한**: 30회까지만 가능 (1번 한정)
+- **천장**: 일반 가챠와 합산 200회마다 1회
 
 ## 개발 명령어
 
@@ -238,109 +323,43 @@ calculate() {
 7. **GACHA_RULES 상수 사용** - 하드코딩된 마법 숫자 (40, 200, 50 등) 대신
 8. **EfficiencyCalculator 사용** - ViewModel에 효율 계산 로직 중복 대신
 
-## 최근 업데이트
+## 업데이트 및 리팩토링 문서
 
-### 2026-01-21: HTML/CSS 리팩토링 완료
-- **ID 네이밍 통일화**: 모든 ID를 `{type}-{element}` 패턴으로 통일 (예: `star3-reset-btn`, `birthday-toggle-ceiling`)
-- **Div Depth 축소**: 11단계 → 8단계로 단순화
-- **시멘틱 HTML**: `<header>`, `<main>`, `<section>`, `<aside>`, `<footer>` 적용
-- **CSS 최적화**: 중복 규칙 제거, !important 제거, 색상 변수화, 11개 섹션으로 구조화
-- **TabManager.js 개선**: `tab-content-wrapper` 없이도 동작하도록 개선
+프로젝트의 업데이트 히스토리와 향후 리팩토링 기회는 별도 문서로 관리됩니다:
 
-### 2026-01-20: 코드 품질 개선
-- **마법 숫자 상수화**: 모든 가챠 규칙이 `GACHA_RULES` 객체 사용
-- **DOM 조작 제거**: ViewModel에서 DOM 요소 직접 접근 제거
-- **EfficiencyCalculator**: 3개 ViewModel에서 ~135줄 중복 코드 제거
-- **ProbabilityEngine**: `calcStepupGroup()` 메서드 추가로 2성 그룹 계산 중앙화
-- **Chart.js 최적화**: `chart.update('none')` 사용으로 재렌더링 성능 개선
+- **[UPDATE.md](UPDATE.md)**: 모든 업데이트 내역 (기능 추가, 버그 수정, 개선 사항)
+- **[REFACTORING.md](REFACTORING.md)**: 향후 리팩토링 기회 및 권장사항
 
-### 2026-01-19: 기능 추가
-- **CDF 역추적**: 3성 가챠에 목표 확률 달성 필요 횟수 계산 서브탭 추가
+### 최근 주요 업데이트 요약
 
-## 개선 로드맵
+**v1.7.2 (2026-01-21)**: HTML/CSS 리팩토링
+- ID 네이밍 통일화 (`{type}-{element}` 패턴)
+- Div Depth 축소 (11단계 → 8단계)
+- 시멘틱 HTML 적용
 
-### Phase 1: 안정성 ✅ 완료
-- [x] 마법 숫자 상수화 (`GACHA_RULES`)
-  - `setupDataDependencies()`에서 `document.getElementById('targetCount')` 제거
-  - InputBinder의 `maxObserver` 옵션으로 대체
-- [x] DOM 조작 제거
-  - CDN 로드 방식에 대한 주석 추가
-- [x] Chart.js import 명시화
-  - `GACHA_RULES` 상수 객체 추가 (STAR3, STAR2, BIRTHDAY)
-  - 모든 ViewModel에서 하드코딩된 숫자를 상수로 교체
+**v1.7.1 (2026-01-20)**: 코드 품질 개선
+- 마법 숫자 상수화, EfficiencyCalculator 분리
+- Chart.js 성능 최적화
 
-### Phase 2: 성능 ✅ 완료
-- [x] Chart.js 재렌더링 최적화 (`destroy/recreate` 대신 `update()` 사용)
+**v1.7.0 (2026-01-19)**: CDF 역추적 기능 추가
 
-### Phase 3: 확장성 ✅ 완료
-- [x] EfficiencyCalculator 서비스 클래스 분리
-  - [EfficiencyCalculator.js](scsfp/js/core/EfficiencyCalculator.js) 생성
-  - `calculate3Star()`, `calculate2Star()`, `calculateBirthday()`, `calculate3StarCDF()` 메서드
-  - 3개 ViewModel의 `_calculateEfficiencyData()` 및 `_calculateCDFData()` 메서드 간소화
-- [x] ProbabilityEngine에 `calcStepupGroup()` 메서드 추가
-  - Star2GachaViewModel의 `_calcGroup` 로직 중앙화
+> 상세 내용은 [UPDATE.md](UPDATE.md) 참조
 
-### 미래 검토 사항
-- [ ] ProbabilityEngine 단위 테스트 작성 (빌드 시스템 도입 시 검토)
+## 프로젝트 상태
 
-## HTML/CSS 개선 내역 (2026-01-21)
+### ✅ 완료된 개선 사항
+모든 기술 부채가 해결되었습니다:
+- **안정성**: 마법 숫자 상수화, DOM 조작 제거
+- **성능**: Chart.js 재렌더링 최적화
+- **확장성**: EfficiencyCalculator 분리, ProbabilityEngine 중앙화
+- **HTML/CSS**: ID 네이밍 통일화, 시멘틱 HTML, Div Depth 축소
 
-### ✅ 해결 완료
+### 📋 향후 리팩토링 기회
+추가 리팩토링이 가능한 영역이 15개 식별되었습니다:
+- **High Priority** (3개): View/ViewModel 결합도, 메모리 누수 방지, Input 설정 명시화
+- **Medium Priority** (3개): Tab 관리 중복, Observable 의존성, 루프 패턴 추상화
+- **Low Priority** (9개): Toggle 패턴, 매직 문자열, DOM 헬퍼 등
 
-#### 1. ID 네이밍 통일화
-**문제**: 3성(`resetBtn3`), 생일(`resetBtnBirthday`), 2성(`resetBtn2`) 간 네이밍 규칙 불일치
+> 상세 내용은 [REFACTORING.md](REFACTORING.md) 참조
 
-**해결**: 모든 ID를 `{type}-{element}` 패턴으로 통일
-| 요소 | 이전 (3성 / 생일 / 2성) | 현재 |
-|------|----------------------|------|
-| 리셋 버튼 | `resetBtn3` / `resetBtnBirthday` / `resetBtn2` | `star3-reset-btn` / `birthday-reset-btn` / `star2-reset-btn` |
-| 천장 토글 | `toggleCeilingBtn3` / `toggleCeilingBtnBirthday` / `toggleCeilingBtn2` | `star3-toggle-ceiling` / `birthday-toggle-ceiling` / `star2-toggle-ceiling` |
-| 뷰 토글 | `toggleViewBtn3` / `toggleViewBtnBirthday` / `toggleViewBtn2` | `star3-toggle-view` / `birthday-toggle-view` / `star2-toggle-view` |
-| 효율 토글 | `btnEfficiencyToggle3` / `btnEfficiencyToggleBirthday` / `btnEfficiencyToggle2` | `star3-efficiency-toggle` / `birthday-efficiency-toggle` / `star2-efficiency-toggle` |
-| 프리셋 컨테이너 | `star3PresetContainer` | `star3-preset-container` |
-| 2성 그룹 버튼 | `btnGroupViewMode` / `btnGroupEfficiencyMode` | `star2-group-view-mode` / `star2-group-efficiency-mode` |
-
-**영향 파일**: [index.html](scsfp/index.html), [Star3GachaViewModel.js](scsfp/js/viewmodel/gacha/Star3GachaViewModel.js), [BirthdayGachaViewModel.js](scsfp/js/viewmodel/gacha/BirthdayGachaViewModel.js), [Star2GachaViewModel.js](scsfp/js/viewmodel/gacha/Star2GachaViewModel.js)
-
-#### 2. Div Depth 축소 (11단계 → 8단계)
-**문제**: 과도한 중첩 구조 (`container` → ... → `canvas` 11단계)
-
-**해결**:
-- 시멘틱 HTML 태그 적용 (`<header>`, `<main>`, `<section>`, `<aside>`, `<footer>`)
-- 서브탭에서 불필요한 `tab-content-wrapper` 제거
-- `result-area` 래퍼 제거
-
-**최종 구조** (8단계):
-```
-container (1) → main (2) → section[tab-3star] (3)
-→ sub-tab-container (4) → div[res-3s-collection] (5)
-→ chart-row (6) → chart-container (7) → canvas (8)
-```
-
-#### 3. 인라인 스타일 정리
-**해결**: 반복되는 인라인 스타일을 CSS 클래스로 추출
-- `.chart-full`: `width: 100%; flex: none;`
-- `.input-hint`: 입력 힌트 텍스트 스타일
-- `.input-row-half`: 반너비 입력 행
-- `.cdf-input-area`: CDF 입력 영역 스타일
-
-**예외**: JavaScript로 동적 제어하는 `style="display:none;"` 유지 (의도된 설계)
-
-#### 4. CSS 개선
-- **중복 규칙 제거**: `.view-toggle-btn[data-state="worst"]` 2회 선언 통합
-- **!important 제거**: specificity 개선으로 4곳 모두 제거
-- **미사용 클래스 제거**: `.cdf-input-section` 제거
-- **색상 변수화**: `:root`에 `--surface-light`, `--surface-medium`, `--surface-blue` 변수 추가
-- **11개 섹션으로 구조화**: Base Layout, Tab System, Inputs, ... 주석으로 구분
-
-#### 5. 시멘틱 HTML 적용
-- `<header>`: 타이틀 영역
-- `<main>`: 메인 탭 시스템
-- `<section>`: 각 가챠 타입 탭 (`tab-3star`, `tab-birthday`, `tab-2star`)
-- `<aside>`: 공유 결과 요약 영역
-- `<footer>`: 향후 확장 예정 (더미)
-
-**의도**: `<nav>`는 향후 다른 게임 기능 추가 시 사용 예정 (현재 미사용)
-
-### 남은 개선 사항
-- 현재 없음 (모든 HTML/CSS 기술 부채 해결 완료)
+**권장**: 현재 상태 유지 또는 High Priority 항목만 선택적 구현
