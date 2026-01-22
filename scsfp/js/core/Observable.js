@@ -19,6 +19,11 @@ export class Observable {
 
     subscribe(listener) {
         this._listeners.push(listener);
+
+        // unsubscribe 함수 반환
+        return () => {
+            this._listeners = this._listeners.filter(l => l !== listener);
+        };
     }
 
     notify() {

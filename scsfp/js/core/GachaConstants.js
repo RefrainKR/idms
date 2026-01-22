@@ -2,14 +2,14 @@ export const CONFIG = {
     STAR3: {
         KEY: 'shani_gacha_3star',
         INPUTS: [
-            { id: 'pickupCount', min: 1, max: 100, def: 2 },
-            { id: 'pickupRate', min: 0, max: 100, def: 1 },
-            { id: 'maxLoops', min: 0, max: 10, def: 2 },
-            { id: 'step4Rate', min: 0, max: 100, def: 40 },
-            { id: 'normalPulls', min: 0, max: 9999, def: 0 },
-            { id: 'stepPulls', min: 0, def: 0 },
-            { id: 'targetCount', min: 0, def: 0 },
-            { id: 'targetProbability3', min: 0, max: 100, def: 90 }
+            { id: 'pickupCount', min: 1, max: 100, def: 2, type: 'int' },
+            { id: 'pickupRate', min: 0, max: 100, def: 1, type: 'float' },
+            { id: 'maxLoops', min: 0, max: 10, def: 2, type: 'int' },
+            { id: 'step4Rate', min: 0, max: 100, def: 40, type: 'float' },
+            { id: 'normalPulls', min: 0, max: 9999, def: 0, type: 'int' },
+            { id: 'stepPulls', min: 0, def: 0, type: 'int' },
+            { id: 'targetCount', min: 0, def: 0, type: 'int' },
+            { id: 'targetProbability3', min: 0, max: 100, def: 90, type: 'float' }
         ], 
         PRESETS: [
             {
@@ -24,25 +24,51 @@ export const CONFIG = {
                 title: 'PJ: REFRAC7IONS 가챠(4픽업 기준)',
                 settings: { pickupCount: 4, pickupRate: 1, maxLoops: 3, step4Rate: 40, rewards: { 2: 'random', 3: 'select' } }
             }
+        ],
+        // Observable 의존성 정의 (setupDataDependencies 대체)
+        DEPENDENCIES: [
+            {
+                // maxLoops가 변경되면 stepMax를 자동 업데이트
+                source: 'maxLoops',
+                handler: (value, model, viewModel) => {
+                    model.stepMax.value = value * 40; // GACHA_RULES.STAR3.STEPUP_CYCLE
+                    if (viewModel && viewModel.updateLoopUI) {
+                        viewModel.updateLoopUI();
+                    }
+                }
+            },
+            {
+                // pickupCount가 변경되면 targetCount를 클램프
+                source: 'pickupCount',
+                handler: (value, model) => {
+                    if (model.targetCount.value > value) {
+                        model.targetCount.value = value;
+                    }
+                }
+            }
         ]
     },
     STAR2: {
         KEY: 'shani_gacha_2star',
         INPUTS: [
-            { id: 'countNormal2', min: 1, max: 100, def: 28 },
-            { id: 'rate2Star', min: 0, max: 100, def: 28 },
-            { id: 'pullsNormal2', min: 0, max: 9999, def: 0 }
-        ]
+            { id: 'countNormal2', min: 1, max: 100, def: 28, type: 'int' },
+            { id: 'rate2Star', min: 0, max: 100, def: 28, type: 'float' },
+            { id: 'pullsNormal2', min: 0, max: 9999, def: 0, type: 'int' }
+        ],
+        // Observable 의존성 정의
+        DEPENDENCIES: [] // 그룹별 의존성은 동적으로 추가됨 (아래 참조)
     },
     BIRTHDAY: {
         KEY: 'shani_gacha_birthday',
         INPUTS: [
-            { id: 'birthdayPickupCount', min: 1, max: 10, def: 1 },
-            { id: 'birthdayNormalRate', min: 0, max: 100, def: 1.5 },
-            { id: 'birthdayStepRate', min: 0, max: 100, def: 2.0 },
-            { id: 'birthdayNormalPulls', min: 0, max: 9999, def: 0 },
-            { id: 'birthdayStepPulls', min: 0, max: 30, def: 0 }
-        ]
+            { id: 'birthdayPickupCount', min: 1, max: 10, def: 1, type: 'int' },
+            { id: 'birthdayNormalRate', min: 0, max: 100, def: 1.5, type: 'float' },
+            { id: 'birthdayStepRate', min: 0, max: 100, def: 2.0, type: 'float' },
+            { id: 'birthdayNormalPulls', min: 0, max: 9999, def: 0, type: 'int' },
+            { id: 'birthdayStepPulls', min: 0, max: 30, def: 0, type: 'int' }
+        ],
+        // Observable 의존성 정의 (없음)
+        DEPENDENCIES: []
     }
 };
 
@@ -50,10 +76,20 @@ export const CONFIG = {
 const groupDefaults = [8, 7, 7, 6];
 ['A', 'B', 'C', 'D'].forEach((grp, idx) => {
     CONFIG.STAR2.INPUTS.push(
-        { id: `countStep${grp}`, min: 1, max: 100, def: groupDefaults[idx] },
-        { id: `pullsStep${grp}`, min: 0, max: 9999, def: 0 },
-        { id: `targetCount${grp}`, min: 0, def: 0 }
+        { id: `countStep${grp}`, min: 1, max: 100, def: groupDefaults[idx], type: 'int' },
+        { id: `pullsStep${grp}`, min: 0, max: 9999, def: 0, type: 'int' },
+        { id: `targetCount${grp}`, min: 0, def: 0, type: 'int' }
     );
+
+    // 그룹별 의존성 추가: countStepX가 변경되면 targetCountX를 클램프
+    CONFIG.STAR2.DEPENDENCIES.push({
+        source: `countStep${grp}`,
+        handler: (value, model) => {
+            if (model[`targetCount${grp}`].value > value) {
+                model[`targetCount${grp}`].value = value;
+            }
+        }
+    });
 });
 
 // 가챠 규칙 상수 정의

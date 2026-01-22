@@ -329,8 +329,254 @@ EfficiencyCalculator.calculate3StarCDF({
 
 ---
 
+## v1.7.3 (2026-01-22) - 아키텍처 리팩토링
+
+### 개요
+코드베이스 전반에 걸친 대규모 리팩토링으로 유지보수성, 확장성, 안정성을 대폭 향상시켰습니다. 5개의 우선순위 리팩토링 항목을 모두 완료했으며, 기능적 변화는 없고 내부 구조만 개선되었습니다.
+
+### 주요 변경사항
+
+#### 1. View/ViewModel 강결합 해소 (High Priority)
+
+**문제**: 가챠 타입별로 별도 렌더 메서드가 존재하고 element ID가 하드코딩됨
+
+**해결**:
+```javascript
+// 신규 파일: js/view/gacha/GachaTypeConfig.js
+export const GACHA_TYPE_CONFIG = {
+    star3: {
+        mainTabId: 'tab-3star',
+        charts: { collection: { canvas: 'resultChart', legend: 'legendList' } },
+        subTabs: { collection: 'res-3s-collection', ... },
+        hasRandomMode: true,
+        hasCdfTab: true,
+        buttonVisibility: { efficiency: ['star3-efficiency-toggle'], ... }
+    },
+    // birthday, star2 설정...
+};
+
+// GachaResultView.js - 통합 렌더링
+static render(gachaType, result, context, model, charts) {
+    const config = getGachaConfig(gachaType);
+    // 설정 기반 렌더링...
+}
+```
+
+**효과**:
+- 새 가챠 타입 추가 시 설정 파일만 수정
+- 렌더링 로직 중복 제거
+- Element ID 하드코딩 제거
+
+**영향 파일**:
+- `js/view/gacha/GachaTypeConfig.js` (NEW)
+- [js/view/gacha/GachaResultView.js](scsfp/js/view/gacha/GachaResultView.js)
+
+---
+
+#### 2. Observable 메모리 누수 방지 (High Priority)
+
+**문제**: Observable 구독이 해제되지 않아 장기 사용 시 메모리 누수 가능성
+
+**해결**:
+```javascript
+// Observable.js - unsubscribe 함수 반환
+subscribe(listener) {
+    this._listeners.push(listener);
+    return () => {
+        this._listeners = this._listeners.filter(l => l !== listener);
+    };
+}
+
+// BaseGachaViewModel.js - 구독 관리
+constructor() {
+    this._subscriptions = [];
+}
+
+init() {
+    const unsubscribe = observable.subscribe(...);
+    this._subscriptions.push(unsubscribe);
+}
+
+destroy() {
+    this._subscriptions.forEach(unsub => unsub());
+    this._subscriptions = [];
+}
+```
+
+**효과**:
+- SPA 전환 시 메모리 누수 방지
+- 명시적인 리소스 정리 패턴
+
+**영향 파일**:
+- [js/core/Observable.js](scsfp/js/core/Observable.js)
+- [js/viewmodel/gacha/BaseGachaViewModel.js](scsfp/js/viewmodel/gacha/BaseGachaViewModel.js)
+- [js/view/component/InputBinder.js](scsfp/js/view/component/InputBinder.js)
+
+---
+
+#### 3. Input 바인딩 설정 불일치 해소 (High Priority)
+
+**문제**: 입력 필드 타입(int/float)을 런타임에 추론하여 예측하기 어려움
+
+**해결**:
+```javascript
+// GachaConstants.js - 명시적 타입 선언
+STAR3: {
+    INPUTS: [
+        { id: 'pickupCount', min: 1, max: 100, def: 2, type: 'int' },
+        { id: 'pickupRate', min: 0, max: 100, def: 1, type: 'float' },
+        // ...
+    ]
+}
+
+// BaseGachaViewModel.js - 타입 추론 제거
+bindInputs() {
+    const setting = configMap.get(id) || {};
+    let binderOptions = {
+        type: setting.type || 'float',  // 명시적 타입 사용
+        // ...
+    };
+}
+```
+
+**효과**:
+- 타입 정보가 설정에 집중
+- 런타임 추론 로직 제거로 예측 가능성 향상
+
+**영향 파일**:
+- [js/core/GachaConstants.js](scsfp/js/core/GachaConstants.js)
+- [js/viewmodel/gacha/BaseGachaViewModel.js](scsfp/js/viewmodel/gacha/BaseGachaViewModel.js)
+
+---
+
+#### 4. Tab 관리 패턴 중복 제거 (Medium Priority)
+
+**문제**: 3개 ViewModel에서 `onTabChange()` 로직이 거의 동일 (각 ~15줄)
+
+**해결**:
+```javascript
+// GachaTypeConfig.js - 버튼 visibility 설정
+buttonVisibility: {
+    efficiency: ['star3-efficiency-toggle', 'star3-efficiency-mode-toggle'],
+    collection: ['star3-toggle-view'],
+    cdf: []  // CDF 탭에서는 버튼 숨김
+}
+
+// applyTabVisibility() 함수로 자동 관리
+export function applyTabVisibility(config, activeSubTab) {
+    // 설정 기반으로 버튼 visibility 자동 처리
+}
+
+// ViewModel - 단순화됨
+onTabChange(tabId) {
+    this.calculate();
+    const config = getGachaConfig('star3');
+    applyTabVisibility(config, tabId);
+}
+```
+
+**효과**:
+- 3개 ViewModel에서 중복 코드 제거 (각 15줄 → 4줄)
+- 탭별 버튼 표시 규칙이 설정으로 관리
+
+**영향 파일**:
+- [js/view/gacha/GachaTypeConfig.js](scsfp/js/view/gacha/GachaTypeConfig.js)
+- [js/viewmodel/gacha/Star3GachaViewModel.js](scsfp/js/viewmodel/gacha/Star3GachaViewModel.js)
+- [js/viewmodel/gacha/BirthdayGachaViewModel.js](scsfp/js/viewmodel/gacha/BirthdayGachaViewModel.js)
+- [js/viewmodel/gacha/Star2GachaViewModel.js](scsfp/js/viewmodel/gacha/Star2GachaViewModel.js)
+
+---
+
+#### 5. Observable 의존성 패턴 표준화 (Medium Priority)
+
+**문제**: 데이터 의존성 로직이 각 ViewModel의 `setupDataDependencies()`에 산재
+
+**해결**:
+```javascript
+// GachaConstants.js - 선언적 의존성 정의
+STAR3: {
+    DEPENDENCIES: [
+        {
+            source: 'maxLoops',
+            handler: (value, model, viewModel) => {
+                model.stepMax.value = value * 40;
+                if (viewModel && viewModel.updateLoopUI) {
+                    viewModel.updateLoopUI();
+                }
+            }
+        },
+        {
+            source: 'pickupCount',
+            handler: (value, model) => {
+                if (model.targetCount.value > value) {
+                    model.targetCount.value = value;
+                }
+            }
+        }
+    ]
+}
+
+// BaseGachaViewModel.js - 자동 적용
+applyDependencies() {
+    if (!this.config || !this.config.DEPENDENCIES) return;
+
+    this.config.DEPENDENCIES.forEach(dep => {
+        const unsubscribe = this.model[dep.source].subscribe((value) => {
+            if (!this.isInitializing) {
+                dep.handler(value, this.model, this);
+            }
+        });
+        this._subscriptions.push(unsubscribe);
+    });
+}
+
+// ViewModel - setupDataDependencies() 제거
+init() {
+    this.applyDependencies();  // 자동 적용
+    super.init();
+}
+```
+
+**효과**:
+- 의존성 로직이 설정 파일에 집중
+- 각 ViewModel의 `setupDataDependencies()` 제거
+- 새 의존성 추가 시 코드 수정 불필요
+
+**영향 파일**:
+- [js/core/GachaConstants.js](scsfp/js/core/GachaConstants.js)
+- [js/viewmodel/gacha/BaseGachaViewModel.js](scsfp/js/viewmodel/gacha/BaseGachaViewModel.js)
+- [js/viewmodel/gacha/Star3GachaViewModel.js](scsfp/js/viewmodel/gacha/Star3GachaViewModel.js)
+- [js/viewmodel/gacha/Star2GachaViewModel.js](scsfp/js/viewmodel/gacha/Star2GachaViewModel.js)
+
+---
+
+### 리팩토링 통계
+
+- **해결된 항목**: 5개 (High: 3, Medium: 2)
+- **제거된 중복 코드**: 약 80줄
+- **신규 파일**: 1개 (GachaTypeConfig.js)
+- **개선된 파일**: 8개
+- **개선된 패턴**:
+  - Observable 구독 생명주기 관리
+  - 설정 중앙화 (UI 설정, 의존성 정의)
+  - 선언적 프로그래밍 (버튼 visibility, 의존성)
+
+### 하위 호환성
+
+모든 변경사항은 내부 구조 개선이며, 기존 API와 기능은 완전히 유지됩니다:
+- `GachaResultView.render3Star()` 등 기존 메서드는 래퍼로 유지
+- 사용자 대면 기능 및 UI는 변화 없음
+- LocalStorage 키 및 데이터 구조 호환
+
+### 추가 문서
+
+이번 리팩토링의 상세 내역은 [REFACTORING.md](REFACTORING.md)를 참조하세요.
+
+---
+
 ## 버전 히스토리
 
+- **v1.7.3** (2026-01-22): 아키텍처 리팩토링 - 설정 중앙화, 메모리 관리, 패턴 표준화
 - **v1.7.2** (2026-01-21): HTML/CSS 리팩토링, ID 네이밍 통일화, 시멘틱 HTML, 게임 시스템 문서화
 - **v1.7.1** (2026-01-20): 코드 품질 개선, 서비스 클래스 분리, 성능 최적화
 - **v1.7.0** (2026-01-19): CDF 역추적 기능 추가

@@ -6,6 +6,7 @@ import { GachaResultView } from '../../view/gacha/GachaResultView.js';
 import { ToggleButton } from '../../view/component/ToggleButton.js';
 import { CONFIG, TOGGLE_STATES, GACHA_RULES } from '../../core/GachaConstants.js';
 import { ProbabilityValidator } from '../../utils/ProbabilityValidator.js';
+import { getGachaConfig, applyTabVisibility } from '../../view/gacha/GachaTypeConfig.js';
 
 export class BirthdayGachaViewModel extends BaseGachaViewModel {
     constructor() {
@@ -52,17 +53,8 @@ export class BirthdayGachaViewModel extends BaseGachaViewModel {
     onTabChange(tabId) {
         this.calculate();
 
-        const isEff = (tabId === 'res-bd-efficiency');
-        const toggle = (id, show) => {
-            const el = document.getElementById(id);
-            if (el) el.style.display = show ? '' : 'none';
-        };
-
-        // 효율 탭 전용 버튼
-        toggle('birthday-efficiency-toggle', isEff);
-
-        // 수집/총획득 탭 전용 버튼
-        toggle('birthday-toggle-view', !isEff);
+        const config = getGachaConfig('birthday');
+        applyTabVisibility(config, tabId);
     }
 
     calculate() {

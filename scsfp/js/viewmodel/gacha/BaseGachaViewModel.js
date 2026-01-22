@@ -7,6 +7,7 @@ export class BaseGachaViewModel {
         this.config = config;
         this.model = null;
         this.isInitializing = true;
+        this._subscriptions = []; // 구독 해제 함수 저장
     }
 
     init() {
@@ -17,18 +18,49 @@ export class BaseGachaViewModel {
 
         for (const key in this.model) {
             if (this.model[key].subscribe) { // Observable 인지 확인
-                this.model[key].subscribe(() => {
+                const unsubscribe = this.model[key].subscribe(() => {
                     if (!this.isInitializing) {
                         this.calculate();
                         this.save();
                     }
                 });
+                this._subscriptions.push(unsubscribe); // 저장
             }
         }
 
         this.bindInputs(); // InputBinder 연결
         this.isInitializing = false;
         this.calculate();
+    }
+
+    destroy() {
+        // 모든 구독 해제
+        this._subscriptions.forEach(unsubscribe => unsubscribe());
+        this._subscriptions = [];
+    }
+
+    /**
+     * CONFIG.DEPENDENCIES에서 정의된 Observable 의존성 자동 적용
+     * setupDataDependencies()를 대체하는 범용 메서드
+     */
+    applyDependencies() {
+        if (!this.config || !this.config.DEPENDENCIES) return;
+
+        this.config.DEPENDENCIES.forEach(dep => {
+            const sourceObservable = this.model[dep.source];
+            if (!sourceObservable || !sourceObservable.subscribe) {
+                console.warn(`Dependency source '${dep.source}' not found in model`);
+                return;
+            }
+
+            const unsubscribe = sourceObservable.subscribe((value) => {
+                if (!this.isInitializing) {
+                    dep.handler(value, this.model, this);
+                }
+            });
+
+            this._subscriptions.push(unsubscribe);
+        });
     }
 
     bindInputs() {
@@ -46,7 +78,7 @@ export class BaseGachaViewModel {
             
             const setting = configMap.get(id) || {};
             let binderOptions = {
-                type: (el.step === '1' || id.toLowerCase().includes('pulls') || id.toLowerCase().includes('count')) ? 'int' : 'float',
+                type: setting.type || 'float',  // CONFIG에서 명시적으로 가져옴
                 min: setting.min,
                 max: setting.max,
                 def: setting.def

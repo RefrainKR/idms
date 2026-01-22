@@ -6,6 +6,7 @@ import { GachaResultView } from '../../view/gacha/GachaResultView.js';
 import { ToggleButton } from '../../view/component/ToggleButton.js';
 import { CONFIG, TOGGLE_STATES, GACHA_RULES } from '../../core/GachaConstants.js';
 import { ProbabilityValidator } from '../../utils/ProbabilityValidator.js';
+import { getGachaConfig, applyTabVisibility } from '../../view/gacha/GachaTypeConfig.js';
 
 export class Star2GachaViewModel extends BaseGachaViewModel {
     constructor() {
@@ -27,10 +28,11 @@ export class Star2GachaViewModel extends BaseGachaViewModel {
     }
 
     init() {
+        this.applyDependencies(); // 먼저 의존성 적용
+
         super.init();
 
         this.bindToggles();
-        this.setupDataDependencies();
 
         const resetBtn = document.getElementById('star2-reset-btn');
         if (resetBtn) {
@@ -66,31 +68,11 @@ export class Star2GachaViewModel extends BaseGachaViewModel {
     onTabChange(tabId) {
         this.calculate();
 
-        const isEff = (tabId === 'res-2s-efficiency');
-        const toggle = (id, show) => {
-            const el = document.getElementById(id);
-            if (el) el.style.display = show ? '' : 'none';
-        };
-
-        // 효율 탭
-        toggle('star2-efficiency-toggle', isEff);
-        toggle('star2-group-efficiency-mode', isEff);
-
-        // 수집/이획득 탭
-        toggle('star2-toggle-view', !isEff);
-        toggle('star2-group-view-mode', !isEff);
+        const config = getGachaConfig('star2');
+        applyTabVisibility(config, tabId);
     }
 
-    setupDataDependencies() {
-        ['A', 'B', 'C', 'D'].forEach(id => {
-            this.model[`countStep${id}`].subscribe((newN) => {
-                // [수정] HTML 속성 변경 제거 - 로직만 처리
-                if (this.model[`targetCount${id}`].value > newN) {
-                    this.model[`targetCount${id}`].value = newN;
-                }
-            });
-        });
-    }
+    // setupDataDependencies 제거됨 - CONFIG.STAR2.DEPENDENCIES로 대체
 
     getCustomBinderOptions(id) {
         // id가 targetCountA 형식이면 countStepA를 감시

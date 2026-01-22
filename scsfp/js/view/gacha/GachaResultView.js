@@ -2,78 +2,178 @@ import { ResultView } from '../ResultView.js';
 import { Formatter } from '../../utils/Formatter.js';
 import { ChartAdapter } from '../../utils/ChartAdapter.js';
 import { ChartUtils } from '../../utils/ChartUtils.js';
+import { getGachaConfig, getActiveSubTab } from './GachaTypeConfig.js';
 
 export class GachaResultView extends ResultView {
 
     // ==========================================
-    // 3성 가챠 화면 렌더링
+    // 통합 렌더링 (리팩토링)
     // ==========================================
-    static render3Star(result, context, model, charts) {
-        const mainTab = document.getElementById('tab-3star');
+    static render(gachaType, result, context, model, charts) {
+        const config = getGachaConfig(gachaType);
+        if (!config) return;
+
+        const mainTab = document.getElementById(config.mainTabId);
         if (!mainTab || !mainTab.classList.contains('active')) return;
 
-        const activeSubTab = document.querySelector('#sub-tab-system-3star .tab-button.active')?.dataset.tab;
+        const activeSubTab = getActiveSubTab(config);
+        if (!activeSubTab) return;
+
         const viewMode = model.viewMode.value;
         const { N, M, dp, dpTotal } = result;
 
-        // 1. 수집 확률 (Pie Chart)
-        if (activeSubTab === 'res-3s-collection') {
-            this.renderCollection(M, dp, viewMode,
-                { chart: 'resultChart', legend: 'legendList', summary: 'globalSummary', logic: 'globalLogic' },
-                {
-                    summary: () => `
-                        <strong>수집 결과</strong> (전체 ${N}종 중 ${M}종)<br>
-                        가챠 횟수 : ${context.totalPulls}회 (일반 ${context.normalPulls} + 스탭업 ${context.stepPulls})<br>
-                        천장 교환 : ${context.totalCeilingCount}회 (통합 ${context.normalCeiling} + 스탭업 ${context.selectRewardCount})<br>
-                        목표(${M}종) 올컴플릿 확률 : <strong>${Formatter.formatProbability(dp[M])}</strong>
-                    `,
-                    logic: () => this._generate3StarLogic(context)
-                },
-                charts.collection
-            );
+        // 수집 확률 (Pie Chart)
+        if (activeSubTab === config.subTabs.collection) {
+            this._renderCollectionTab(gachaType, config, M, dp, viewMode, context, charts);
         }
-        // 2. 이 획득 수 (Bar Chart)
-        else if (activeSubTab === 'res-3s-total') {
-            const expected = dpTotal.reduce((acc, p, i) => acc + i * p, 0);
-            this.renderTotalCount(dpTotal, viewMode,
-                { chart: 'resultChartTotal3', summary: 'globalSummary', logic: 'globalLogic' },
-                {
-                    summary: () => `
-                        타겟(${M}종) 이 획득 기대 수: 약 <strong>${expected.toFixed(3)}개</strong><br>
-                        <span style="font-size:0.85rem; color:#666;">* 유효 픽업 ${M}종의 획득 개수 합계입니다.</span><br>
-                        <span style="font-size:0.85rem; color:#dc3545;">(천장 포함 버튼이 활성화 되어있는지 주의하세요.)</span>
-                    `
-                },
-                charts.total
-            );
+        // 총 획득 수 (Bar Chart)
+        else if (activeSubTab === config.subTabs.total) {
+            this._renderTotalTab(gachaType, config, M, dpTotal, viewMode, context, charts);
         }
-        // 3. 효율 비교 (Line Chart)
-        else if (activeSubTab === 'res-3s-efficiency') {
-            if (context.efficiencyData) {
-                this.renderEfficiencyChart(
-                    context.efficiencyData,
-                    'efficiencyChart',
-                    model.efficiencyMode.value === 'worst',
-                    charts.efficiency,
-                    context.efficiencyLimit,
-                    M,
-                    '',
-                    false
-                );
-            }
+        // 효율 비교 (Line Chart)
+        else if (activeSubTab === config.subTabs.efficiency) {
+            this._renderEfficiencyTab(gachaType, config, M, context, model, charts);
         }
-        // 4. CDF 역추적 (Line Chart)
-        else if (activeSubTab === 'res-3s-cdf') {
-            if (context.cdfData) {
-                this.renderCDFChart(
-                    context.cdfData,
-                    'cdfChart',
-                    charts.cdf,
-                    model.targetProbability.value,
-                    M
-                );
-            }
+        // CDF 역추적 (3성 전용)
+        else if (config.hasCdfTab && activeSubTab === config.subTabs.cdf) {
+            this._renderCdfTab(config, M, context, model, charts);
         }
+    }
+
+    // 수집 확률 탭 렌더링
+    static _renderCollectionTab(gachaType, config, M, dp, viewMode, context, charts) {
+        const summaryFn = this._getCollectionSummary(gachaType, context, M, dp);
+        const logicFn = this._getLogic(gachaType, context);
+
+        this.renderCollection(M, dp, viewMode,
+            {
+                chart: config.charts.collection.canvas,
+                legend: config.charts.collection.legend,
+                summary: config.summary.element,
+                logic: config.summary.logic
+            },
+            {
+                summary: summaryFn,
+                logic: logicFn
+            },
+            charts.collection
+        );
+    }
+
+    // 총 획득 수 탭 렌더링
+    static _renderTotalTab(gachaType, config, M, dpTotal, viewMode, context, charts) {
+        const expected = dpTotal.reduce((acc, p, i) => acc + i * p, 0);
+        const summaryFn = () => `
+            타겟(${M}종) 총 획득 기대 수: 약 <strong>${expected.toFixed(3)}개</strong><br>
+            <span style="font-size:0.85rem; color:#666;">* 유효 픽업 ${M}종의 획득 개수 합계입니다.</span><br>
+            <span style="font-size:0.85rem; color:#dc3545;">(천장 포함 버튼이 활성화 되어있는지 주의하세요.)</span>
+        `;
+
+        this.renderTotalCount(dpTotal, viewMode,
+            {
+                chart: config.charts.total.canvas,
+                summary: config.summary.element,
+                logic: config.summary.logic
+            },
+            { summary: summaryFn },
+            charts.total
+        );
+    }
+
+    // 효율 비교 탭 렌더링
+    static _renderEfficiencyTab(gachaType, config, M, context, model, charts) {
+        if (!context.efficiencyData) return;
+
+        let xLimit, targetM, targetLabel, showMultipleLines;
+
+        if (gachaType === 'star3') {
+            xLimit = context.efficiencyLimit;
+            targetM = M;
+            targetLabel = '';
+            showMultipleLines = false;
+        } else if (gachaType === 'birthday') {
+            xLimit = 30;  // 스탭업 30회 기준
+            targetM = M;
+            targetLabel = '';
+            showMultipleLines = false;
+        } else if (gachaType === 'star2') {
+            xLimit = 100;
+            targetM = context.targetGroupInfo ? context.targetGroupInfo.M : M;
+            targetLabel = context.targetGroupInfo ? context.targetGroupInfo.id : '';
+            showMultipleLines = true;
+        }
+
+        this.renderEfficiencyChart(
+            context.efficiencyData,
+            config.charts.efficiency.canvas,
+            model.efficiencyMode.value === 'worst',
+            charts.efficiency,
+            xLimit,
+            targetM,
+            targetLabel,
+            showMultipleLines
+        );
+    }
+
+    // CDF 역추적 탭 렌더링 (3성 전용)
+    static _renderCdfTab(config, M, context, model, charts) {
+        if (!context.cdfData) return;
+
+        this.renderCDFChart(
+            context.cdfData,
+            config.charts.cdf.canvas,
+            charts.cdf,
+            model.targetProbability.value,
+            M
+        );
+    }
+
+    // 가챠 타입별 수집 요약 생성
+    static _getCollectionSummary(gachaType, context, M, dp) {
+        const N = context.N || M;
+
+        if (gachaType === 'star3') {
+            return () => `
+                <strong>수집 결과</strong> (전체 ${N}종 중 ${M}종)<br>
+                가챠 횟수 : ${context.totalPulls}회 (일반 ${context.normalPulls} + 스탭업 ${context.stepPulls})<br>
+                천장 교환 : ${context.totalCeilingCount}회 (통합 ${context.normalCeiling} + 스탭업 ${context.selectRewardCount})<br>
+                목표(${M}종) 올컴플릿 확률 : <strong>${Formatter.formatProbability(dp[M])}</strong>
+            `;
+        } else if (gachaType === 'birthday') {
+            const guaranteedMsg = context.stepGuaranteed ? '<br><span style="color:#45a247;">✅ 스탭업 30회 확정 획득!</span>' : '';
+            return () => `
+                <strong>생일 가챠 결과</strong><br>
+                가챠 횟수: ${context.totalPulls}회 (일반 ${context.normalPulls} + 스탭업 ${context.stepPulls})<br>
+                천장 교환: ${context.ceilingCount}회<br>
+                획득 확률: <strong>${Formatter.formatProbability(dp[M])}</strong>
+                ${guaranteedMsg}
+            `;
+        } else if (gachaType === 'star2') {
+            return () => `
+                <strong>수집 결과</strong> (전체 ${N}종 중 ${M}종)<br>
+                가챠 횟수 : ${context.totalPulls}회 / 천장 : ${context.totalCeil}회<br>
+                목표(${M}종) 올컴플릿 확률 : <strong>${Formatter.formatProbability(dp[M])}</strong><br>
+                <span style="font-size:0.85rem; color:#dc3545;">(천장 포함 버튼이 활성화 되어있는지 주의하세요.)</span>
+            `;
+        }
+    }
+
+    // 가챠 타입별 로직 생성
+    static _getLogic(gachaType, context) {
+        if (gachaType === 'star3') {
+            return () => this._generate3StarLogic(context);
+        } else if (gachaType === 'birthday') {
+            return () => this._generateBirthdayLogic(context);
+        } else if (gachaType === 'star2') {
+            return () => this._generate2StarLogic(context);
+        }
+    }
+
+    // ==========================================
+    // 3성 가챠 화면 렌더링 (하위 호환)
+    // ==========================================
+    static render3Star(result, context, model, charts) {
+        this.render('star3', result, context, model, charts);
     }
 
     // 3성 상세 로직 HTML 생성
@@ -106,60 +206,7 @@ export class GachaResultView extends ResultView {
     // 생일 가챠 화면 렌더링
     // ==========================================
     static renderBirthday(result, context, model, charts) {
-        const mainTab = document.getElementById('tab-birthday');
-        if (!mainTab || !mainTab.classList.contains('active')) return;
-
-        const activeSubTab = document.querySelector('#sub-tab-system-birthday .tab-button.active')?.dataset.tab;
-        const viewMode = model.viewMode.value;
-        const { N, M, dp, dpTotal } = result;
-
-        // 1. 픽업 획득 (Pie Chart)
-        if (activeSubTab === 'res-bd-collection') {
-            this.renderCollection(M, dp, viewMode,
-                { chart: 'resultChartBirthday', legend: 'legendListBirthday', summary: 'globalSummary', logic: 'globalLogic' },
-                {
-                    summary: () => `
-                        <strong>생일 가챠 결과</strong><br>
-                        가챠 횟수: ${context.totalPulls}회 (일반 ${context.normalPulls} + 스탭업 ${context.stepPulls})<br>
-                        천장 교환: ${context.ceilingCount}회<br>
-                        획득 확률: <strong>${Formatter.formatProbability(dp[M])}</strong>
-                        ${context.stepGuaranteed ? '<br><span style="color:#45a247;">✅ 스탭업 30회 확정 획득!</span>' : ''}
-                    `,
-                    logic: () => this._generateBirthdayLogic(context)
-                },
-                charts.collection
-            );
-        }
-        // 2. 총 획득 (Bar Chart)
-        else if (activeSubTab === 'res-bd-total') {
-            const expected = dpTotal.reduce((acc, p, i) => acc + i * p, 0);
-            this.renderTotalCount(dpTotal, viewMode,
-                { chart: 'resultChartTotalBirthday', summary: 'globalSummary', logic: 'globalLogic' },
-                {
-                    summary: () => `
-                        픽업 총 획득 기대 수: 약 <strong>${expected.toFixed(3)}개</strong><br>
-                        <span style="font-size:0.85rem; color:#666;">* 중복 포함 획득 개수 합계입니다.</span><br>
-                        <span style="font-size:0.85rem; color:#dc3545;">(천장 포함 버튼이 활성화 되어있는지 주의하세요.)</span>
-                    `
-                },
-                charts.total
-            );
-        }
-        // 3. 효율 비교 (Line Chart)
-        else if (activeSubTab === 'res-bd-efficiency') {
-            if (context.efficiencyData) {
-                this.renderEfficiencyChart(
-                    context.efficiencyData,
-                    'efficiencyChartBirthday',
-                    model.efficiencyMode.value === 'worst',
-                    charts.efficiency,
-                    30,  // 스탭업 30회 기준
-                    M,
-                    '',
-                    false
-                );
-            }
-        }
+        this.render('birthday', result, context, model, charts);
     }
 
     static _generateBirthdayLogic(ctx) {
@@ -184,62 +231,10 @@ export class GachaResultView extends ResultView {
     }
 
     // ==========================================
-    // 2성 가챠 화면 렌더링
+    // 2성 가챠 화면 렌더링 (하위 호환)
     // ==========================================
     static render2Star(result, context, model, charts) {
-        const mainTab = document.getElementById('tab-2star');
-        if (!mainTab || !mainTab.classList.contains('active')) return;
-
-        const activeSubTab = document.querySelector('#sub-tab-system-2star .tab-button.active')?.dataset.tab;
-        const viewMode = model.viewMode.value;
-        const { N, M, dp, dpTotal } = result;
-
-        // 1. 수집 확률 (Pie)
-        if (activeSubTab === 'res-2s-collection') {
-            this.renderCollection(M, dp, viewMode,
-                { chart: 'resultChart2', legend: 'legendList2', summary: 'globalSummary', logic: 'globalLogic' },
-                {
-                    summary: () => `
-                        <strong>수집 결과</strong> (전체 ${N}종 중 ${M}종)<br>
-                        가챠 횟수 : ${context.totalPulls}회 / 천장 : ${context.totalCeil}회<br>
-                        목표(${M}종) 올컴플릿 확률 : <strong>${Formatter.formatProbability(dp[M])}</strong><br>
-                        <span style="font-size:0.85rem; color:#dc3545;">(천장 포함 버튼이 활성화 되어있는지 주의하세요.)</span>
-                    `,
-                    logic: () => this._generate2StarLogic(context)
-                },
-                charts.collection
-            );
-        }
-        // 2. 이 획득 (Bar)
-        else if (activeSubTab === 'res-2s-total') {
-            const expected = dpTotal.reduce((acc, p, i) => acc + i * p, 0);
-            this.renderTotalCount(dpTotal, viewMode,
-                { chart: 'resultChartTotal2', summary: 'globalSummary', logic: 'globalLogic' },
-                {
-                    summary: () => `
-                        타겟(${M}종) 이 획득 기대 수: 약 <strong>${expected.toFixed(3)}개</strong><br>
-                        <span style="font-size:0.85rem; color:#666;">* 타겟 그룹 픽업의 획득 개수 합계입니다.</span><br>
-                        <span style="font-size:0.85rem; color:#dc3545;">(천장 포함 버튼이 활성화 되어있는지 주의하세요.)</span>
-                    `
-                },
-                charts.total
-            );
-        }
-        // 3. 효율 비교 (Line)
-        else if (activeSubTab === 'res-2s-efficiency') {
-            if (context.efficiencyData) {
-                this.renderEfficiencyChart(
-                    context.efficiencyData,
-                    'efficiencyChart2',
-                    model.efficiencyMode.value === 'worst',
-                    charts.efficiency,
-                    100,
-                    context.targetGroupInfo ? context.targetGroupInfo.M : M,
-                    context.targetGroupInfo ? context.targetGroupInfo.id : '',
-                    true
-                );
-            }
-        }
+        this.render('star2', result, context, model, charts);
     }
 
     static _generate2StarLogic(ctx) {

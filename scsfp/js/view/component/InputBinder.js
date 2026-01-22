@@ -1,11 +1,14 @@
 export class InputBinder {
     /**
-     * @param {HTMLElement} element 
-     * @param {Observable} observable 
+     * @param {HTMLElement} element
+     * @param {Observable} observable
      * @param {Object} options { min, max, def, type, maxObserver: Observable }
+     * @returns {Function} unsubscribe 함수 (SPA 전환 시 사용)
      */
     static bind(element, observable, options = {}) {
-        if (!element || !observable) return;
+        if (!element || !observable) return () => {};
+
+        const unsubscribes = []; // 구독 해제 함수 수집
 
         const isInt = options.type === 'int';
         let currentMax = options.max !== undefined ? options.max : Infinity;
@@ -22,25 +25,27 @@ export class InputBinder {
             }
             
             // 이후 변경사항 감지
-            options.maxObserver.subscribe((newMax) => {
+            const unsubMax = options.maxObserver.subscribe((newMax) => {
                 currentMax = newMax;
-                
+
                 // 현재 값이 새 Max보다 크다면 즉시 깎음
                 if (observable.value > newMax) {
                     observable.value = newMax;
                     element.value = newMax;
                 }
             });
+            unsubscribes.push(unsubMax);
         }
 
         let previousValue = observable.value;
 
-        observable.subscribe((val) => {
+        const unsubObs = observable.subscribe((val) => {
             if (document.activeElement !== element) {
                 element.value = val;
                 previousValue = val;
             }
         });
+        unsubscribes.push(unsubObs);
 
         element.addEventListener('focus', () => {
             previousValue = isInt ? parseInt(element.value) : parseFloat(element.value);
@@ -72,7 +77,12 @@ export class InputBinder {
         element.addEventListener('change', commitValue);
         element.addEventListener('blur', commitValue);
         element.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); element.blur(); } });
-        
+
         element.value = observable.value;
+
+        // 모든 구독 해제하는 함수 반환 (SPA 전환 시 사용)
+        return () => {
+            unsubscribes.forEach(unsub => unsub());
+        };
     }
 }

@@ -6,6 +6,7 @@ import { GachaResultView } from '../../view/gacha/GachaResultView.js';
 import { ToggleButton } from '../../view/component/ToggleButton.js';
 import { CONFIG, TOGGLE_STATES, GACHA_RULES } from '../../core/GachaConstants.js';
 import { ProbabilityValidator } from '../../utils/ProbabilityValidator.js';
+import { getGachaConfig, applyTabVisibility } from '../../view/gacha/GachaTypeConfig.js';
 
 export class Star3GachaViewModel extends BaseGachaViewModel {
     constructor() {
@@ -27,10 +28,10 @@ export class Star3GachaViewModel extends BaseGachaViewModel {
     }
 
     init() {
-        // [수정] setupDataDependencies를 super.init() 전에 호출하여
+        // applyDependencies를 super.init() 전에 호출하여
         // InputBinder가 올바른 maxObserver를 받을 수 있도록 함
-        this.setupDataDependencies();
-        
+        this.applyDependencies();
+
         super.init(); // 여기서 bindInputs()가 호출됨
 
         this.bindToggles();
@@ -56,15 +57,8 @@ export class Star3GachaViewModel extends BaseGachaViewModel {
     onTabChange(tabId) {
         this.calculate();
 
-        const isEff = (tabId === 'res-3s-efficiency');
-        const isCdf = (tabId === 'res-3s-cdf');
-        const toggle = (id, show) => {
-            const el = document.getElementById(id);
-            if (el) el.style.display = show ? '' : 'none';
-        };
-
-        toggle('star3-efficiency-toggle', isEff);
-        toggle('star3-toggle-view', !isEff && !isCdf);
+        const config = getGachaConfig('star3');
+        applyTabVisibility(config, tabId);
     }
         
     renderPresetButtons() {
@@ -82,18 +76,7 @@ export class Star3GachaViewModel extends BaseGachaViewModel {
         });
     }
 
-    setupDataDependencies() {
-        this.model.maxLoops.subscribe((val) => {
-            this.model.stepMax.value = val * GACHA_RULES.STAR3.STEPUP_CYCLE;
-            this.updateLoopUI();
-        });
-
-        this.model.pickupCount.subscribe((newN) => {
-            if (this.model.targetCount.value > newN) {
-                this.model.targetCount.value = newN;
-            }
-        });
-    }
+    // setupDataDependencies 제거됨 - CONFIG.STAR3.DEPENDENCIES로 대체
 
     getCustomBinderOptions(id) {
         if (id === 'targetCount') {
