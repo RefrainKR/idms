@@ -152,8 +152,7 @@ export class GachaResultView extends ResultView {
             return () => `
                 <strong>수집 결과</strong> (전체 ${N}종 중 ${M}종)<br>
                 가챠 횟수 : ${context.totalPulls}회 / 천장 : ${context.totalCeil}회<br>
-                목표(${M}종) 올컴플릿 확률 : <strong>${Formatter.formatProbability(dp[M])}</strong><br>
-                <span style="font-size:0.85rem; color:#dc3545;">(천장 포함 버튼이 활성화 되어있는지 주의하세요.)</span>
+                목표(${M}종) 올컴플릿 확률 : <strong>${Formatter.formatProbability(dp[M])}</strong>
             `;
         }
     }
@@ -192,7 +191,7 @@ export class GachaResultView extends ResultView {
                 <span class="logic-title">상세 계산 근거</span>
                 <button class="toggle-btn">▼</button>
             </div>
-            <div class="section-content logic-view">
+            <div class="logic-view">
                 <ul class="logic-list">
                     <li>기본 ${ctx.p_indiv}% (${ctx.countNormal}회), Step4 개별 ${(ctx.p_step4_total/ctx.N).toFixed(3)}% (${ctx.countStep4}회)</li>
                     <li>주회 보상: ${rewardHistory}</li>
@@ -218,7 +217,7 @@ export class GachaResultView extends ResultView {
                 <span class="logic-title">상세 계산 근거</span>
                 <button class="toggle-btn">▼</button>
             </div>
-            <div class="section-content logic-view">
+            <div class="logic-view">
                 <ul class="logic-list">
                     <li><strong>일반 가챠:</strong> ${ctx.normalRate}% (${ctx.normalPulls}회)</li>
                     <li><strong>스탭업 가챠:</strong> ${ctx.stepRate}% (${ctx.stepPulls}회)
@@ -270,7 +269,7 @@ export class GachaResultView extends ResultView {
                 <span class="logic-title">상세 계산 근거</span>
                 <button class="toggle-btn">▼</button>
             </div>
-            <div class="section-content logic-view">
+            <div class="logic-view">
                 <ul class="logic-list">
                     <li><strong>확률 적용(일반):</strong> 일반 ${pNorm}% (${normalBase}회), 보정(전체 95%, 개별 ${pHigh}%) (${normalHigh}회)</li>
                     <li><strong>확률 적용(스탭업):</strong> 일반 (${totalStepNormal}회), 확정 (${totalStepGuar}회)
