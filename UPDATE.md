@@ -574,8 +574,43 @@ init() {
 
 ---
 
+## v1.7.4 (2026-01-22) - 저장 동작 개선
+
+### 변경 사항
+
+**가챠 횟수 저장 제외**
+
+**문제**: 2성 가챠의 스탭업 횟수(`pullsStepA`, `pullsStepB`, `pullsStepC`, `pullsStepD`)가 LocalStorage에 저장되어 페이지 새로고침 시에도 유지됨
+
+**해결**: 가챠 횟수는 세션마다 초기화되도록 저장 대상에서 제외
+```javascript
+// Star2GachaModel.js - toJSON()
+toJSON() {
+    return {
+        countNormal: this.countNormal.value,
+        rateTotal: this.rateTotal.value,
+        // 그룹별 픽업 수와 목표만 저장
+        countStepA: this.countStepA.value,
+        targetCountA: this.targetCountA.value,
+        // pullsStepA 제외 (항상 0으로 시작)
+        // ...
+    };
+}
+```
+
+**효과**:
+- 사용자가 새로고침 시 가챠 횟수가 0으로 초기화됨
+- 픽업 설정(countStep*, targetCount*)은 여전히 저장되어 편의성 유지
+- 3성, 생일 가챠는 이미 횟수를 저장하지 않았으므로 변경 없음
+
+**영향 파일**:
+- [js/model/gacha/Star2GachaModel.js](scsfp/js/model/gacha/Star2GachaModel.js)
+
+---
+
 ## 버전 히스토리
 
+- **v1.7.4** (2026-01-22): 2성 가챠 횟수 저장 제외 - 세션마다 초기화
 - **v1.7.3** (2026-01-22): 아키텍처 리팩토링 - 설정 중앙화, 메모리 관리, 패턴 표준화
 - **v1.7.2** (2026-01-21): HTML/CSS 리팩토링, ID 네이밍 통일화, 시멘틱 HTML, 게임 시스템 문서화
 - **v1.7.1** (2026-01-20): 코드 품질 개선, 서비스 클래스 분리, 성능 최적화
