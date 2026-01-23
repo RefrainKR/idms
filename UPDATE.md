@@ -4,6 +4,238 @@
 
 ---
 
+## v1.8.0 (2026-01-23) - 확률 표기법 개선
+
+### 새로운 기능
+
+**경계값 명시 표기법 추가**
+
+**문제**:
+- 기존: `0.0003%` → `0.000%` 표시 (실제 0이 아닌데 0으로 보임)
+- 기존: `99.9997%` → `100.000%` 표시 (실제 100이 아닌데 100으로 보임)
+- 사용자가 정확히 0% 또는 100%가 아님을 알 수 없음
+
+**해결**:
+- 차트 레이블에 화살표 표기 도입
+  - `0.001%↓` = "0.001%보다 작음"
+  - `99.999%↑` = "99.999%보다 큼"
+- 숫자 뒤에 화살표 배치로 정렬 깔끔하게 유지
+
+### 변경 사항
+
+#### 1. Formatter.js 메서드 추가
+
+**새로운 메서드** (v1.8.0 최종):
+
+1. **`probabilityFraction(probability, decimals = 3)`**
+   - 용도: 범례, 툴팁, 요약 (정확한 확률 전달)
+   - 특징: 분수 표기 지원 (`1/100,000`)
+   - 예시:
+     ```
+     0.000003 → "1/333,333"
+     0.00123  → "0.123%"
+     0.5      → "50.000%"
+     ```
+
+2. **`probabilityBounded(probability, decimals = 3)`**
+   - 용도: 차트 내부 레이블, 모든 확률 표시 (가독성 우선)
+   - 특징: 화살표로 경계값 명시
+   - 예시:
+     ```
+     0.000003 → "0.001%↓"  (0.001%보다 작음)
+     0.00123  → "0.123%"
+     0.999997 → "99.999%↑" (99.999%보다 큼)
+     ```
+
+**호환성**:
+- 기존 `formatProbability()` 유지 (내부적으로 `probabilityFraction(prob, 3)` 호출)
+- 코드베이스 전체에서 새 메서드명 사용 (별칭 제거됨)
+
+#### 2. 차트 및 확률 표시 전면 개선
+
+**파일**:
+- [js/utils/ChartAdapter.js](scsfp/js/utils/ChartAdapter.js)
+- [js/view/gacha/GachaResultView.js](scsfp/js/view/gacha/GachaResultView.js)
+
+**변경 사항**:
+
+1. **차트 레이블** (ChartAdapter.js):
+   ```javascript
+   // 변경 전
+   formatter: (value) => value + '%'
+
+   // 변경 후
+   formatter: (value) => Formatter.probabilityBounded(value / 100, 2)
+   ```
+
+2. **차트 툴팁 차이값** (ChartAdapter.js:186):
+   ```javascript
+   // 변경 전
+   const diff = (v1 - v2).toFixed(3);
+
+   // 변경 후
+   const diff = Math.abs(v1 - v2) / 100;
+   const diffText = Formatter.probabilityBounded(diff, 3).replace('%', '');
+   ```
+
+3. **CDF 차트 툴팁** (GachaResultView.js:468):
+   ```javascript
+   // 변경 전
+   return ` ${context.dataset.label}: ${context.raw.toFixed(3)}%`;
+
+   // 변경 후
+   const probText = Formatter.probabilityBounded(context.raw / 100, 3);
+   return ` ${context.dataset.label}: ${probText}`;
+   ```
+
+4. **역추적 결과 표시** (GachaResultView.js:547-548):
+   ```javascript
+   // 변경 전
+   실제 ${actualProbStepup.toFixed(2)}%
+
+   // 변경 후
+   실제 ${Formatter.probabilityBounded(actualProbStepup / 100, 2)}
+   ```
+
+5. **상세 계산 근거 확률** (GachaResultView.js:196, 248-249, 262-263, 274):
+   - 모든 `.toFixed()` 호출을 `Formatter.probabilityBounded()` 또는 `probabilityFraction()`으로 대체
+   - 3성, 2성, 생일 가챠의 모든 확률 표시 개선
+
+6. **효율 차트 (Efficiency Chart)** (GachaResultView.js:292-293, 346-353 / ChartAdapter.js:180):
+   ```javascript
+   // 변경 전 (데이터 준비)
+   const finalStep = stepupData.map(v => parseFloat(v[modeKey]).toFixed(3));
+   const finalNorm = normalData.map(v => parseFloat(v[modeKey]).toFixed(3));
+
+   // 변경 후 (데이터 준비)
+   const finalStep = stepupData.map(v => parseFloat(v[modeKey]));
+   const finalNorm = normalData.map(v => parseFloat(v[modeKey]));
+
+   // 변경 전 (요약 텍스트)
+   (스탭업 ${sVal}% vs 일반 ${nVal}%)
+
+   // 변경 후 (요약 텍스트)
+   const sValText = Formatter.probabilityBounded(sVal / 100, 3);
+   const nValText = Formatter.probabilityBounded(nVal / 100, 3);
+   (스탭업 ${sValText} vs 일반 ${nValText})
+
+   // 변경 전 (라인 차트 툴팁)
+   return ` ${label}: ${context.raw}%`;
+
+   // 변경 후 (라인 차트 툴팁)
+   const probText = Formatter.probabilityBounded(context.raw / 100, 3);
+   return ` ${label}: ${probText}`;
+   ```
+
+7. **총 획득 수 차트 (Total Count Chart)** (ResultView.js:117-118, 162):
+   ```javascript
+   // 변경 전 (THRESHOLD)
+   const THRESHOLD = 0.0001;  // 0.01% 미만은 차트에서 제외
+
+   // 변경 후 (THRESHOLD)
+   const THRESHOLD = 0.00001;  // 0.001% 이상 모두 포함
+
+   // 변경 전 (데이터)
+   data.push((val * 100).toFixed(2));
+
+   // 변경 후 (데이터)
+   data.push(val * 100);  // Keep as number for chart rendering
+   ```
+
+**효과**:
+- 전체 UI에서 일관된 확률 표기
+- 경계값 혼란 완전 제거
+- 매우 낮은 확률도 명확하게 표시 (`0.001%↓`)
+- 효율 차트(efficiencyChart, efficiencyChart2)에서도 경계값 표시 적용
+- 총 획득 수 차트(resultChartTotal3, resultChartTotal2)에서 0.001% 이상의 확률 모두 표시
+
+### 기술적 세부사항
+
+**화살표 선택 이유**:
+- ✅ 숫자 정렬 완벽 (시작 위치 일정)
+- ✅ 시각적 직관성 (↓ = 더 작음, ↑ = 더 큼)
+- ✅ 차트 가독성 우수
+- ✅ 게임 UI 스타일에 적합
+
+**다른 방식과 비교**:
+```
+부등호 앞 배치:        화살표 뒤 배치:
+< 0.001%              0.001%↓
+  1.234%              1.234%
+ 50.000%             50.000%
+> 99.999%            99.999%↑
+```
+
+부등호를 앞에 두면 정렬이 흐트러지지만, 화살표를 뒤에 두면 완벽하게 정렬됩니다.
+
+**경계값 판정 로직**:
+```javascript
+const threshold = 1 / Math.pow(10, decimals);  // decimals=3 → 0.001
+if (percent < threshold) return `${threshold.toFixed(decimals)}%↓`;
+if (percent > 100 - threshold) return `${(100 - threshold).toFixed(decimals)}%↑`;
+```
+
+### 테스트
+
+**테스트 파일**: [test/test-formatter-v1.8.0.html](scsfp/test/test-formatter-v1.8.0.html)
+
+**테스트 커버리지**:
+- `probabilityFraction`: decimals 2, 3 테스트
+- `probabilityBounded`: decimals 2, 3 테스트
+- 경계값 정밀 테스트 (0.0009%, 0.0010%, 99.999%, 99.9991% 등)
+- 하위 호환성 테스트 (기존 `formatProbability` 동작 확인)
+- 실제 사용 케이스 (3성, 2성, 생일 가챠)
+- **총 44개 테스트 케이스** (별칭 테스트 2개 제거)
+
+### 영향 파일
+
+**코어 파일**:
+- [js/utils/Formatter.js](scsfp/js/utils/Formatter.js) - 핵심 메서드 추가 (`probabilityFraction`, `probabilityBounded`)
+- [js/utils/ChartAdapter.js](scsfp/js/utils/ChartAdapter.js) - 모든 차트 레이블 및 툴팁 적용
+- [js/view/ResultView.js](scsfp/js/view/ResultView.js) - 총 획득 수 차트 THRESHOLD 조정 및 데이터 포맷 개선
+- [js/view/gacha/GachaResultView.js](scsfp/js/view/gacha/GachaResultView.js) - 모든 확률 표시 개선
+
+**문서 및 테스트**:
+- [test/test-formatter-v1.8.0.html](scsfp/test/test-formatter-v1.8.0.html) - 포괄적 테스트 스위트 (46개 케이스)
+- [update/v1.8.0-implementation-summary.md](scsfp/update/v1.8.0-implementation-summary.md) - 상세 구현 문서
+- [update/v1.8.0-bugfix-efficiency-chart.md](scsfp/update/v1.8.0-bugfix-efficiency-chart.md) - 효율 차트 버그 수정
+- [update/v1.8.0-bugfix-total-chart.md](scsfp/update/v1.8.0-bugfix-total-chart.md) - 총 획득 수 차트 버그 수정
+
+### 향후 확장 계획 (v1.9.0)
+
+- 사용자 설정에서 표기 스타일 선택 가능 (화살표 / 부등호)
+- 설정 UI 추가
+
+---
+
+## v1.7.5 (2026-01-23) - Dead Code 제거
+
+### 변경 사항
+
+**미사용 버튼 제거**
+
+**제거 항목**: `star3-efficiency-mode-toggle` 버튼
+
+**배경**:
+- v1.7.2 HTML 리팩토링 시 ID 네이밍 통일화 과정에서 포함되었으나 실제로는 미구현/미사용 기능
+- 3성 가챠의 "효율 비교"는 이미 "일반 vs 스탭업" 탭에서 제공 중
+- JavaScript 바인딩 없음, 항상 `display:none` 상태
+
+**효과**:
+- HTML 코드 정리 (불필요한 요소 1개 제거)
+- GachaTypeConfig의 buttonVisibility 규칙 간소화
+- 혼란 방지 (실제 동작하지 않는 UI 요소 제거)
+
+**영향 파일**:
+- [index.html](scsfp/index.html) - 버튼 요소 제거
+- [js/view/gacha/GachaTypeConfig.js](scsfp/js/view/gacha/GachaTypeConfig.js) - visibility 규칙에서 제거
+
+**비교**:
+- 2성 가챠의 `star2-group-efficiency-mode`는 실제로 사용 중 (그룹별 효율 비교)
+- 3성 가챠는 이미 효율 탭에서 일반/스탭업 비교를 제공하므로 별도 모드 불필요
+
+---
+
 ## 2026-01-21: HTML/CSS 리팩토링 완료
 
 ### ID 네이밍 통일화
@@ -17,7 +249,6 @@
 | 천장 토글 | `toggleCeilingBtn3` / `toggleCeilingBtnBirthday` / `toggleCeilingBtn2` | `star3-toggle-ceiling` / `birthday-toggle-ceiling` / `star2-toggle-ceiling` |
 | 뷰 토글 | `toggleViewBtn3` / `toggleViewBtnBirthday` / `toggleViewBtn2` | `star3-toggle-view` / `birthday-toggle-view` / `star2-toggle-view` |
 | 효율 토글 | `btnEfficiencyToggle3` / `btnEfficiencyToggleBirthday` / `btnEfficiencyToggle2` | `star3-efficiency-toggle` / `birthday-efficiency-toggle` / `star2-efficiency-toggle` |
-| 효율 모드 토글 | `btnEfficiencyModeToggle3` | `star3-efficiency-mode-toggle` |
 | 프리셋 컨테이너 | `star3PresetContainer` | `star3-preset-container` |
 | 2성 그룹 뷰 모드 | `btnGroupViewMode` | `star2-group-view-mode` |
 | 2성 그룹 효율 모드 | `btnGroupEfficiencyMode` | `star2-group-efficiency-mode` |

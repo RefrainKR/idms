@@ -113,8 +113,8 @@ export class ResultView {
             if (individualDP[i] > maxVal) { maxVal = individualDP[i]; maxIndex = i; } 
         }
 
-        // 유의미한 구간 탐색 (0.01%)
-        const THRESHOLD = 0.0001;
+        // 유의미한 구간 탐색 (0.001% 이상)
+        const THRESHOLD = 0.00001;
         let startK = 0;
         let endK = individualDP.length - 1;
 
@@ -158,10 +158,10 @@ export class ResultView {
 
         for (let k = startK; k <= endK; k++) {
             const val = transformedDP[k] || 0;
-            labels.push(`${k}${suffix}`); 
-            data.push((val * 100).toFixed(2));
+            labels.push(`${k}${suffix}`);
+            data.push(val * 100);  // Keep as number for chart rendering
             tooltipVals.push(Formatter.formatProbability(val));
-            
+
             // Peak 지점 강조 (모드 상관없이 항상 표시)
             colors.push(k === maxIndex ? '#45a247' : '#e3f2fd');
         }
