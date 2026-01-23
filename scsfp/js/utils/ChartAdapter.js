@@ -4,6 +4,8 @@
  *
  * [개선] destroy/recreate 대신 update() 사용으로 성능 최적화
  */
+import { Formatter } from './Formatter.js';
+
 export class ChartAdapter {
 
     // 파이 차트 (수집 확률)
@@ -48,7 +50,8 @@ export class ChartAdapter {
                         font: { weight: 'bold', size: 14 },
                         formatter: (value, context) => {
                             if (value < 3) return null;
-                            return `${context.chart.data.labels[context.dataIndex]}\n${value}%`;
+                            const percentText = Formatter.probabilityBounded(value / 100, 2);
+                            return `${context.chart.data.labels[context.dataIndex]}\n${percentText}`;
                         },
                         textAlign: 'center',
                         textShadowBlur: 4,
@@ -110,7 +113,13 @@ export class ChartAdapter {
                         anchor: 'end',
                         align: 'top',
                         font: { weight: 'bold', size: 10 },
-                        formatter: (value) => (parseFloat(value) < 0.01 ? null : value + '%')
+                        formatter: (value) => {
+                            // 매우 작은 값도 화살표 표기로 표시
+                            const formatted = Formatter.probabilityBounded(parseFloat(value) / 100, 2);
+                            // 정확히 0%인 경우만 숨김
+                            if (formatted === '0.00%') return null;
+                            return formatted;
+                        }
                     },
                     tooltip: {
                         callbacks: {
@@ -168,14 +177,16 @@ export class ChartAdapter {
                         callbacks: {
                             label: (context) => {
                                 let label = context.dataset.label.split(' ')[0] || '';
-                                return ` ${label}: ${context.raw}%`;
+                                const probText = Formatter.probabilityBounded(context.raw / 100, 3);
+                                return ` ${label}: ${probText}`;
                             },
                             footer: (items) => {
                                 if (items.length < 2) return '';
                                 const v1 = parseFloat(items[0].raw);
                                 const v2 = parseFloat(items[1].raw);
-                                const diff = (v1 - v2).toFixed(3);
-                                return ` 차이: ${diff}%p`;
+                                const diff = Math.abs(v1 - v2) / 100;
+                                const diffText = Formatter.probabilityBounded(diff, 3).replace('%', '');
+                                return ` 차이: ${diffText}%p`;
                             }
                         },
                         footerFont: { weight: 'bold', size: 12 },

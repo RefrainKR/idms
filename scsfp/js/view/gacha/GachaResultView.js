@@ -193,7 +193,7 @@ export class GachaResultView extends ResultView {
             </div>
             <div class="logic-view">
                 <ul class="logic-list">
-                    <li>기본 ${ctx.p_indiv}% (${ctx.countNormal}회), Step4 개별 ${(ctx.p_step4_total/ctx.N).toFixed(3)}% (${ctx.countStep4}회)</li>
+                    <li>기본 ${ctx.p_indiv}% (${ctx.countNormal}회), Step4 개별 ${Formatter.probabilityBounded(ctx.p_step4_total/ctx.N/100, 3)} (${ctx.countStep4}회)</li>
                     <li>주회 보상: ${rewardHistory}</li>
                     <li>랜덤 교환(${ctx.randomRewardCount}회), 천장 교환(${ctx.totalCeilingCount}회)</li>
                     <li>알고리즘: DP (Coupon Collector)</li>
@@ -245,8 +245,8 @@ export class GachaResultView extends ResultView {
         for (let i = 1; i <= ctx.normalPulls; i++) {
             if (i % 10 === 0) normalHigh++; else normalBase++;
         }
-        const pNorm = (ctx.rateTotal * 100 / ctx.N).toFixed(3);
-        const pHigh = (95 / ctx.N).toFixed(3);
+        const pNorm = Formatter.probabilityBounded(ctx.rateTotal / ctx.N, 3);
+        const pHigh = Formatter.probabilityBounded(0.95 / ctx.N, 3);
 
         // 2. 스탭업 그룹별 통계
         let groupDetails = "";
@@ -259,9 +259,9 @@ export class GachaResultView extends ResultView {
             }
             totalStepNormal += gNormal;
             totalStepGuar += gGuar;
-            const pIndiv = (ctx.rateTotal * 100 / g.N).toFixed(3);
-            const pGuar = (100 / g.N).toFixed(3);
-            groupDetails += `<li>그룹 ${g.id} (${g.N}종): 개별 ${pIndiv}% (${gNormal}회), 확정 ${pGuar}% (${gGuar}회)</li>`;
+            const pIndiv = Formatter.probabilityBounded(ctx.rateTotal / g.N, 3);
+            const pGuar = Formatter.probabilityBounded(1 / g.N, 3);
+            groupDetails += `<li>그룹 ${g.id} (${g.N}종): 개별 ${pIndiv} (${gNormal}회), 확정 ${pGuar} (${gGuar}회)</li>`;
         });
 
         return `
@@ -271,7 +271,7 @@ export class GachaResultView extends ResultView {
             </div>
             <div class="logic-view">
                 <ul class="logic-list">
-                    <li><strong>확률 적용(일반):</strong> 일반 ${pNorm}% (${normalBase}회), 보정(전체 95%, 개별 ${pHigh}%) (${normalHigh}회)</li>
+                    <li><strong>확률 적용(일반):</strong> 일반 ${pNorm} (${normalBase}회), 보정(전체 95%, 개별 ${pHigh}) (${normalHigh}회)</li>
                     <li><strong>확률 적용(스탭업):</strong> 일반 (${totalStepNormal}회), 확정 (${totalStepGuar}회)
                         <ul style="padding-left: 20px; margin-top: 5px; list-style-type: none;">${groupDetails}</ul>
                     </li>
@@ -289,8 +289,8 @@ export class GachaResultView extends ResultView {
         const { labels, normalData, stepupData } = data;
         
         const modeKey = isWorst ? 'worst' : 'best';
-        const finalStep = stepupData.map(v => parseFloat(v[modeKey]).toFixed(3));
-        const finalNorm = normalData.map(v => parseFloat(v[modeKey]).toFixed(3));
+        const finalStep = stepupData.map(v => parseFloat(v[modeKey]));
+        const finalNorm = normalData.map(v => parseFloat(v[modeKey]));
 
         // [개선] ChartUtils 사용으로 중복 제거
         const getPointRadius = (ctx) => {
@@ -343,14 +343,16 @@ export class GachaResultView extends ResultView {
             const limitIdx = limit;
             const sVal = finalStep[limitIdx];
             const nVal = finalNorm[limitIdx];
+            const sValText = Formatter.probabilityBounded(sVal / 100, 3);
+            const nValText = Formatter.probabilityBounded(nVal / 100, 3);
             const modeText = isWorst ? '실패(폭사) 확률' : '성공(졸업) 확률';
             const compText = isWorst ? '낮아' : '높아';
 
             summaryEl.innerHTML = `
                 <strong>💡 ${groupName ? `Group ${groupName}` : ''} ${modeText} 분석 (목표 ${M}명)</strong><br>
-                ${limit}회 기준 스탭업이 일반보다 ${modeText}이 
+                ${limit}회 기준 스탭업이 일반보다 ${modeText}이
                 <span style="color:${mainColor}; font-weight:bold;">${compText} 유리합니다.</span><br>
-                <span style="font-size:0.85rem; color:#666;">(스탭업 ${sVal}% vs 일반 ${nVal}%)</span>
+                <span style="font-size:0.85rem; color:#666;">(스탭업 ${sValText} vs 일반 ${nValText})</span>
             `;
         }
         
@@ -465,7 +467,8 @@ export class GachaResultView extends ResultView {
                         callbacks: {
                             label: (context) => {
                                 if (context.datasetIndex === 0 || context.datasetIndex === 1) {
-                                    return ` ${context.dataset.label}: ${context.raw.toFixed(2)}%`;
+                                    const probText = Formatter.probabilityBounded(context.raw / 100, 3);
+                                    return ` ${context.dataset.label}: ${probText}`;
                                 } else {
                                     return ` ${context.dataset.label}`;
                                 }
@@ -541,11 +544,14 @@ export class GachaResultView extends ResultView {
             const actualProbStepup = cdfDataStepup[targetPullsStepup] || 0;
             const actualProbNormal = cdfDataNormal[targetPullsNormal] || 0;
 
+            const stepupProbText = Formatter.probabilityBounded(actualProbStepup / 100, 2);
+            const normalProbText = Formatter.probabilityBounded(actualProbNormal / 100, 2);
+
             summaryEl.innerHTML = `
                 <strong>🎯 목표 확률 역추적 분석 (목표 ${M}명)</strong><br>
                 목표 달성 확률: <strong>${targetProb}%</strong><br><br>
-                <span style="color:#45a247; font-weight:bold;">스탭업 가챠:</span> 약 <strong>${targetPullsStepup}회</strong> 필요 (실제 ${actualProbStepup.toFixed(2)}%)<br>
-                <span style="color:#283c86; font-weight:bold;">일반 가챠:</span> 약 <strong>${targetPullsNormal}회</strong> 필요 (실제 ${actualProbNormal.toFixed(2)}%)
+                <span style="color:#45a247; font-weight:bold;">스탭업 가챠:</span> 약 <strong>${targetPullsStepup}회</strong> 필요 (실제 ${stepupProbText})<br>
+                <span style="color:#283c86; font-weight:bold;">일반 가챠:</span> 약 <strong>${targetPullsNormal}회</strong> 필요 (실제 ${normalProbText})
             `;
         }
 

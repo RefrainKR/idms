@@ -28,7 +28,7 @@ export const GACHA_TYPE_CONFIG = {
         hasCdfTab: true,
         // 탭별 버튼 visibility 규칙
         buttonVisibility: {
-            efficiency: ['star3-efficiency-toggle', 'star3-efficiency-mode-toggle'],
+            efficiency: ['star3-efficiency-toggle'],
             collection: ['star3-toggle-view'],
             total: ['star3-toggle-view'],
             cdf: [] // CDF 탭에서는 토글 버튼 숨김
