@@ -58,13 +58,16 @@ export class Formatter {
      * probabilityBounded(1) → "100.000%"
      */
     static probabilityBounded(probability, decimals = 3) {
-        // 정확히 0
-        if (probability === 0) {
+        // 부동소수점 오차 허용 범위 (epsilon)
+        const EPSILON = 1e-9;
+
+        // 정확히 0 (오차 범위 포함)
+        if (probability <= EPSILON) {
             return `0.${'0'.repeat(decimals)}%`;
         }
 
-        // 정확히 1 (100%)
-        if (probability >= 1) {
+        // 정확히 1 (100%, 오차 범위 포함)
+        if (probability >= 1 - EPSILON) {
             return `100.${'0'.repeat(decimals)}%`;
         }
 

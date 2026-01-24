@@ -8,16 +8,25 @@
 
 ### 버그 수정
 
-**probabilityBounded에서 100% 확률이 99.999%↑로 표시되는 버그** (Formatter.js:60-86):
+**probabilityBounded에서 100% 확률이 99.999%↑로 표시되는 버그** (Formatter.js:60-89):
 
-**문제**:
+**문제 1**: 조건 순서 오류
 - `probability = 1` (정확히 100%)을 입력하면 "99.999%↑"로 표시됨
 - 원인: `percent >= 100` 체크가 경계값 체크(`percent > 100 - threshold`) **이후**에 실행됨
 - `100 > 99.999` 조건이 먼저 true가 되어 "99.999%↑" 반환
 
+**문제 2**: 부동소수점 오차
+- 차트에서 `context.raw / 100` 연산 시 부동소수점 오차 발생
+- 예: `100.0 / 100 = 0.9999999999999999` (JavaScript 부동소수점)
+- 실제 케이스: 3성 일반 프리셋, 픽업 1개, 2주 보상 천장(셀렉) 설정
+  - 80회: "100.000%" 표시 ✓
+  - 110회: "99.999%↑" 표시 ✗ (실제로는 100%)
+
 **해결**:
-- `probability === 0` 및 `probability >= 1` 체크를 **percent 계산 전**으로 이동
-- 정확한 경계값을 먼저 처리하여 부동소수점 오차 방지
+1. `probability === 0` 및 `probability >= 1` 체크를 **percent 계산 전**으로 이동
+2. **EPSILON (1e-9) 허용 범위** 도입
+   - `probability >= 1 - EPSILON` → 100% 처리 (0.999999999 이상)
+   - `probability <= EPSILON` → 0% 처리
 
 ```javascript
 // 변경 전
@@ -26,7 +35,9 @@ if (percent >= 100) return "100.000%";        // 도달 불가
 if (percent > 100 - threshold) return "99.999%↑";  // 먼저 실행 ✗
 
 // 변경 후
-if (probability >= 1) return "100.000%";      // 먼저 실행 ✓
+const EPSILON = 1e-9;  // 부동소수점 오차 허용
+if (probability >= 1 - EPSILON) return "100.000%";  // 0.999999999 → 100%
+if (probability <= EPSILON) return "0.000%";
 const percent = probability * 100;
 if (percent > 100 - threshold) return "99.999%↑";
 ```
