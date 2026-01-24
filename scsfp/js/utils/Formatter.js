@@ -58,18 +58,18 @@ export class Formatter {
      * probabilityBounded(1) → "100.000%"
      */
     static probabilityBounded(probability, decimals = 3) {
-        const percent = probability * 100;
-        const threshold = 1 / Math.pow(10, decimals);
-
         // 정확히 0
-        if (percent === 0) {
+        if (probability === 0) {
             return `0.${'0'.repeat(decimals)}%`;
         }
 
-        // 정확히 100 이상
-        if (percent >= 100) {
+        // 정확히 1 (100%)
+        if (probability >= 1) {
             return `100.${'0'.repeat(decimals)}%`;
         }
+
+        const percent = probability * 100;
+        const threshold = 1 / Math.pow(10, decimals);
 
         // 경계값: 0에 가까움 (표시 한계보다 작음)
         if (percent < threshold) {

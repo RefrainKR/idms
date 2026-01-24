@@ -6,6 +6,31 @@
 
 ## v1.8.0 (2026-01-23) - 확률 표기법 개선
 
+### 버그 수정
+
+**probabilityBounded에서 100% 확률이 99.999%↑로 표시되는 버그** (Formatter.js:60-86):
+
+**문제**:
+- `probability = 1` (정확히 100%)을 입력하면 "99.999%↑"로 표시됨
+- 원인: `percent >= 100` 체크가 경계값 체크(`percent > 100 - threshold`) **이후**에 실행됨
+- `100 > 99.999` 조건이 먼저 true가 되어 "99.999%↑" 반환
+
+**해결**:
+- `probability === 0` 및 `probability >= 1` 체크를 **percent 계산 전**으로 이동
+- 정확한 경계값을 먼저 처리하여 부동소수점 오차 방지
+
+```javascript
+// 변경 전
+const percent = probability * 100;
+if (percent >= 100) return "100.000%";        // 도달 불가
+if (percent > 100 - threshold) return "99.999%↑";  // 먼저 실행 ✗
+
+// 변경 후
+if (probability >= 1) return "100.000%";      // 먼저 실행 ✓
+const percent = probability * 100;
+if (percent > 100 - threshold) return "99.999%↑";
+```
+
 ### 새로운 기능
 
 **경계값 명시 표기법 추가**
