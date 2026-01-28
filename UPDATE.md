@@ -4,11 +4,101 @@
 
 ---
 
+## v1.8.1 (2026-01-28) - 생일/본가(2탄) 가챠 확장
+
+### 새로운 기능
+
+**1. 생일/본가(2탄) 통합 지원**
+
+**탭 이름 변경**: "생일" → "생일/본가(2탄)"
+
+**프리셋 추가** (GachaConstants.js:72-90):
+- **생일**: 픽업 1개, 일반 1.5%, 스탭업 2.0%, Step3 ON
+- **본가(2탄)**: 픽업 5개, 일반 0.75%, 스탭업 1.0%, Step3 OFF
+
+**2. Step3 확정 기능 추가**
+
+30회 배수(30, 60, 90...)마다 확정 획득 옵션:
+- Step3 토글 버튼 추가
+- 프리셋에 따라 자동 설정 (생일: ON, 본가(2탄): OFF)
+- 스탭업 횟수 제한 해제 (30회 → 9999회)
+
+**3. 저격 픽업 수 기능 추가**
+
+3성 가챠와 동일하게 목표 개수 지정:
+- 기본값: 0 (전체 N개 수집)
+- 1~N: 해당 개수만 수집
+- pickupCount에 자동 연동 (최대값 제한)
+
+### 버그 수정
+
+**Step3 확정 메시지 오류** (BirthdayGachaViewModel.js:176, GachaResultView.js:143):
+- **문제**: 30회일 때만 확정 메시지 표시, 60회/90회는 표시 안 됨
+- **해결**: 확정 횟수 계산 로직 수정
+  ```javascript
+  // 변경 전
+  stepGuaranteed: stepPulls === GACHA_RULES.BIRTHDAY.STEPUP_MAX ? 1 : 0
+
+  // 변경 후
+  stepGuaranteed: step3Mode === 'included'
+      ? Math.floor(stepPulls / GACHA_RULES.BIRTHDAY.STEPUP_GUARANTEE)
+      : 0
+  ```
+- **UI 메시지**: "Step3 확정 N회 획득!" (N = 실제 확정 횟수)
+
+**효율 차트 업데이트 누락** (EfficiencyCalculator.js:230-253):
+- **문제**: 저격 픽업 수 변경 시 효율 차트가 업데이트되지 않음
+- **해결**: `calculateBirthday()`에 N, M 파라미터 추가, 동적 DP 배열 사용
+
+### 주요 변경사항
+
+**파일 변경**:
+- `index.html`: Step3 버튼, 저격 픽업 수 input 추가
+- `GachaConstants.js`: BIRTHDAY.PRESETS, STEP3 토글 상태 추가
+- `BirthdayGachaModel.js`: targetCount, step3Mode 추가, localStorage 저장
+- `BirthdayGachaViewModel.js`: 프리셋, Step3 토글, targetCount 계산 로직
+- `EfficiencyCalculator.js`: N, M 기반 동적 계산
+- `ToggleButton.js`: `setState()` 메서드 추가
+
+---
+
 ## v1.8.0 (2026-01-23) - 확률 표기법 개선
 
 ### 버그 수정
 
-**probabilityBounded에서 100% 확률이 99.999%↑로 표시되는 버그** (Formatter.js:60-89):
+**1. 생일 가챠 입력 필드 활성화 및 localStorage 저장** (index.html:169-178, BirthdayGachaModel.js:20-43, BirthdayGachaViewModel.js:15-20):
+
+**문제**:
+- 픽업 개수, 일반 픽업 확률, 스탭업 픽업 확률이 `disabled` 상태
+- `BirthdayGachaModel.toJSON()`이 빈 객체 반환 → localStorage에 저장 안 됨
+- `inputsMap`에 3개 필드가 누락되어 InputBinder와 연결 안 됨
+
+**해결**:
+1. index.html에서 `disabled` 제거, `min`/`max`/`step` 속성 추가
+2. `toJSON()`/`fromJSON()` 메서드 구현으로 localStorage 저장/로드 지원
+3. `inputsMap`에 3개 필드 추가
+
+```javascript
+// BirthdayGachaModel.js - 변경 후
+toJSON() {
+    return {
+        pickupCount: this.pickupCount.value,
+        normalRate: this.normalRate.value,
+        stepRate: this.stepRate.value,
+        // ... 옵션들
+    };
+}
+
+// BirthdayGachaViewModel.js - 변경 후
+this.inputsMap = {
+    'birthdayPickupCount': this.model.pickupCount,
+    'birthdayNormalRate': this.model.normalRate,
+    'birthdayStepRate': this.model.stepRate,
+    // ...
+};
+```
+
+**2. probabilityBounded에서 100% 확률이 99.999%↑로 표시되는 버그** (Formatter.js:60-89):
 
 **문제 1**: 조건 순서 오류
 - `probability = 1` (정확히 100%)을 입력하면 "99.999%↑"로 표시됨
@@ -41,6 +131,32 @@ if (probability <= EPSILON) return "0.000%";
 const percent = probability * 100;
 if (percent > 100 - threshold) return "99.999%↑";
 ```
+
+### UI/UX 개선
+
+**1. 색상 시스템 개편** (style.css:5-78):
+
+**변경 사항**:
+- :root 색상 변수를 체계적으로 재구성
+- Primary: `#283c86` (기존 파란색 유지)
+- Secondary: `#4a66d5` (Primary 기반의 밝은 파란색, 기존 녹색 대체)
+- 8단계 Gray Scale 추가 (gray-50 ~ gray-800)
+- Semantic Colors 정의 (success, warning, danger, info)
+
+**컴포넌트 색상 적용**:
+- Sub-tab active: Primary 색상 (#283c86)
+- Preset 버튼: Secondary 기반 (연한 파란색 배경 + hover 시 진한 파란색)
+- Toggle 버튼 active: Secondary 색상
+- Toggle 버튼 off: 회색 유지
+
+**2. Sub-tab 스타일 개선** (style.css:469-502):
+
+**변경 사항**:
+- 둥근 알약 스타일 → 플랫한 탭 스타일
+- `flex-wrap: wrap` 추가로 좁은 화면에서 여러 줄 배치 지원
+- `font-weight: bold` 적용으로 가독성 향상
+- 배경: 회색 바탕 (#f3f5f7)
+- 활성 탭: 흰색 배경 + Primary 색상 텍스트 + 그림자
 
 ### 새로운 기능
 

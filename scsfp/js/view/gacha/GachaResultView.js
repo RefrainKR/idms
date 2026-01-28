@@ -140,7 +140,9 @@ export class GachaResultView extends ResultView {
                 목표(${M}종) 올컴플릿 확률 : <strong>${Formatter.formatProbability(dp[M])}</strong>
             `;
         } else if (gachaType === 'birthday') {
-            const guaranteedMsg = context.stepGuaranteed ? '<br><span style="color:#45a247;">✅ 스탭업 30회 확정 획득!</span>' : '';
+            const guaranteedMsg = context.stepGuaranteed > 0
+                ? `<br><span style="color:#45a247;">✅ Step3 확정 ${context.stepGuaranteed}회 획득!</span>`
+                : '';
             return () => `
                 <strong>생일 가챠 결과</strong><br>
                 가챠 횟수: ${context.totalPulls}회 (일반 ${context.normalPulls} + 스탭업 ${context.stepPulls})<br>

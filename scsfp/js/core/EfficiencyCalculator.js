@@ -227,8 +227,7 @@ export class EfficiencyCalculator {
      * @param {string} params.ceilingMode - 천장 모드
      * @returns {Object} { labels, normalData, stepupData }
      */
-    static calculateBirthday({ normalRate, stepRate, ceilingMode }) {
-        const M = 1; // 생일 가챠는 항상 1명 목표
+    static calculateBirthday({ normalRate, stepRate, ceilingMode, step3Mode, N, M }) {
         const labels = [];
         const normalData = [];
         const stepupData = [];
@@ -237,7 +236,8 @@ export class EfficiencyCalculator {
             labels.push(pulls);
 
             // 일반 가챠 시뮬레이션
-            let dpN = [1.0, 0];
+            let dpN = new Array(M + 1).fill(0);
+            dpN[0] = 1.0;
             for (let i = 0; i < pulls; i++) {
                 dpN = ProbabilityEngine.runSinglePull(dpN, normalRate);
             }
@@ -249,23 +249,19 @@ export class EfficiencyCalculator {
             }
             normalData.push({ best: dpN[M] * 100, worst: dpN[0] * 100 });
 
-            // 스탭업 가챠 시뮬레이션 (최대 30회까지만)
-            let dpS = [1.0, 0];
-            const stepPulls = Math.min(pulls, GACHA_RULES.BIRTHDAY.STEPUP_MAX);
+            // 스탭업 가챠 시뮬레이션 (Step3 확정 옵션)
+            let dpS = new Array(M + 1).fill(0);
+            dpS[0] = 1.0;
 
-            for (let i = 1; i <= stepPulls; i++) {
-                if (i === GACHA_RULES.BIRTHDAY.STEPUP_GUARANTEE) {
+            for (let i = 1; i <= pulls; i++) {
+                const isStep3 = (i % GACHA_RULES.BIRTHDAY.STEPUP_GUARANTEE === 0);
+
+                if (isStep3 && step3Mode === 'included') {
+                    // 30회, 60회, 90회... Step3 확정
                     dpS = ProbabilityEngine.runGuaranteedPull(dpS);
                 } else {
+                    // 일반 스탭업 확률
                     dpS = ProbabilityEngine.runSinglePull(dpS, stepRate);
-                }
-            }
-
-            // 스탭업 30회 초과분은 일반 가챠로 처리
-            if (pulls > GACHA_RULES.BIRTHDAY.STEPUP_MAX) {
-                const extraPulls = pulls - GACHA_RULES.BIRTHDAY.STEPUP_MAX;
-                for (let i = 0; i < extraPulls; i++) {
-                    dpS = ProbabilityEngine.runSinglePull(dpS, normalRate);
                 }
             }
 

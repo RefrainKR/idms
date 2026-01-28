@@ -29,4 +29,12 @@ export class ToggleButton {
 
         this.button.dataset.state = state.name;
     }
+
+    setState(stateName) {
+        const idx = this.states.findIndex(s => s.name === stateName);
+        if (idx !== -1) {
+            this.currentIndex = idx;
+            this.updateUI();
+        }
+    }
 }

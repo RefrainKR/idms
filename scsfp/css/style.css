@@ -4,38 +4,80 @@
    ======================================== */
 
 :root {
-    /* Color Palette */
-    --primary-color: #283c86;
-    --accent-color: #45a247;
-    --info-color: #283c86;
-    --text-color: #333;
-    --text-muted: #888;
-    --bg-color: #dcdcdc;
-    --card-bg: #ffffff;
-    --input-bg: #f9f9f9;
+    /* Brand Colors */
+    --primary: #283c86;
+    --primary-dark: #1f2e66;
+    --primary-light: #e8ebf5;
+    --secondary: #4a66d5;
+    --secondary-dark: #3854b8;
+    --secondary-light: #e3e9fa;
+    --accent: #00D9A3;
 
-    /* Surface Colors (유사 회색 통합) */
+    /* Neutral Colors */
+    --gray-50: #fafbfc;
+    --gray-100: #f3f5f7;
+    --gray-200: #e5e9ed;
+    --gray-300: #d1d8dd;
+    --gray-400: #9fa8b3;
+    --gray-500: #6b7684;
+    --gray-600: #4a5568;
+    --gray-700: #2d3748;
+    --gray-800: #1a202c;
+
+    /* Semantic Colors */
+    --success: #45a247;
+    --warning: #ff9800;
+    --danger: #dc3545;
+    --info: #283c86;
+
+    /* Surfaces */
+    --bg-app: #dcdcdc;
+    --bg-card: #ffffff;
+    --bg-input: #f9f9f9;
+    --bg-hover: #f0f0f0;
     --surface-light: #fafafa;
     --surface-medium: #f8f9fa;
-    --surface-blue: #f0f4f8;
 
-    /* Tabs & Borders */
-    --tab-inactive-bg: #e0e0e0;
+    /* Text */
+    --text-primary: #333;
+    --text-secondary: #666;
+    --text-muted: #888;
+    --text-inverse: #ffffff;
+
+    /* Borders */
+    --border-color: #e0e0e0;
     --border-light: #eee;
     --border-dark: #ddd;
+    --border-radius-sm: 6px;
+    --border-radius-md: 8px;
+    --border-radius-lg: 12px;
 
-    /* Buttons */
-    --btn-preset-bg: #e3f2fd;
-    --btn-preset-border: #bbdefb;
-    --btn-gray-bg: #f0f0f0;
-    --btn-active-bg: #6c757d;
+    /* Shadows */
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.2);
 
-    /* State Colors */
-    --state-danger: #dc3545;
+    /* State Colors (2성 그룹) */
     --state-group-a: #e91e63;
     --state-group-b: #2196f3;
     --state-group-c: #ff9800;
     --state-group-d: #9c27b0;
+
+    /* Legacy Support (하위 호환성) */
+    --primary-color: var(--primary);
+    --accent-color: var(--secondary);
+    --info-color: var(--info);
+    --text-color: var(--text-primary);
+    --bg-color: var(--bg-app);
+    --card-bg: var(--bg-card);
+    --input-bg: var(--bg-input);
+    --btn-gray-bg: var(--bg-hover);
+    --btn-active-bg: var(--gray-600);
+    --state-danger: var(--danger);
+    --tab-inactive-bg: var(--gray-200);
+    --btn-preset-bg: var(--secondary-light);
+    --btn-preset-border: var(--secondary);
+    --surface-blue: var(--primary-light);
 }
 
 * { box-sizing: border-box; }
@@ -221,10 +263,10 @@ input:disabled {
 
 .loop-rewards-container,
 .group-row {
-    background-color: var(--surface-blue);
+    background-color: var(--primary-light);
     padding: 10px;
     border-radius: 10px;
-    border: 1px solid #dde1e6;
+    border: 1px solid var(--border-color);
     margin-bottom: 5px;
 }
 
@@ -319,13 +361,16 @@ button { font-family: inherit; }
 
 .preset-btn {
     padding: 6px 12px;
-    background-color: var(--btn-preset-bg);
-    color: var(--primary-color);
-    border: 1px solid var(--btn-preset-border);
-    border-radius: 5px;
+    background-color: var(--secondary-light);
+    color: var(--secondary-dark);
+    border: 1px solid var(--secondary);
+    border-radius: var(--border-radius-sm);
     font-size: 0.85rem;
 }
-.preset-btn:hover { background-color: var(--btn-preset-border); }
+.preset-btn:hover {
+    background-color: var(--secondary);
+    color: white;
+}
 
 .reset-btn {
     padding: 6px 8px;
@@ -371,38 +416,40 @@ button { font-family: inherit; }
 .view-toggle-btn {
     padding: 6px 8px;
     min-width: 50px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-sm);
     font-size: 0.85rem;
-    background-color: #fff;
-    color: var(--primary-color);
+    background-color: white;
+    color: var(--text-primary);
+    transition: all 0.2s ease;
 }
 
 /* Toggle States */
 .view-toggle-btn[data-state="included"],
 .view-toggle-btn[data-state="best"] {
-    background-color: var(--primary-color);
+    background-color: var(--secondary);
     color: white;
-    border-color: var(--primary-color);
+    border-color: var(--secondary);
 }
 
 .view-toggle-btn[data-state="excluded"] {
-    background-color: #e9ecef;
+    background-color: var(--gray-200);
     color: var(--text-muted);
     text-decoration: line-through;
+    border-color: var(--gray-300);
 }
 
 .view-toggle-btn[data-state="worst"] {
-    background-color: #fff;
-    color: var(--state-danger);
-    border-color: var(--state-danger);
+    background-color: white;
+    color: var(--danger);
+    border-color: var(--danger);
 }
 
 .view-toggle-btn[data-state="individual"],
 .view-toggle-btn[data-state="cumulative_less"],
 .view-toggle-btn[data-state="cumulative_more"] {
-    background-color: var(--btn-active-bg);
-    border-color: var(--btn-active-bg);
+    background-color: var(--secondary);
+    border-color: var(--secondary);
     color: white;
 }
 
@@ -421,34 +468,41 @@ button { font-family: inherit; }
 }
 
 .sub-tab-nav {
-    justify-content: center;
+    display: flex;
     flex-wrap: wrap;
+    justify-content: center;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--gray-100);
+    padding: 6px;
     gap: 5px;
-    margin-bottom: 5px;
-    border-bottom: none;
+    margin-bottom: 0;
 }
 
 .sub-tab-btn {
-    flex: 0 1 auto;
+    flex: 1 1 auto;
     min-width: 100px;
-    padding: 5px 10px;
-    font-size: 0.85rem;
-    background-color: transparent;
-    color: #666;
-    border-radius: 20px;
-    border: 1px solid transparent;
+    padding: 8px 12px;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    font-weight: bold;
+    cursor: pointer;
+    border-radius: var(--border-radius-sm);
+    transition: all 0.2s ease;
+    white-space: nowrap;
 }
 
 .sub-tab-btn:hover {
-    background-color: var(--btn-gray-bg);
-    color: #333;
+    background: var(--bg-hover);
+    color: var(--text-primary);
 }
 
 .sub-tab-btn.active {
-    background-color: var(--btn-active-bg);
-    color: white;
-    border-color: var(--btn-active-bg);
-    font-weight: normal;
+    background: white;
+    color: var(--primary);
+    box-shadow: var(--shadow-sm);
+    font-weight: bold;
 }
 
 /* ========================================
@@ -581,7 +635,7 @@ button { font-family: inherit; }
 }
 
 .logic-detail {
-    background-color: var(--surface-blue);
+    background-color: var(--primary-light);
     border-left: 5px solid var(--info-color);
     line-height: 1.6;
     color: #444;

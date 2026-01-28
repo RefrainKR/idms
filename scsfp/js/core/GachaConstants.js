@@ -64,11 +64,30 @@ export const CONFIG = {
             { id: 'birthdayPickupCount', min: 1, max: 10, def: 1, type: 'int' },
             { id: 'birthdayNormalRate', min: 0, max: 100, def: 1.5, type: 'float' },
             { id: 'birthdayStepRate', min: 0, max: 100, def: 2.0, type: 'float' },
+            { id: 'birthdayTargetCount', min: 0, max: 10, def: 0, type: 'int' },
             { id: 'birthdayNormalPulls', min: 0, max: 9999, def: 0, type: 'int' },
-            { id: 'birthdayStepPulls', min: 0, max: 30, def: 0, type: 'int' }
+            { id: 'birthdayStepPulls', min: 0, max: 9999, def: 0, type: 'int' }
         ],
-        // Observable 의존성 정의 (없음)
-        DEPENDENCIES: []
+        // Observable 의존성: targetCount의 최대값은 pickupCount
+        DEPENDENCIES: [
+            { id: 'birthdayTargetCount', max: 'birthdayPickupCount' }
+        ],
+        PRESETS: {
+            birthday: {
+                label: '생일',
+                pickupCount: 1,
+                normalRate: 1.5,
+                stepRate: 2.0,
+                step3Mode: 'included'
+            },
+            hongaSecond: {
+                label: '본가(2탄)',
+                pickupCount: 5,
+                normalRate: 0.75,
+                stepRate: 1.0,
+                step3Mode: 'excluded'
+            }
+        }
     }
 };
 
@@ -137,6 +156,10 @@ export const TOGGLE_STATES = {
     STEP4: [
         { name: 'included', text: 'Step4', isActive: true },
         { name: 'excluded', text: 'Step4', isActive: false }
+    ],
+    STEP3: [
+        { name: 'included', text: 'Step3', isActive: true },
+        { name: 'excluded', text: 'Step3', isActive: false }
     ],
     EFFICIENCY: [
         { name: 'best', text: 'Best', isActive: true },
