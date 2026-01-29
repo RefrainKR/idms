@@ -28,9 +28,7 @@ export class Star2GachaViewModel extends BaseGachaViewModel {
     }
 
     init() {
-        this.applyDependencies(); // 먼저 의존성 적용
-
-        super.init();
+        super.init(); // fromJSON → applyDependencies → bindInputs 순서로 실행됨
 
         this.bindToggles();
 

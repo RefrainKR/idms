@@ -16,6 +16,9 @@ export class BaseGachaViewModel {
             this.model.fromJSON(savedData);
         }
 
+        // Dependencies 적용 (fromJSON 이후, bindInputs 전에 실행하여 maxObserver가 올바르게 설정되도록)
+        this.applyDependencies();
+
         for (const key in this.model) {
             if (this.model[key].subscribe) { // Observable 인지 확인
                 const unsubscribe = this.model[key].subscribe(() => {
@@ -53,6 +56,10 @@ export class BaseGachaViewModel {
                 return;
             }
 
+            // 초기값 즉시 적용 (isInitializing=true 상태에서도 실행)
+            dep.handler(sourceObservable.value, this.model, this);
+
+            // 이후 변경사항 구독
             const unsubscribe = sourceObservable.subscribe((value) => {
                 if (!this.isInitializing) {
                     dep.handler(value, this.model, this);

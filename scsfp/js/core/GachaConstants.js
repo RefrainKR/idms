@@ -68,9 +68,16 @@ export const CONFIG = {
             { id: 'birthdayNormalPulls', min: 0, max: 9999, def: 0, type: 'int' },
             { id: 'birthdayStepPulls', min: 0, max: 9999, def: 0, type: 'int' }
         ],
-        // Observable 의존성: targetCount의 최대값은 pickupCount
+        // Observable 의존성: pickupCount가 변경되면 targetCount를 클램프
         DEPENDENCIES: [
-            { id: 'birthdayTargetCount', max: 'birthdayPickupCount' }
+            {
+                source: 'pickupCount',
+                handler: (value, model) => {
+                    if (model.targetCount.value > value) {
+                        model.targetCount.value = value;
+                    }
+                }
+            }
         ],
         PRESETS: {
             birthday: {

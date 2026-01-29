@@ -28,11 +28,7 @@ export class Star3GachaViewModel extends BaseGachaViewModel {
     }
 
     init() {
-        // applyDependencies를 super.init() 전에 호출하여
-        // InputBinder가 올바른 maxObserver를 받을 수 있도록 함
-        this.applyDependencies();
-
-        super.init(); // 여기서 bindInputs()가 호출됨
+        super.init(); // fromJSON → applyDependencies → bindInputs 순서로 실행됨
 
         this.bindToggles();
         this.renderPresetButtons();
