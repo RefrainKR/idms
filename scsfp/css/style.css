@@ -182,6 +182,43 @@ footer {
     font-weight: bold;
 }
 
+.subsection-group {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    padding: 12px;
+    background-color: var(--gray-50);
+    border-radius: var(--border-radius-sm);
+    margin-bottom: 10px;
+}
+
+.subsection-group:last-child {
+    margin-bottom: 0;
+}
+
+.subsection-title {
+    font-size: 0.95rem;
+    color: var(--primary-color);
+    font-weight: bold;
+    margin: 0;
+    grid-column: 1 / -1;
+}
+
+/* 그룹 레이아웃 요소는 전체 너비 사용 */
+.subsection-group .group-row {
+    grid-column: 1 / -1;
+}
+
+/* 2성 가챠용 block 레이아웃 */
+.subsection-group-block {
+    display: block;
+}
+
+.subsection-group-block .input-row-half {
+    margin-bottom: 10px;
+}
+
 .toggle-btn {
     background: none;
     border: none;
@@ -235,7 +272,7 @@ input:disabled {
 }
 
 .input-item label {
-    font-size: 0.95rem;
+    font-size: 0.9rem;
     font-weight: bold;
     color: #555;
     margin-right: 10px;
@@ -448,9 +485,9 @@ button { font-family: inherit; }
 .view-toggle-btn[data-state="individual"],
 .view-toggle-btn[data-state="cumulative_less"],
 .view-toggle-btn[data-state="cumulative_more"] {
-    background-color: var(--secondary);
-    border-color: var(--secondary);
-    color: white;
+    background-color: var(--gray-200);
+    border-color: var(--gray-300);
+    color: var(--text-color);
 }
 
 /* 2성 그룹별 색상 */
@@ -481,11 +518,11 @@ button { font-family: inherit; }
 .sub-tab-btn {
     flex: 1 1 auto;
     min-width: 100px;
-    padding: 8px 12px;
+    padding: 6px 10px;
     border: none;
     background: transparent;
     color: var(--text-secondary);
-    font-size: 0.8rem;
+    font-size: 0.85rem;
     font-weight: bold;
     cursor: pointer;
     border-radius: var(--border-radius-sm);

@@ -4,6 +4,71 @@
 
 ---
 
+## v1.8.2 (2026-01-29) - UI/UX 개선 및 버그 수정
+
+### 버그 수정
+
+**1. 동적 max 값 초기화 버그 수정**
+
+**문제**:
+- 페이지 최초 로딩 시 `stepPulls`의 max 값이 `maxLoops * 40`이 아닌 기본값 80으로 고정
+- 3성, 2성 가챠 모두 동일한 문제 발생
+
+**원인**:
+- `applyDependencies()`가 `super.init()` **전**에 호출됨
+- LocalStorage 로드(`fromJSON()`) 전에 의존성 handler 실행
+- `maxLoops`가 기본값(2)일 때 `stepMax = 80` 설정됨
+
+**해결** (BaseGachaViewModel.js:13-20, Star3GachaViewModel.js:30-31, Star2GachaViewModel.js:29-30):
+- `applyDependencies()`를 `fromJSON()` **이후**, `bindInputs()` **전**에 실행하도록 순서 변경
+- 초기값 즉시 적용: handler를 구독 전에 1회 실행하여 초기 의존성 반영
+
+**2. 생일 가챠 DEPENDENCIES 형식 통일** (GachaConstants.js:72-81):
+- 구형 형식 `{ id, max }` → 신규 형식 `{ source, handler }`로 변경
+- `pickupCount` 변경 시 `targetCount` 자동 클램프
+
+### UI/UX 개선
+
+**1. 입력 섹션 구조 개편** (index.html, style.css)
+
+**변경 전**:
+- "기본 정보" + "스탭업 정보" 2개의 독립 섹션
+- 각 섹션마다 토글 버튼(▼) 존재
+
+**변경 후**:
+- **"가챠 정보"** 1개 섹션으로 통합
+  - 내부에 "기본 정보" subsection
+  - 내부에 "스탭업 정보" subsection
+- 토글 버튼은 최상위 섹션에만 1개
+- subsection-group으로 시각적 그룹핑 (회색 배경, 패딩)
+
+**적용 범위**: 3성, 생일/본가(2탄), 2성 모든 가챠 타입
+
+**2. 타이틀 태그 통일** (index.html)
+- `<p class="section-title">` → `<h3 class="section-title">`
+- `<h4 class="subsection-title">` 유지
+- 시맨틱 HTML 계층 구조 준수 (h3 > h4)
+
+**3. 스타일 일관성 개선** (style.css)
+
+- **subsection-title 색상**: `var(--text-secondary)` → `var(--primary-color)` (파란색)
+- **VIEW 토글 버튼**: 3가지 상태 모두 회색 배경으로 통일
+- **input-item label**: `font-size: 0.95rem` → `0.9rem` (loop-reward-item과 동일)
+- **sub-tab-btn**: `padding: 8px 12px` → `6px 10px`, `font-size: 0.8rem` → `0.85rem`
+- **사용자 설정**: subsection-group 스타일 적용으로 가챠 정보와 통일감 확보
+
+### 주요 변경사항
+
+**파일 변경**:
+- `BaseGachaViewModel.js`: applyDependencies 실행 순서 변경, 초기값 즉시 적용
+- `Star3GachaViewModel.js`: 중복 applyDependencies 호출 제거
+- `Star2GachaViewModel.js`: 중복 applyDependencies 호출 제거
+- `GachaConstants.js`: 생일 가챠 DEPENDENCIES 형식 통일
+- `index.html`: 섹션 구조 개편, 태그 통일, subsection-group 추가
+- `style.css`: subsection-group, subsection-title, 버튼 스타일 개선
+
+---
+
 ## v1.8.1 (2026-01-28) - 생일/본가(2탄) 가챠 확장
 
 ### 새로운 기능

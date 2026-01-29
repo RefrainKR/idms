@@ -10,7 +10,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
 
     <!-- CSS -->
-    <link rel="stylesheet" href="css/style.css?v=1.8.1">
+    <link rel="stylesheet" href="css/style.css?v=1.8.2">
 </head>
 <body>
 
@@ -38,61 +38,60 @@
                 <button id="star3-reset-btn" class="reset-btn" title="설정 초기화">↻</button>
             </div>
 
-            <!-- 입력: 기본 정보 -->
+            <!-- 입력: 가챠 정보 -->
             <div class="collapsible-container">
                 <div class="section-header">
-                    <p class="section-title">기본 정보</p>
+                    <h3 class="section-title">가챠 정보</h3>
                     <button class="toggle-btn">▼</button>
                 </div>
                 <div class="section-content">
-                    <div class="input-item">
-                        <label for="pickupCount">픽업 개수</label>
-                        <input type="number" id="pickupCount">
+                    <div class="subsection-group">
+                        <h4 class="subsection-title">기본 정보</h4>
+                        <div class="input-item">
+                            <label for="pickupCount">픽업 개수</label>
+                            <input type="number" id="pickupCount">
+                        </div>
+                        <div class="input-item">
+                            <label for="pickupRate">개별 픽업 확률 (%)</label>
+                            <input type="number" id="pickupRate">
+                        </div>
                     </div>
-                    <div class="input-item">
-                        <label for="pickupRate">개별 픽업 확률 (%)</label>
-                        <input type="number" id="pickupRate">
-                    </div>
-                </div>
-            </div>
 
-            <!-- 입력: 스탭업 정보 -->
-            <div class="collapsible-container">
-                <div class="section-header">
-                    <p class="section-title">스탭업 정보</p>
-                    <button class="toggle-btn">▼</button>
-                </div>
-                <div class="section-content">
-                    <div class="input-item">
-                        <label for="maxLoops">최대 주회(周回) 수</label>
-                        <input type="number" id="maxLoops">
+                    <div class="subsection-group">
+                        <h4 class="subsection-title">스탭업 정보</h4>
+                        <div class="input-item">
+                            <label for="maxLoops">최대 주회(周回) 수</label>
+                            <input type="number" id="maxLoops">
+                        </div>
+                        <div class="input-item">
+                            <label for="step4Rate">Step4 픽업 확률 (%)</label>
+                            <input type="number" id="step4Rate">
+                        </div>
+                        <div class="loop-rewards-container" id="loopRewardsArea"></div>
                     </div>
-                    <div class="input-item">
-                        <label for="step4Rate">Step4 픽업 확률 (%)</label>
-                        <input type="number" id="step4Rate">
-                    </div>
-                    <div class="loop-rewards-container" id="loopRewardsArea"></div>
                 </div>
             </div>
 
             <!-- 입력: 사용자 설정 -->
             <div class="collapsible-container">
                 <div class="section-header">
-                    <p class="section-title">사용자 설정</p>
+                    <h3 class="section-title">사용자 설정</h3>
                 </div>
                 <div class="section-content">
-                    <div class="input-item">
-                        <label for="normalPulls">일반 횟수</label>
-                        <input type="number" id="normalPulls">
-                    </div>
-                    <div class="input-item">
-                        <label for="stepPulls">스탭업 횟수</label>
-                        <input type="number" id="stepPulls">
-                    </div>
-                    <div class="input-item">
-                        <label for="targetCount">저격 픽업 수</label>
-                        <span class="input-hint">전체(N) /</span>
-                        <input type="number" id="targetCount">
+                    <div class="subsection-group">
+                        <div class="input-item">
+                            <label for="normalPulls">일반 횟수</label>
+                            <input type="number" id="normalPulls">
+                        </div>
+                        <div class="input-item">
+                            <label for="stepPulls">스탭업 횟수</label>
+                            <input type="number" id="stepPulls">
+                        </div>
+                        <div class="input-item">
+                            <label for="targetCount">저격 픽업 수</label>
+                            <span class="input-hint">전체(N) /</span>
+                            <input type="number" id="targetCount">
+                        </div>
                     </div>
                 </div>
             </div>
@@ -157,24 +156,31 @@
                 <button id="birthday-reset-btn" class="reset-btn" title="설정 초기화">↻</button>
             </div>
 
-            <!-- 입력: 기본 정보 -->
+            <!-- 입력: 가챠 정보 -->
             <div class="collapsible-container">
                 <div class="section-header">
-                    <p class="section-title">기본 정보</p>
+                    <h3 class="section-title">가챠 정보</h3>
                     <button class="toggle-btn">▼</button>
                 </div>
                 <div class="section-content">
-                    <div class="input-item">
-                        <label>픽업 개수</label>
-                        <input type="number" id="birthdayPickupCount" value="1" min="1" max="10">
+                    <div class="subsection-group">
+                        <h4 class="subsection-title">기본 정보</h4>
+                        <div class="input-item">
+                            <label>픽업 개수</label>
+                            <input type="number" id="birthdayPickupCount" value="1" min="1" max="10">
+                        </div>
                     </div>
-                    <div class="input-item">
-                        <label>일반 픽업 확률 (%)</label>
-                        <input type="number" id="birthdayNormalRate" value="1.5" min="0.001" max="100" step="0.001">
-                    </div>
-                    <div class="input-item">
-                        <label>스탭업 픽업 확률 (%)</label>
-                        <input type="number" id="birthdayStepRate" value="2.0" min="0.001" max="100" step="0.001">
+
+                    <div class="subsection-group">
+                        <h4 class="subsection-title">가챠별 확률</h4>
+                        <div class="input-item">
+                            <label>일반 픽업 확률 (%)</label>
+                            <input type="number" id="birthdayNormalRate" value="1.5" min="0.001" max="100" step="0.001">
+                        </div>
+                        <div class="input-item">
+                            <label>스탭업 픽업 확률 (%)</label>
+                            <input type="number" id="birthdayStepRate" value="2.0" min="0.001" max="100" step="0.001">
+                        </div>
                     </div>
                 </div>
             </div>
@@ -182,21 +188,23 @@
             <!-- 입력: 사용자 설정 -->
             <div class="collapsible-container">
                 <div class="section-header">
-                    <p class="section-title">사용자 설정</p>
+                    <h3 class="section-title">사용자 설정</h3>
                 </div>
                 <div class="section-content">
-                    <div class="input-item">
-                        <label for="birthdayNormalPulls">일반 횟수</label>
-                        <input type="number" id="birthdayNormalPulls">
-                    </div>
-                    <div class="input-item">
-                        <label for="birthdayStepPulls">스탭업 횟수</label>
-                        <input type="number" id="birthdayStepPulls">
-                    </div>
-                    <div class="input-item">
-                        <label for="birthdayTargetCount">저격 픽업 수</label>
-                        <span class="input-hint">전체(N) /</span>
-                        <input type="number" id="birthdayTargetCount">
+                    <div class="subsection-group">
+                        <div class="input-item">
+                            <label for="birthdayNormalPulls">일반 횟수</label>
+                            <input type="number" id="birthdayNormalPulls">
+                        </div>
+                        <div class="input-item">
+                            <label for="birthdayStepPulls">스탭업 횟수</label>
+                            <input type="number" id="birthdayStepPulls">
+                        </div>
+                        <div class="input-item">
+                            <label for="birthdayTargetCount">저격 픽업 수</label>
+                            <span class="input-hint">전체(N) /</span>
+                            <input type="number" id="birthdayTargetCount">
+                        </div>
                     </div>
                 </div>
             </div>
@@ -249,37 +257,35 @@
             </div>
 
             <!-- 입력: 기본 정보 -->
+            <!-- 입력: 가챠 정보 -->
             <div class="collapsible-container">
                 <div class="section-header">
-                    <p class="section-title">기본 정보</p>
+                    <h3 class="section-title">가챠 정보</h3>
                     <button class="toggle-btn">▼</button>
                 </div>
                 <div class="section-content">
-                    <div class="input-item">
-                        <label for="countNormal2">픽업 개수 (전체)</label>
-                        <input type="number" id="countNormal2">
+                    <div class="subsection-group">
+                        <h4 class="subsection-title">기본 정보</h4>
+                        <div class="input-item">
+                            <label for="countNormal2">픽업 개수 (전체)</label>
+                            <input type="number" id="countNormal2">
+                        </div>
+                        <div class="input-item">
+                            <label for="rate2Star">전체 픽업 확률 (%)</label>
+                            <input type="number" id="rate2Star">
+                        </div>
                     </div>
-                    <div class="input-item">
-                        <label for="rate2Star">전체 픽업 확률 (%)</label>
-                        <input type="number" id="rate2Star">
-                    </div>
-                </div>
-            </div>
 
-            <!-- 입력: 스탭업 정보 -->
-            <div class="collapsible-container">
-                <div class="section-header">
-                    <p class="section-title">스탭업 정보</p>
-                    <button class="toggle-btn">▼</button>
-                </div>
-                <div class="section-content force-block">
-                    <div class="group-row">
-                        <div class="group-label">픽업 개수</div>
-                        <div class="group-inputs-container">
-                            <div class="group-input-block"><span class="group-name">A</span><input type="number" id="countStepA"></div>
-                            <div class="group-input-block"><span class="group-name">B</span><input type="number" id="countStepB"></div>
-                            <div class="group-input-block"><span class="group-name">C</span><input type="number" id="countStepC"></div>
-                            <div class="group-input-block"><span class="group-name">D</span><input type="number" id="countStepD"></div>
+                    <div class="subsection-group">
+                        <h4 class="subsection-title">스탭업 정보</h4>
+                        <div class="group-row">
+                            <div class="group-label">픽업 개수</div>
+                            <div class="group-inputs-container">
+                                <div class="group-input-block"><span class="group-name">A</span><input type="number" id="countStepA"></div>
+                                <div class="group-input-block"><span class="group-name">B</span><input type="number" id="countStepB"></div>
+                                <div class="group-input-block"><span class="group-name">C</span><input type="number" id="countStepC"></div>
+                                <div class="group-input-block"><span class="group-name">D</span><input type="number" id="countStepD"></div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -288,31 +294,33 @@
             <!-- 입력: 사용자 설정 -->
             <div class="collapsible-container">
                 <div class="section-header">
-                    <p class="section-title">사용자 설정</p>
+                    <h3 class="section-title">사용자 설정</h3>
                 </div>
-                <div class="section-content force-block">
-                    <div class="input-row-half">
-                        <div class="input-item">
-                            <label for="pullsNormal2">일반 횟수</label>
-                            <input type="number" id="pullsNormal2">
+                <div class="section-content">
+                    <div class="subsection-group subsection-group-block">
+                        <div class="input-row-half">
+                            <div class="input-item">
+                                <label for="pullsNormal2">일반 횟수</label>
+                                <input type="number" id="pullsNormal2">
+                            </div>
                         </div>
-                    </div>
-                    <div class="group-row">
-                        <div class="group-label">스탭업 횟수</div>
-                        <div class="group-inputs-container">
-                            <div class="group-input-block"><span class="group-name">A</span><input type="number" id="pullsStepA"></div>
-                            <div class="group-input-block"><span class="group-name">B</span><input type="number" id="pullsStepB"></div>
-                            <div class="group-input-block"><span class="group-name">C</span><input type="number" id="pullsStepC"></div>
-                            <div class="group-input-block"><span class="group-name">D</span><input type="number" id="pullsStepD"></div>
+                        <div class="group-row">
+                            <div class="group-label">스탭업 횟수</div>
+                            <div class="group-inputs-container">
+                                <div class="group-input-block"><span class="group-name">A</span><input type="number" id="pullsStepA"></div>
+                                <div class="group-input-block"><span class="group-name">B</span><input type="number" id="pullsStepB"></div>
+                                <div class="group-input-block"><span class="group-name">C</span><input type="number" id="pullsStepC"></div>
+                                <div class="group-input-block"><span class="group-name">D</span><input type="number" id="pullsStepD"></div>
+                            </div>
                         </div>
-                    </div>
-                    <div class="group-row">
-                        <div class="group-label">저격 픽업 수</div>
-                        <div class="group-inputs-container">
-                            <div class="group-input-block"><span class="group-name">A</span><input type="number" id="targetCountA"></div>
-                            <div class="group-input-block"><span class="group-name">B</span><input type="number" id="targetCountB"></div>
-                            <div class="group-input-block"><span class="group-name">C</span><input type="number" id="targetCountC"></div>
-                            <div class="group-input-block"><span class="group-name">D</span><input type="number" id="targetCountD"></div>
+                        <div class="group-row">
+                            <div class="group-label">저격 픽업 수</div>
+                            <div class="group-inputs-container">
+                                <div class="group-input-block"><span class="group-name">A</span><input type="number" id="targetCountA"></div>
+                                <div class="group-input-block"><span class="group-name">B</span><input type="number" id="targetCountB"></div>
+                                <div class="group-input-block"><span class="group-name">C</span><input type="number" id="targetCountC"></div>
+                                <div class="group-input-block"><span class="group-name">D</span><input type="number" id="targetCountD"></div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -370,7 +378,7 @@
     </footer>
 </div>
 
-<script type="module" src="js/main.js?v=1.8.1"></script>
+<script type="module" src="js/main.js?v=1.8.2"></script>
 
 </body>
 </html>
