@@ -25,6 +25,10 @@ export class BaseGachaViewModel {
                     if (!this.isInitializing) {
                         this.calculate();
                         this.save();
+                        // targetProbability는 공유 설정이므로 별도 저장
+                        if (key === 'targetProbability') {
+                            StorageManager.saveSharedSettings();
+                        }
                     }
                 });
                 this._subscriptions.push(unsubscribe); // 저장

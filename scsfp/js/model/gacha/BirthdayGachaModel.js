@@ -1,4 +1,5 @@
-import { Observable } from '../../core/Observable.js';
+import { Observable } from '../../utils/Observable.js';
+import { SharedSettings } from '../../core/SharedSettings.js';
 
 export class BirthdayGachaModel {
     constructor() {
@@ -11,15 +12,15 @@ export class BirthdayGachaModel {
         this.targetCount = new Observable(0);
         this.normalPulls = new Observable(0);
         this.stepPulls = new Observable(0);
-        
+
         // 옵션
         this.ceilingMode = new Observable('included');
         this.step3Mode = new Observable('included');
         this.viewMode = new Observable('individual');
         this.efficiencyMode = new Observable('best');
 
-        // CDF 역추적용 목표 확률
-        this.targetProbability = new Observable(90);
+        // CDF 역추적용 목표 확률 (공유 설정)
+        this.targetProbability = SharedSettings.getInstance().targetProbability;
     }
 
     toJSON() {

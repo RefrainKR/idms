@@ -6,7 +6,7 @@
 
 **샤니송 가챠 확률 시뮬레이터** - THE IDOLM@STER Shiny Colors Song for Prism의 가챠(뽑기) 확률 계산기. 동적 계획법(DP)과 쿠폰 컬렉터 알고리즘을 활용하여 3성/2성/생일 가챠 시스템의 수집 확률을 시뮬레이션합니다.
 
-**버전**: 1.7.2
+**버전**: [UPDATE.md](UPDATE.md) 참조
 **언어**: Vanilla JavaScript (ES6 modules)
 **기술 스택**: HTML5, CSS3, Chart.js 4.4.1
 
@@ -115,21 +115,71 @@ npx serve
 
 코드베이스는 Model-View-ViewModel 아키텍처를 따릅니다:
 
-- **Models** ([js/model/gacha/](scsfp/js/model/gacha/)): Observable 패턴으로 상태 저장
+- **Models** ([js/model/gacha/](scsfp/js/model/gacha/)): Observable 기반 상태 컨테이너
   - [Star3GachaModel.js](scsfp/js/model/gacha/Star3GachaModel.js), [Star2GachaModel.js](scsfp/js/model/gacha/Star2GachaModel.js), [BirthdayGachaModel.js](scsfp/js/model/gacha/BirthdayGachaModel.js)
+  - 도메인 엔티티의 데이터 구조 정의
 
-- **ViewModels** ([js/viewmodel/gacha/](scsfp/js/viewmodel/gacha/)): 비즈니스 로직, DP 계산
+- **ViewModels** ([js/viewmodel/gacha/](scsfp/js/viewmodel/gacha/)): 프레젠테이션 로직
   - 모두 [BaseGachaViewModel.js](scsfp/js/viewmodel/gacha/BaseGachaViewModel.js) 상속
-  - 저장, 입력 바인딩, 재계산 트리거 처리
+  - 모델과 뷰를 연결, 사용자 상호작용 처리, core 서비스 오케스트레이션
 
-- **Views** ([js/view/](scsfp/js/view/)): UI 렌더링 및 Chart.js 연동
+- **Views** ([js/view/](scsfp/js/view/)): UI 렌더링
   - [GachaResultView.js](scsfp/js/view/gacha/GachaResultView.js)가 모든 가챠 타입의 결과 렌더링
+  - DOM 조작 및 Chart.js 통합
 
-- **Core** ([js/core/](scsfp/js/core/)): 공유 알고리즘
+- **Core** ([js/core/](scsfp/js/core/)): 앱 특화 도메인 로직
   - [ProbabilityEngine.js](scsfp/js/core/ProbabilityEngine.js): DP 상태 전이, 컨벌루션
-  - [Observable.js](scsfp/js/core/Observable.js): 반응형 데이터 바인딩
   - [GachaConstants.js](scsfp/js/core/GachaConstants.js): 모든 설정 상수 및 가챠 규칙
   - [EfficiencyCalculator.js](scsfp/js/core/EfficiencyCalculator.js): 효율 계산 서비스 클래스
+  - [SharedSettings.js](scsfp/js/core/SharedSettings.js): 가챠 간 공유 설정 관리 (싱글톤)
+
+- **Utils** ([js/utils/](scsfp/js/utils/)): 프로젝트 간 재사용 가능한 범용 컴포넌트
+  - [Observable.js](scsfp/js/utils/Observable.js): 반응형 데이터 바인딩 패턴
+  - [ProbabilityValidator.js](scsfp/js/utils/ProbabilityValidator.js): 확률 검증 및 클램핑
+  - [ChartAdapter.js](scsfp/js/utils/ChartAdapter.js): Chart.js 래퍼
+  - 도메인 특화 임포트 없이 독립적으로 동작
+
+### 폴더 구조 기준
+
+각 폴더는 명확한 책임과 재사용성 기준을 따릅니다:
+
+#### `utils/` - 프로젝트 간 재사용 가능
+```
+✅ 범용 유틸리티 (Observable, 검증기, 포매터)
+✅ 도메인 특화 임포트 없음
+✅ 독립 npm 패키지로 배포 가능
+✅ 다른 프로젝트에서도 그대로 사용 가능
+```
+
+#### `core/` - 앱 특화 도메인 로직
+```
+✅ 비즈니스 규칙 및 계산 (가챠 시스템 전용)
+✅ 도메인 특화 서비스 및 엔진
+✅ 설정 및 상수 (GACHA_RULES 등)
+✅ "데이터를 어떻게 처리하는가" 표현
+```
+
+#### `model/` - 도메인 엔티티
+```
+✅ 상태 컨테이너 (Observable 기반)
+✅ 데이터 구조 정의 및 직렬화 (toJSON/fromJSON)
+✅ "어떤 데이터가 존재하는가" 표현
+✅ 비즈니스 로직 없이 순수 데이터 저장
+```
+
+#### `viewmodel/` - 프레젠테이션 로직
+```
+✅ 모델과 뷰 연결
+✅ 사용자 입력 처리 및 검증
+✅ core 서비스 호출 및 결과 조합
+```
+
+#### `view/` - UI 렌더링
+```
+✅ DOM 조작 및 이벤트 바인딩
+✅ Chart.js 등 UI 라이브러리 통합
+✅ 시각적 표현만 담당
+```
 
 ### 진입점
 

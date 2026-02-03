@@ -1,4 +1,5 @@
 import { APP_VERSION, VERSION_CONFIG, CONFIG } from '../core/GachaConstants.js';
+import { SharedSettings } from '../core/SharedSettings.js';
 
 export const StorageManager = {
     /**
@@ -12,6 +13,28 @@ export const StorageManager = {
             this.migrate(savedVersion, APP_VERSION);
             localStorage.setItem('app_version', APP_VERSION);
         }
+
+        // 공유 설정 로드
+        this.loadSharedSettings();
+    },
+
+    /**
+     * 공유 설정 로드
+     */
+    loadSharedSettings() {
+        const sharedSettings = SharedSettings.getInstance();
+        const data = this.load('shani_gacha_shared');
+        if (data) {
+            sharedSettings.fromJSON(data);
+        }
+    },
+
+    /**
+     * 공유 설정 저장
+     */
+    saveSharedSettings() {
+        const sharedSettings = SharedSettings.getInstance();
+        this.save('shani_gacha_shared', sharedSettings.toJSON());
     },
 
     /**

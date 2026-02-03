@@ -1,11 +1,12 @@
-import { Observable } from '../../core/Observable.js';
+import { Observable } from '../../utils/Observable.js';
+import { SharedSettings } from '../../core/SharedSettings.js';
 
 export class Star3GachaModel {
     constructor() {
         this.pickupCount = new Observable(2);
         this.pickupRate = new Observable(1.0);
         this.targetCount = new Observable(0);
-        
+
         this.maxLoops = new Observable(2);
         this.stepMax = new Observable(80);
         this.step4Rate = new Observable(40.0);
@@ -20,8 +21,8 @@ export class Star3GachaModel {
         this.viewMode = new Observable('individual');
         this.efficiencyMode = new Observable('best');
 
-        // CDF 역추적용 목표 확률
-        this.targetProbability = new Observable(90);
+        // CDF 역추적용 목표 확률 (공유 설정)
+        this.targetProbability = SharedSettings.getInstance().targetProbability;
     }
 
     toJSON() {

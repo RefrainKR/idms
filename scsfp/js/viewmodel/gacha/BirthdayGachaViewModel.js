@@ -209,7 +209,8 @@ export class BirthdayGachaViewModel extends BaseGachaViewModel {
             ceilingMode: this.model.ceilingMode.value,
             step3Mode: this.model.step3Mode.value,
             N: N,
-            M: M
+            M: M,
+            stepupLimit: GACHA_RULES.BIRTHDAY.STEPUP_MAX
         });
     }
 

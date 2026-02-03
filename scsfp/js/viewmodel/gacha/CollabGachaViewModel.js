@@ -177,7 +177,8 @@ export class CollabGachaViewModel extends BaseGachaViewModel {
             ceilingMode: this.model.ceilingMode.value,
             step3Mode: 'excluded', // 콜라보는 항상 Step3 확정 없음
             N: N,
-            M: M
+            M: M,
+            stepupLimit: 9999 // 콜라보는 스탭업 횟수 제한 없음
         });
     }
 

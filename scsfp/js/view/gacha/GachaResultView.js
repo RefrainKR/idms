@@ -34,9 +34,9 @@ export class GachaResultView extends ResultView {
         else if (activeSubTab === config.subTabs.efficiency) {
             this._renderEfficiencyTab(gachaType, config, M, context, model, charts);
         }
-        // CDF 역추적 (3성 전용)
+        // CDF 역추적
         else if (config.hasCdfTab && activeSubTab === config.subTabs.cdf) {
-            this._renderCdfTab(config, M, context, model, charts);
+            this._renderCdfTab(gachaType, config, M, context, model, charts);
         }
     }
 
@@ -118,10 +118,13 @@ export class GachaResultView extends ResultView {
             targetLabel,
             showMultipleLines
         );
+
+        // 효율 비교 탭 summary 업데이트
+        this._updateEfficiencySummary(gachaType, config, M, context);
     }
 
-    // CDF 역추적 탭 렌더링 (3성 전용)
-    static _renderCdfTab(config, M, context, model, charts) {
+    // CDF 역추적 탭 렌더링
+    static _renderCdfTab(gachaType, config, M, context, model, charts) {
         if (!context.cdfData) return;
 
         this.renderCDFChart(
@@ -131,6 +134,9 @@ export class GachaResultView extends ResultView {
             model.targetProbability.value,
             M
         );
+
+        // CDF 역추적 탭 summary 업데이트
+        this._updateCdfSummary(gachaType, config, M, context);
     }
 
     // 가챠 타입별 수집 요약 생성
@@ -176,10 +182,71 @@ export class GachaResultView extends ResultView {
         if (gachaType === 'star3') {
             return () => this._generate3StarLogic(context);
         } else if (gachaType === 'birthday' || gachaType === 'collab') {
-            return () => this._generateSimpleStepupLogic(context);
+            return () => this._generateSimpleStepupLogic(context, gachaType);
         } else if (gachaType === 'star2') {
             return () => this._generate2StarLogic(context);
         }
+    }
+
+    // 효율 비교 탭 summary 업데이트
+    static _updateEfficiencySummary(gachaType, config, M, context) {
+        const summaryEl = document.getElementById(config.summary.element);
+        if (!summaryEl) return;
+
+        let summaryHTML = `<strong>효율 비교</strong><br>`;
+
+        if (gachaType === 'birthday') {
+            summaryHTML += `목표: 픽업 획득 (${M}종)<br>`;
+            summaryHTML += `<span style="color:#666; font-size:0.9em;">※ 스탭업은 최대 30회까지 가능하며, 초과분은 일반 가챠 확률(${context.normalRate}%)로 계산됩니다.</span>`;
+        } else if (gachaType === 'collab') {
+            summaryHTML += `목표: ${M}종 올컴플릿<br>`;
+            summaryHTML += `<span style="color:#666; font-size:0.9em;">스탭업 횟수 제한 없음 (계속 ${context.stepRate}% 확률 적용)</span>`;
+        } else if (gachaType === 'star3') {
+            summaryHTML += `목표: ${M}종 올컴플릿`;
+        } else if (gachaType === 'star2') {
+            summaryHTML += `목표: ${M}종 올컴플릿`;
+        }
+
+        summaryEl.innerHTML = summaryHTML;
+        summaryEl.style.display = 'block';
+
+        // 로직 영역 숨김
+        const logicEl = document.getElementById(config.summary.logic);
+        if (logicEl) logicEl.style.display = 'none';
+    }
+
+    // CDF 역추적 탭 summary 업데이트
+    static _updateCdfSummary(gachaType, config, M, context) {
+        const summaryEl = document.getElementById(config.summary.element);
+        if (!summaryEl) return;
+
+        let summaryHTML = `<strong>역추적 결과</strong><br>`;
+
+        if (gachaType === 'birthday') {
+            const { stepupRequired, normalRequired } = context.cdfData || {};
+            summaryHTML += `목표: 픽업 획득 (${M}종)<br>`;
+            summaryHTML += `스탭업 필요 횟수: ${stepupRequired}회<br>`;
+            summaryHTML += `일반 필요 횟수: ${normalRequired}회<br>`;
+            summaryHTML += `<span style="color:#666; font-size:0.9em;">※ 스탭업은 최대 30회까지 가능하며, 초과분은 일반 가챠 확률(${context.normalRate}%)로 계산됩니다.</span>`;
+        } else if (gachaType === 'collab') {
+            const { stepupRequired, normalRequired } = context.cdfData || {};
+            summaryHTML += `목표: ${M}종 올컴플릿<br>`;
+            summaryHTML += `스탭업 필요 횟수: ${stepupRequired}회<br>`;
+            summaryHTML += `일반 필요 횟수: ${normalRequired}회<br>`;
+            summaryHTML += `<span style="color:#666; font-size:0.9em;">스탭업 횟수 제한 없음 (계속 ${context.stepRate}% 확률 적용)</span>`;
+        } else if (gachaType === 'star3') {
+            const { stepupRequired, normalRequired } = context.cdfData || {};
+            summaryHTML += `목표: ${M}종 올컴플릿<br>`;
+            summaryHTML += `스탭업 필요 횟수: ${stepupRequired}회<br>`;
+            summaryHTML += `일반 필요 횟수: ${normalRequired}회`;
+        }
+
+        summaryEl.innerHTML = summaryHTML;
+        summaryEl.style.display = 'block';
+
+        // 로직 영역 숨김
+        const logicEl = document.getElementById(config.summary.logic);
+        if (logicEl) logicEl.style.display = 'none';
     }
 
     // ==========================================
@@ -223,7 +290,7 @@ export class GachaResultView extends ResultView {
     }
 
     // 단순 스탭업 (확률 증가형) 상세 로직 HTML 생성 - Type B (생일/콜라보)
-    static _generateSimpleStepupLogic(ctx) {
+    static _generateSimpleStepupLogic(ctx, gachaType) {
         const isCeilingOff = ctx.ceilingMode === 'excluded';
         const strike = (text, cond) => cond ? `<span style="text-decoration:line-through; color:#aaa;">${text}</span>` : text;
 

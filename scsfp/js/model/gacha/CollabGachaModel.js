@@ -1,4 +1,5 @@
-import { Observable } from '../../core/Observable.js';
+import { Observable } from '../../utils/Observable.js';
+import { SharedSettings } from '../../core/SharedSettings.js';
 
 export class CollabGachaModel {
     constructor() {
@@ -17,8 +18,8 @@ export class CollabGachaModel {
         this.viewMode = new Observable('individual');
         this.efficiencyMode = new Observable('best');
 
-        // CDF 역추적용 목표 확률
-        this.targetProbability = new Observable(90);
+        // CDF 역추적용 목표 확률 (공유 설정)
+        this.targetProbability = SharedSettings.getInstance().targetProbability;
     }
 
     toJSON() {

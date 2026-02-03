@@ -246,7 +246,8 @@ export class Star3GachaViewModel extends BaseGachaViewModel {
             loopRewards: this.model.loopRewards.value,
             ceilingMode: this.model.ceilingMode.value,
             step4Mode: this.model.step4Mode.value,
-            randomMode: this.model.randomMode.value
+            randomMode: this.model.randomMode.value,
+            targetProb: this.model.targetProbability.value / 100
         });
     }
 }

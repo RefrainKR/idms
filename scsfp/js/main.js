@@ -29,37 +29,16 @@ window.onload = function() {
     // 2. UI 컴포넌트 활성화
     new CollapsibleSection(); // 섹션 토글 기능
 
-    // 3. 사이드바 네비게이션 설정
-    const sidebar = document.getElementById('sidebar');
-    const sidebarToggle = document.getElementById('sidebar-toggle');
-    const sidebarClose = document.getElementById('sidebar-close');
-    const navItems = document.querySelectorAll('.nav-item');
+    // 3. 메인 탭 네비게이션 설정
+    const mainTabButtons = document.querySelectorAll('.main-tab-nav .tab-button');
 
-    // 햄버거 버튼 클릭
-    sidebarToggle.addEventListener('click', () => {
-        sidebar.classList.toggle('open');
-    });
+    mainTabButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const targetTab = button.dataset.tab;
 
-    // 사이드바 내부 닫기 버튼 클릭
-    sidebarClose.addEventListener('click', () => {
-        sidebar.classList.remove('open');
-    });
-
-    // 사이드바 외부 클릭 시 닫기
-    document.addEventListener('click', (e) => {
-        if (!sidebar.contains(e.target) && !sidebarToggle.contains(e.target)) {
-            sidebar.classList.remove('open');
-        }
-    });
-
-    // 네비게이션 아이템 클릭
-    navItems.forEach(item => {
-        item.addEventListener('click', () => {
-            const targetTab = item.dataset.tab;
-
-            // 모든 네비게이션 아이템 비활성화
-            navItems.forEach(nav => nav.classList.remove('active'));
-            item.classList.add('active');
+            // 모든 탭 버튼 비활성화
+            mainTabButtons.forEach(btn => btn.classList.remove('active'));
+            button.classList.add('active');
 
             // 모든 탭 콘텐츠 숨김
             document.querySelectorAll('#main-tab-system > .tab-content').forEach(tab => {
@@ -74,9 +53,6 @@ window.onload = function() {
             else if (targetTab === 'tab-birthday') birthdayVM.calculate();
             else if (targetTab === 'tab-collab') collabVM.calculate();
             else if (targetTab === 'tab-2star') star2VM.calculate();
-
-            // 사이드바 닫기
-            sidebar.classList.remove('open');
         });
     });
 

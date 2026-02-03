@@ -143,14 +143,18 @@ export class EfficiencyCalculator {
      * @param {string} params.ceilingMode - 천장 모드 ('included' | 'excluded')
      * @param {string} params.step4Mode - Step4 모드 ('included' | 'excluded')
      * @param {string} params.randomMode - 랜덤 모드 ('included' | 'excluded')
-     * @returns {Object} { labels, cdfDataStepup, cdfDataNormal }
+     * @param {number} params.targetProb - 목표 확률 (0~1, 옵션)
+     * @returns {Object} { labels, cdfDataStepup, cdfDataNormal, stepupRequired, normalRequired }
      */
-    static calculate3StarCDF({ N, M, p_indiv, p_step4_total, maxLoops, loopRewards, ceilingMode, step4Mode, randomMode }) {
+    static calculate3StarCDF({ N, M, p_indiv, p_step4_total, maxLoops, loopRewards, ceilingMode, step4Mode, randomMode, targetProb = 0.9 }) {
         const labels = [];
         const cdfDataStepup = [];
         const cdfDataNormal = [];
         const maxPulls = 200;
         const stepupLimit = maxLoops * GACHA_RULES.STAR3.STEPUP_CYCLE;
+
+        let stepupRequired = null;
+        let normalRequired = null;
 
         for (let pulls = 0; pulls <= maxPulls; pulls++) {
             labels.push(pulls);
@@ -195,7 +199,13 @@ export class EfficiencyCalculator {
                 }
             }
 
-            cdfDataStepup.push(dpS[M] * 100);
+            const stepupProb = dpS[M] * 100;
+            cdfDataStepup.push(stepupProb);
+
+            // 목표 확률 달성 체크 (스탭업)
+            if (stepupRequired === null && stepupProb >= targetProb * 100) {
+                stepupRequired = pulls;
+            }
 
             // 2. 일반 가챠만
             let dpN = new Array(M + 1).fill(0);
@@ -213,10 +223,16 @@ export class EfficiencyCalculator {
                 }
             }
 
-            cdfDataNormal.push(dpN[M] * 100);
+            const normalProb = dpN[M] * 100;
+            cdfDataNormal.push(normalProb);
+
+            // 목표 확률 달성 체크 (일반)
+            if (normalRequired === null && normalProb >= targetProb * 100) {
+                normalRequired = pulls;
+            }
         }
 
-        return { labels, cdfDataStepup, cdfDataNormal };
+        return { labels, cdfDataStepup, cdfDataNormal, stepupRequired, normalRequired };
     }
 
     /**
@@ -229,9 +245,10 @@ export class EfficiencyCalculator {
      * @param {string} params.step3Mode - Step3 확정 모드 ('included' | 'excluded')
      * @param {number} params.N - 전체 픽업 수
      * @param {number} params.M - 목표 픽업 수
+     * @param {number} params.stepupLimit - 스탭업 최대 횟수 (생일: 30, 콜라보: 9999)
      * @returns {Object} { labels, normalData, stepupData }
      */
-    static calculateSimpleStepup({ normalRate, stepRate, ceilingMode, step3Mode, N, M }) {
+    static calculateSimpleStepup({ normalRate, stepRate, ceilingMode, step3Mode, N, M, stepupLimit = 9999 }) {
         const labels = [];
         const normalData = [];
         const stepupData = [];
@@ -257,7 +274,9 @@ export class EfficiencyCalculator {
             let dpS = new Array(M + 1).fill(0);
             dpS[0] = 1.0;
 
-            for (let i = 1; i <= pulls; i++) {
+            const actualStepPulls = Math.min(pulls, stepupLimit);
+
+            for (let i = 1; i <= actualStepPulls; i++) {
                 const isStep3 = (i % GACHA_RULES.BIRTHDAY.STEPUP_GUARANTEE === 0);
 
                 if (isStep3 && step3Mode === 'included') {
@@ -266,6 +285,14 @@ export class EfficiencyCalculator {
                 } else {
                     // 일반 스탭업 확률
                     dpS = ProbabilityEngine.runSinglePull(dpS, stepRate);
+                }
+            }
+
+            // 스탭업 초과분은 일반 가챠로 처리
+            if (pulls > stepupLimit) {
+                const extraPulls = pulls - stepupLimit;
+                for (let i = 0; i < extraPulls; i++) {
+                    dpS = ProbabilityEngine.runSinglePull(dpS, normalRate);
                 }
             }
 

@@ -1,4 +1,4 @@
-import { Observable } from '../../core/Observable.js';
+import { Observable } from '../../utils/Observable.js';
 
 export class Star2GachaModel {
     constructor() {

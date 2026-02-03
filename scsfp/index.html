@@ -16,27 +16,16 @@
 
 <div class="container">
     <header>
-        <button id="sidebar-toggle" class="sidebar-toggle" aria-label="Toggle Navigation">
-            <span></span>
-            <span></span>
-            <span></span>
-        </button>
         <h1>샤니송 픽업 확률 계산기</h1>
     </header>
 
-    <aside id="sidebar" class="sidebar">
-        <button id="sidebar-close" class="sidebar-close" aria-label="Close Navigation">
-            <span></span>
-            <span></span>
-            <span></span>
-        </button>
-        <nav class="sidebar-nav">
-            <button class="nav-item active" data-tab="tab-3star">3성</button>
-            <button class="nav-item" data-tab="tab-birthday">생일</button>
-            <button class="nav-item" data-tab="tab-collab">콜라보</button>
-            <button class="nav-item" data-tab="tab-2star">2성</button>
-        </nav>
-    </aside>
+    <!-- Main Navigation Tabs -->
+    <nav class="tab-buttons main-tab-nav">
+        <button class="tab-button active" data-tab="tab-3star">3성</button>
+        <button class="tab-button" data-tab="tab-birthday">생일</button>
+        <button class="tab-button" data-tab="tab-collab">콜라보</button>
+        <button class="tab-button" data-tab="tab-2star">2성</button>
+    </nav>
 
     <main id="main-tab-system">
 
@@ -63,7 +52,7 @@
                             <input type="number" id="pickupCount">
                         </div>
                         <div class="input-item">
-                            <label for="pickupRate">개별 픽업 확률 (%)</label>
+                            <label for="pickupRate">픽업 확률: 개별 (%)</label>
                             <input type="number" id="pickupRate">
                         </div>
                     </div>
@@ -71,11 +60,11 @@
                     <div class="subsection-group">
                         <h4 class="subsection-title">스탭업 정보</h4>
                         <div class="input-item">
-                            <label for="maxLoops">최대 주회(周回) 수</label>
+                            <label for="maxLoops">주회(周回): 최대 수</label>
                             <input type="number" id="maxLoops">
                         </div>
                         <div class="input-item">
-                            <label for="step4Rate">Step4 픽업 확률 (%)</label>
+                            <label for="step4Rate">픽업 확률: Step4 (%)</label>
                             <input type="number" id="step4Rate">
                         </div>
                         <div class="loop-rewards-container" id="loopRewardsArea"></div>
@@ -91,16 +80,16 @@
                 <div class="section-content">
                     <div class="subsection-group">
                         <div class="input-item">
-                            <label for="normalPulls">일반 횟수</label>
+                            <label for="normalPulls">횟수: 일반</label>
                             <input type="number" id="normalPulls">
                         </div>
                         <div class="input-item">
-                            <label for="stepPulls">스탭업 횟수</label>
+                            <label for="stepPulls">횟수: 스탭업</label>
                             <input type="number" id="stepPulls">
                         </div>
                         <div class="input-item">
                             <label for="targetCount">저격 픽업 수</label>
-                            <span class="input-hint">전체(N) /</span>
+                            <span class="input-hint">0 = 전체 </span>
                             <input type="number" id="targetCount">
                         </div>
                     </div>
@@ -185,11 +174,11 @@
                     <div class="subsection-group">
                         <h4 class="subsection-title">가챠별 확률</h4>
                         <div class="input-item">
-                            <label>일반 픽업 확률 (%)</label>
+                            <label>픽업 확률: 일반 (%)</label>
                             <input type="number" id="birthdayNormalRate" value="1.5" min="0.001" max="100" step="0.001">
                         </div>
                         <div class="input-item">
-                            <label>스탭업 픽업 확률 (%)</label>
+                            <label>픽업 확률: 스탭업 (%)</label>
                             <input type="number" id="birthdayStepRate" value="2.0" min="0.001" max="100" step="0.001">
                         </div>
                     </div>
@@ -204,16 +193,16 @@
                 <div class="section-content">
                     <div class="subsection-group">
                         <div class="input-item">
-                            <label for="birthdayNormalPulls">일반 횟수</label>
+                            <label for="birthdayNormalPulls">횟수: 일반</label>
                             <input type="number" id="birthdayNormalPulls">
                         </div>
                         <div class="input-item">
-                            <label for="birthdayStepPulls">스탭업 횟수</label>
+                            <label for="birthdayStepPulls">횟수: 스탭업</label>
                             <input type="number" id="birthdayStepPulls">
                         </div>
                         <div class="input-item" style="display: none;">
                             <label for="birthdayTargetCount">저격 픽업 수</label>
-                            <span class="input-hint">전체(N) /</span>
+                            <span class="input-hint">0 = 전체</span>
                             <input type="number" id="birthdayTargetCount">
                         </div>
                     </div>
@@ -299,11 +288,11 @@
                     <div class="subsection-group">
                         <h4 class="subsection-title">가챠별 확률</h4>
                         <div class="input-item">
-                            <label>일반 픽업 확률 (%)</label>
+                            <label>픽업 확률: 일반 (%)</label>
                             <input type="number" id="collabNormalRate" value="0.75" min="0.001" max="100" step="0.001">
                         </div>
                         <div class="input-item">
-                            <label>스탭업 픽업 확률 (%)</label>
+                            <label>픽업 확률: 스탭업 (%)</label>
                             <input type="number" id="collabStepRate" value="1.0" min="0.001" max="100" step="0.001">
                         </div>
                     </div>
@@ -318,16 +307,16 @@
                 <div class="section-content">
                     <div class="subsection-group">
                         <div class="input-item">
-                            <label for="collabNormalPulls">일반 횟수</label>
+                            <label for="collabNormalPulls">횟수: 일반</label>
                             <input type="number" id="collabNormalPulls">
                         </div>
                         <div class="input-item">
-                            <label for="collabStepPulls">스탭업 횟수</label>
+                            <label for="collabStepPulls">횟수: 스탭업</label>
                             <input type="number" id="collabStepPulls">
                         </div>
-                        <div class="input-item">
+                        <div class="input-item">    
                             <label for="collabTargetCount">저격 픽업 수</label>
-                            <span class="input-hint">전체(N) /</span>
+                            <span class="input-hint">0 = 전체</span>
                             <input type="number" id="collabTargetCount">
                         </div>
                     </div>
@@ -403,11 +392,11 @@
                     <div class="subsection-group">
                         <h4 class="subsection-title">기본 정보</h4>
                         <div class="input-item">
-                            <label for="countNormal2">픽업 개수 (전체)</label>
+                            <label for="countNormal2">픽업 개수</label>
                             <input type="number" id="countNormal2">
                         </div>
                         <div class="input-item">
-                            <label for="rate2Star">전체 픽업 확률 (%)</label>
+                            <label for="rate2Star">픽업 확률: 전체 (%)</label>
                             <input type="number" id="rate2Star">
                         </div>
                     </div>
