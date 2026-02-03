@@ -41,12 +41,14 @@ export const GACHA_TYPE_CONFIG = {
         charts: {
             collection: { canvas: 'resultChartBirthday', legend: 'legendListBirthday' },
             total: { canvas: 'resultChartTotalBirthday' },
-            efficiency: { canvas: 'efficiencyChartBirthday' }
+            efficiency: { canvas: 'efficiencyChartBirthday' },
+            cdf: { canvas: 'cdfChartBirthday' }
         },
         subTabs: {
             collection: 'res-bd-collection',
             total: 'res-bd-total',
-            efficiency: 'res-bd-efficiency'
+            efficiency: 'res-bd-efficiency',
+            cdf: 'res-bd-cdf'
         },
         summary: {
             element: 'globalSummary',
@@ -54,12 +56,44 @@ export const GACHA_TYPE_CONFIG = {
         },
         hasRandomMode: false,
         hasStep4Mode: false,
-        hasCdfTab: false,
+        hasCdfTab: true,
         // 탭별 버튼 visibility 규칙
         buttonVisibility: {
             efficiency: ['birthday-efficiency-toggle'],
             collection: ['birthday-toggle-view'],
-            total: ['birthday-toggle-view']
+            total: ['birthday-toggle-view'],
+            cdf: []
+        }
+    },
+
+    collab: {
+        mainTabId: 'tab-collab',
+        subTabContainerId: 'sub-tab-system-collab',
+        charts: {
+            collection: { canvas: 'resultChartCollab', legend: 'legendListCollab' },
+            total: { canvas: 'resultChartTotalCollab' },
+            efficiency: { canvas: 'efficiencyChartCollab' },
+            cdf: { canvas: 'cdfChartCollab' }
+        },
+        subTabs: {
+            collection: 'res-cb-collection',
+            total: 'res-cb-total',
+            efficiency: 'res-cb-efficiency',
+            cdf: 'res-cb-cdf'
+        },
+        summary: {
+            element: 'globalSummary',
+            logic: 'globalLogic'
+        },
+        hasRandomMode: false,
+        hasStep4Mode: false,
+        hasCdfTab: true,
+        // 탭별 버튼 visibility 규칙
+        buttonVisibility: {
+            efficiency: ['collab-efficiency-toggle'],
+            collection: ['collab-toggle-view'],
+            total: ['collab-toggle-view'],
+            cdf: []
         }
     },
 

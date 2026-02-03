@@ -1,6 +1,6 @@
 /* ========================================
    샤니송 픽업 확률 계산기 - 스타일시트
-   v1.7.1 - 시멘틱 구조 개선
+   v1.9.0 - 사이드바 네비게이션, 생일/콜라보 분리
    ======================================== */
 
 :root {
@@ -107,11 +107,134 @@ body {
     padding: 20px;
 }
 
+header {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
 header h1 {
     text-align: center;
     font-size: 1.3rem;
     color: var(--primary-color);
     margin: 0 0 20px 0;
+    flex: 1;
+}
+
+/* Hamburger Toggle Button */
+.sidebar-toggle {
+    position: absolute;
+    left: 0;
+    top: -5px;
+    width: 24px;
+    height: 24px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    align-items: center;
+    z-index: 999;
+}
+
+.sidebar-toggle span {
+    display: block;
+    width: 20px;
+    height: 2.5px;
+    background-color: var(--primary-color);
+    border-radius: 2px;
+}
+
+.sidebar-toggle:hover span {
+    background-color: var(--primary-dark);
+}
+
+/* Sidebar */
+.sidebar {
+    position: fixed;
+    left: -250px;
+    top: 0;
+    width: 250px;
+    height: 100vh;
+    background-color: var(--bg-card);
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+    transition: none;
+    z-index: 1001;
+    overflow-y: auto;
+    border-radius: 0 12px 12px 0;
+}
+
+.sidebar.open {
+    left: 0;
+}
+
+/* Sidebar Close Button (inside sidebar) */
+.sidebar-close {
+    position: absolute;
+    right: 15px;
+    top: 15px;
+    width: 24px;
+    height: 24px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    align-items: center;
+    z-index: 1003;
+}
+
+.sidebar-close span {
+    display: block;
+    width: 20px;
+    height: 2.5px;
+    background-color: var(--gray-600);
+    border-radius: 2px;
+}
+
+.sidebar-close:hover span {
+    background-color: var(--primary-color);
+}
+
+.sidebar-nav {
+    padding: 60px 0 20px 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.nav-item {
+    padding: 15px 25px;
+    border: none;
+    border-bottom: 1px solid var(--gray-200);
+    background: transparent;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    font-weight: 500;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border-left: 4px solid transparent;
+}
+
+.nav-item:last-child {
+    border-bottom: none;
+}
+
+.nav-item:hover {
+    background-color: var(--gray-100);
+    border-left-color: var(--primary-light);
+}
+
+.nav-item.active {
+    background-color: var(--primary-light);
+    color: var(--primary-color);
+    border-left-color: var(--primary-color);
+    font-weight: bold;
 }
 
 footer {
@@ -119,32 +242,8 @@ footer {
 }
 
 /* ========================================
-   2. Tab System
+   2. Main Tab Content System
    ======================================== */
-
-.tab-buttons {
-    display: flex;
-    border-bottom: 2px solid var(--primary-color);
-    margin-bottom: 15px;
-}
-
-.tab-button {
-    flex: 1;
-    padding: 10px 15px;
-    border: none;
-    background-color: var(--tab-inactive-bg);
-    color: #666;
-    font-size: 1rem;
-    font-weight: bold;
-    cursor: pointer;
-    transition: background-color 0.3s;
-    border-radius: 10px 10px 0 0;
-    margin-right: 5px;
-}
-
-.tab-button:last-child { margin-right: 0; }
-.tab-button:hover { background-color: #d0d0d0; }
-.tab-button.active { background-color: var(--primary-color); color: #fff; }
 
 .tab-content {
     display: none;

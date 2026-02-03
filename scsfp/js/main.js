@@ -1,8 +1,10 @@
 import { Star3GachaViewModel } from './viewmodel/gacha/Star3GachaViewModel.js';
 import { Star2GachaViewModel } from './viewmodel/gacha/Star2GachaViewModel.js';
 import { BirthdayGachaViewModel } from './viewmodel/gacha/BirthdayGachaViewModel.js';
+import { CollabGachaViewModel } from './viewmodel/gacha/CollabGachaViewModel.js';
 import { TabManager } from './view/component/TabManager.js';
 import { CollapsibleSection } from './view/component/CollapsibleSection.js';
+import { StorageManager } from './utils/StorageManager.js';
 
 // Chart.js and ChartDataLabels are loaded as global variables via CDN (see index.html)
 // Chart.js: https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js
@@ -10,23 +12,72 @@ import { CollapsibleSection } from './view/component/CollapsibleSection.js';
 Chart.register(ChartDataLabels);
 
 window.onload = function() {
+    // 0. 버전 체크 및 마이그레이션
+    StorageManager.init();
+
     // 1. ViewModel 초기화
     const star3VM = new Star3GachaViewModel();
     const star2VM = new Star2GachaViewModel();
     const birthdayVM = new BirthdayGachaViewModel();
+    const collabVM = new CollabGachaViewModel();
 
     star3VM.init();
     star2VM.init();
     birthdayVM.init();
+    collabVM.init();
 
     // 2. UI 컴포넌트 활성화
     new CollapsibleSection(); // 섹션 토글 기능
 
-    // 3. 탭 매니저 연결 (탭 전환 시 강제 렌더링)
-    new TabManager(document.getElementById('main-tab-system'), (id) => {
-        if (id === 'tab-3star') star3VM.calculate();
-        else if (id === 'tab-birthday') birthdayVM.calculate();
-        else star2VM.calculate();
+    // 3. 사이드바 네비게이션 설정
+    const sidebar = document.getElementById('sidebar');
+    const sidebarToggle = document.getElementById('sidebar-toggle');
+    const sidebarClose = document.getElementById('sidebar-close');
+    const navItems = document.querySelectorAll('.nav-item');
+
+    // 햄버거 버튼 클릭
+    sidebarToggle.addEventListener('click', () => {
+        sidebar.classList.toggle('open');
+    });
+
+    // 사이드바 내부 닫기 버튼 클릭
+    sidebarClose.addEventListener('click', () => {
+        sidebar.classList.remove('open');
+    });
+
+    // 사이드바 외부 클릭 시 닫기
+    document.addEventListener('click', (e) => {
+        if (!sidebar.contains(e.target) && !sidebarToggle.contains(e.target)) {
+            sidebar.classList.remove('open');
+        }
+    });
+
+    // 네비게이션 아이템 클릭
+    navItems.forEach(item => {
+        item.addEventListener('click', () => {
+            const targetTab = item.dataset.tab;
+
+            // 모든 네비게이션 아이템 비활성화
+            navItems.forEach(nav => nav.classList.remove('active'));
+            item.classList.add('active');
+
+            // 모든 탭 콘텐츠 숨김
+            document.querySelectorAll('#main-tab-system > .tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            // 선택된 탭 표시
+            document.getElementById(targetTab).classList.add('active');
+
+            // ViewModel 계산 트리거
+            if (targetTab === 'tab-3star') star3VM.calculate();
+            else if (targetTab === 'tab-birthday') birthdayVM.calculate();
+            else if (targetTab === 'tab-collab') collabVM.calculate();
+            else if (targetTab === 'tab-2star') star2VM.calculate();
+
+            // 사이드바 닫기
+            sidebar.classList.remove('open');
+        });
     });
 
     // 서브 탭 시스템 연결
@@ -36,16 +87,22 @@ window.onload = function() {
     const subBirthday = document.getElementById('sub-tab-system-birthday');
     if (subBirthday) new TabManager(subBirthday, (tabId) => birthdayVM.onTabChange(tabId));
 
+    const subCollab = document.getElementById('sub-tab-system-collab');
+    if (subCollab) new TabManager(subCollab, (tabId) => collabVM.onTabChange(tabId));
+
     const sub2 = document.getElementById('sub-tab-system-2star');
     if (sub2) new TabManager(sub2, (tabId) => star2VM.onTabChange(tabId));
-    
+
     // 초기 로딩 시 현재 활성 탭에 맞춰 UI 설정
     const initialTab3 = sub3.querySelector('.tab-button.active').dataset.tab;
     star3VM.onTabChange(initialTab3);
-    
+
     const initialTabBirthday = subBirthday.querySelector('.tab-button.active').dataset.tab;
     birthdayVM.onTabChange(initialTabBirthday);
-    
+
+    const initialTabCollab = subCollab.querySelector('.tab-button.active').dataset.tab;
+    collabVM.onTabChange(initialTabCollab);
+
     const initialTab2 = sub2.querySelector('.tab-button.active').dataset.tab;
     star2VM.onTabChange(initialTab2);
 };

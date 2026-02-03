@@ -1,3 +1,19 @@
+// 앱 버전 관리
+export const APP_VERSION = '1.9.0';
+
+// 버전별 마이그레이션 설정
+export const VERSION_CONFIG = {
+    '1.9.0': {
+        changes: [
+            {
+                gacha: 'BIRTHDAY',
+                reason: 'fixed_values_applied',
+                action: 'reset'
+            }
+        ]
+    }
+};
+
 export const CONFIG = {
     STAR3: {
         KEY: 'shani_gacha_3star',
@@ -60,14 +76,24 @@ export const CONFIG = {
     },
     BIRTHDAY: {
         KEY: 'shani_gacha_birthday',
+        VERSION: '1.9.0',
+
+        // 고정값 정의 (사양 변경 시 여기만 수정)
+        FIXED_VALUES: {
+            pickupCount: 1,
+            normalRate: 1.5,
+            stepRate: 2.0
+        },
+
         INPUTS: [
-            { id: 'birthdayPickupCount', min: 1, max: 10, def: 1, type: 'int' },
-            { id: 'birthdayNormalRate', min: 0, max: 100, def: 1.5, type: 'float' },
-            { id: 'birthdayStepRate', min: 0, max: 100, def: 2.0, type: 'float' },
+            { id: 'birthdayPickupCount', min: 1, max: 10, def: 1, type: 'int', fixed: true },
+            { id: 'birthdayNormalRate', min: 0, max: 100, def: 1.5, type: 'float', fixed: true },
+            { id: 'birthdayStepRate', min: 0, max: 100, def: 2.0, type: 'float', fixed: true },
             { id: 'birthdayTargetCount', min: 0, max: 10, def: 0, type: 'int' },
             { id: 'birthdayNormalPulls', min: 0, max: 9999, def: 0, type: 'int' },
-            { id: 'birthdayStepPulls', min: 0, max: 9999, def: 0, type: 'int' }
+            { id: 'birthdayStepPulls', min: 0, max: 30, def: 0, type: 'int' }
         ],
+
         // Observable 의존성: pickupCount가 변경되면 targetCount를 클램프
         DEPENDENCIES: [
             {
@@ -78,23 +104,41 @@ export const CONFIG = {
                     }
                 }
             }
+        ]
+    },
+
+    COLLAB: {
+        KEY: 'shani_gacha_collab',
+        VERSION: '1.9.0',
+
+        INPUTS: [
+            { id: 'collabPickupCount', min: 1, max: 10, def: 5, type: 'int' },
+            { id: 'collabNormalRate', min: 0, max: 100, def: 0.75, type: 'float' },
+            { id: 'collabStepRate', min: 0, max: 100, def: 1.0, type: 'float' },
+            { id: 'collabTargetCount', min: 0, max: 10, def: 0, type: 'int' },
+            { id: 'collabNormalPulls', min: 0, max: 9999, def: 0, type: 'int' },
+            { id: 'collabStepPulls', min: 0, max: 9999, def: 0, type: 'int' }
         ],
+
         PRESETS: {
-            birthday: {
-                label: '생일',
-                pickupCount: 1,
-                normalRate: 1.5,
-                stepRate: 2.0,
-                step3Mode: 'included'
-            },
-            hongaSecond: {
+            honka2nd: {
                 label: '본가(2탄)',
                 pickupCount: 5,
                 normalRate: 0.75,
-                stepRate: 1.0,
-                step3Mode: 'excluded'
+                stepRate: 1.0
             }
-        }
+        },
+
+        DEPENDENCIES: [
+            {
+                source: 'pickupCount',
+                handler: (value, model) => {
+                    if (model.targetCount.value > value) {
+                        model.targetCount.value = value;
+                    }
+                }
+            }
+        ]
     }
 };
 

@@ -4,6 +4,100 @@
 
 ---
 
+## v1.9.0 (2026-02-03) - 사이드바 네비게이션 및 가챠 타입 확장
+
+### 새로운 기능
+
+**1. 사이드바 네비게이션 추가**
+
+**데스크톱 레이아웃**:
+- 좌측 고정 사이드바(aside) 도입
+- 3성, 생일, 콜라보, 2성 탭을 사이드바에 배치
+- 사이드바 토글 버튼 (열기/닫기 아이콘)
+- SVG 아이콘으로 가챠 타입 시각화
+
+**모바일 레이아웃**:
+- 상단 네비게이션으로 전환
+- 탭 형태가 아닌 새로운 모바일 UI 패턴
+- 반응형 디자인 개선
+
+**2. 콜라보 가챠 분리**
+
+**기존**: "생일/본가(2탄)" 통합 탭
+**변경**: "생일"과 "콜라보" 분리
+
+**생일 가챠**:
+- 프리셋 제거 (생일 전용 고정 설정)
+- 픽업 개수: 1개 고정
+- 일반 확률: 1.5% 고정
+- 스탭업 확률: 2.0% 고정
+- 스탭업 최대 횟수: 30회로 제한 (기존 9999회)
+- Step3 확정: 항상 ON
+
+**콜라보 가챠** (신규):
+- 프리셋 기능 유지
+- 본가(2탄) 프리셋 추가
+  - 픽업 개수: 5개
+  - 일반 확률: 0.75%
+  - 스탭업 확률: 1.0%
+  - Step3 확정: OFF
+- 스탭업 최대 횟수: 9999회 (제한 없음)
+
+### 주요 변경사항
+
+**1. 버전 관리 시스템 구축** (StorageManager.js):
+- `APP_VERSION = '1.9.0'` 도입
+- `VERSION_CONFIG`를 통한 마이그레이션 정의
+- 버전 업그레이드 시 생일 가챠 localStorage 자동 초기화
+- 간접 참조 방식으로 CONFIG 기반 마이그레이션
+
+**2. 생일 가챠 고정값 적용** (BirthdayGachaViewModel.js):
+- `FIXED_VALUES`를 GachaConstants에서 로드
+- `applyFixedValues()`: LocalStorage 로드 전 고정값 강제 적용
+- `disableFixedInputs()`: 고정 필드 비활성화 (회색 배경, not-allowed 커서)
+- 프리셋 기능 제거 (initPresets, applyPreset 삭제)
+- 저격 픽업 수 입력 필드 숨김 처리
+
+**3. 콜라보 가챠 신규 추가**:
+- CollabGachaModel.js (신규 생성)
+- CollabGachaViewModel.js (신규 생성)
+  - Step3 확정 기능 제거 (확률만 증가)
+  - 프리셋 기능 유지 (본가(2탄) 프리셋 포함)
+  - 스탭업 제한 없음 (9999회)
+- HTML: tab-collab 섹션 추가 (차트, 토글 버튼 포함)
+- GachaTypeConfig.js: collab 설정 추가
+
+**4. 사이드바 네비게이션 구현** (index.html, style.css, main.js):
+- 햄버거 토글 버튼 (header 좌측 상단)
+- 슬라이드 사이드바 (250px, 좌측)
+  - 우측 상단 닫기 버튼 (햄버거 아이콘)
+  - 4개 네비게이션 항목: 3성, 생일, 콜라보, 2성
+  - 항목 간 구분선 (border-bottom)
+  - 우측 모서리 둥글게 (border-radius: 0 12px 12px 0)
+- 외부 클릭 시 자동 닫힘
+- 애니메이션 제거 (즉각 반응)
+
+**5. 코드 체계화** (EfficiencyCalculator.js, GachaResultView.js):
+- 스탭업 가챠 타입 분류에 따른 메서드명 개선
+  - Type A (3성): 주회 보상 시스템형
+  - Type B (생일/콜라보): 단순 확률 증가형
+  - Type C (2성): 그룹별 확정 시스템형
+- `calculateBirthday` → `calculateSimpleStepup`
+- `_generateBirthdayLogic` → `_generateSimpleStepupLogic`
+- 각 타입별 주석 추가로 명확한 분류
+
+**파일 변경 요약**:
+- **신규**: CollabGachaModel.js, CollabGachaViewModel.js
+- **수정**: GachaConstants.js, StorageManager.js, BirthdayGachaViewModel.js, BaseGachaViewModel.js
+- **수정**: index.html (사이드바, collab 섹션)
+- **수정**: style.css (사이드바, nav-item 스타일)
+- **수정**: main.js (사이드바 로직, collab 초기화)
+- **수정**: GachaResultView.js (collab 렌더링, 메서드명 개선)
+- **수정**: GachaTypeConfig.js (collab 설정)
+- **수정**: EfficiencyCalculator.js (메서드명 개선)
+
+---
+
 ## v1.8.2 (2026-01-29) - UI/UX 개선 및 버그 수정
 
 ### 버그 수정

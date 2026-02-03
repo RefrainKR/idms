@@ -10,24 +10,35 @@
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
 
     <!-- CSS -->
-    <link rel="stylesheet" href="css/style.css?v=1.8.3">
+    <link rel="stylesheet" href="css/style.css?v=1.9.0">
 </head>
 <body>
 
 <div class="container">
     <header>
+        <button id="sidebar-toggle" class="sidebar-toggle" aria-label="Toggle Navigation">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
         <h1>샤니송 픽업 확률 계산기</h1>
     </header>
 
-    <!-- 향후 다른 기능 추가 시 nav 사용 예정 -->
+    <aside id="sidebar" class="sidebar">
+        <button id="sidebar-close" class="sidebar-close" aria-label="Close Navigation">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+        <nav class="sidebar-nav">
+            <button class="nav-item active" data-tab="tab-3star">3성</button>
+            <button class="nav-item" data-tab="tab-birthday">생일</button>
+            <button class="nav-item" data-tab="tab-collab">콜라보</button>
+            <button class="nav-item" data-tab="tab-2star">2성</button>
+        </nav>
+    </aside>
 
     <main id="main-tab-system">
-        <!-- 메인 탭 버튼 -->
-        <div class="tab-buttons">
-            <button class="tab-button active" data-tab="tab-3star">3성</button>
-            <button class="tab-button" data-tab="tab-birthday">생일/본가(2탄)</button>
-            <button class="tab-button" data-tab="tab-2star">2성</button>
-        </div>
 
         <!-- ========== [Tab 1] 3성 가챠 ========== -->
         <section id="tab-3star" class="tab-content active">
@@ -152,7 +163,7 @@
         <section id="tab-birthday" class="tab-content">
 
             <div class="reset-area">
-                <div class="preset-group" id="birthday-preset-container"></div>
+                <div class="preset-group"></div>
                 <button id="birthday-reset-btn" class="reset-btn" title="설정 초기화">↻</button>
             </div>
 
@@ -200,7 +211,7 @@
                             <label for="birthdayStepPulls">스탭업 횟수</label>
                             <input type="number" id="birthdayStepPulls">
                         </div>
-                        <div class="input-item">
+                        <div class="input-item" style="display: none;">
                             <label for="birthdayTargetCount">저격 픽업 수</label>
                             <span class="input-hint">전체(N) /</span>
                             <input type="number" id="birthdayTargetCount">
@@ -215,6 +226,7 @@
                     <button class="tab-button sub-tab-btn active" data-tab="res-bd-collection">픽업 획득(중복X)</button>
                     <button class="tab-button sub-tab-btn" data-tab="res-bd-total">총 획득(중복O)</button>
                     <button class="tab-button sub-tab-btn" data-tab="res-bd-efficiency">일반vs스탭업</button>
+                    <button class="tab-button sub-tab-btn" data-tab="res-bd-cdf">역추적</button>
                 </div>
 
                 <div class="result-options-header">
@@ -245,10 +257,134 @@
                         <div class="chart-scroll-inner"><canvas id="efficiencyChartBirthday"></canvas></div>
                     </div>
                 </div>
+                <div id="res-bd-cdf" class="tab-content">
+                    <div class="chart-scroll-wrapper">
+                        <div class="chart-scroll-inner"><canvas id="cdfChartBirthday"></canvas></div>
+                        <div class="cdf-input-area">
+                            <div class="input-item">
+                                <label for="targetProbabilityBirthday">목표 확률 (%)</label>
+                                <input type="number" id="targetProbabilityBirthday">
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </section>
 
-        <!-- ========== [Tab 3] 2성 가챠 ========== -->
+        <!-- ========== [Tab 3] 본가(2탄) 콜라보 가챠 ========== -->
+        <section id="tab-collab" class="tab-content">
+
+            <div class="reset-area">
+                <div class="preset-group" id="collab-preset-container">
+                    <button id="collab-preset-honka2nd" class="preset-btn">본가(2탄)</button>
+                </div>
+                <button id="collab-reset-btn" class="reset-btn" title="설정 초기화">↻</button>
+            </div>
+
+            <!-- 입력: 가챠 정보 -->
+            <div class="collapsible-container">
+                <div class="section-header">
+                    <h3 class="section-title">가챠 정보</h3>
+                    <button class="toggle-btn">▼</button>
+                </div>
+                <div class="section-content">
+                    <div class="subsection-group">
+                        <h4 class="subsection-title">기본 정보</h4>
+                        <div class="input-item">
+                            <label>픽업 개수</label>
+                            <input type="number" id="collabPickupCount" value="5" min="1" max="10">
+                        </div>
+                    </div>
+
+                    <div class="subsection-group">
+                        <h4 class="subsection-title">가챠별 확률</h4>
+                        <div class="input-item">
+                            <label>일반 픽업 확률 (%)</label>
+                            <input type="number" id="collabNormalRate" value="0.75" min="0.001" max="100" step="0.001">
+                        </div>
+                        <div class="input-item">
+                            <label>스탭업 픽업 확률 (%)</label>
+                            <input type="number" id="collabStepRate" value="1.0" min="0.001" max="100" step="0.001">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 입력: 사용자 설정 -->
+            <div class="collapsible-container">
+                <div class="section-header">
+                    <h3 class="section-title">사용자 설정</h3>
+                </div>
+                <div class="section-content">
+                    <div class="subsection-group">
+                        <div class="input-item">
+                            <label for="collabNormalPulls">일반 횟수</label>
+                            <input type="number" id="collabNormalPulls">
+                        </div>
+                        <div class="input-item">
+                            <label for="collabStepPulls">스탭업 횟수</label>
+                            <input type="number" id="collabStepPulls">
+                        </div>
+                        <div class="input-item">
+                            <label for="collabTargetCount">저격 픽업 수</label>
+                            <span class="input-hint">전체(N) /</span>
+                            <input type="number" id="collabTargetCount">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 콜라보 결과 영역 -->
+            <div id="sub-tab-system-collab" class="sub-tab-container">
+                <div class="tab-buttons sub-tab-nav">
+                    <button class="tab-button sub-tab-btn active" data-tab="res-cb-collection">픽업 획득(중복X)</button>
+                    <button class="tab-button sub-tab-btn" data-tab="res-cb-total">총 획득(중복O)</button>
+                    <button class="tab-button sub-tab-btn" data-tab="res-cb-efficiency">일반vs스탭업</button>
+                    <button class="tab-button sub-tab-btn" data-tab="res-cb-cdf">역추적</button>
+                </div>
+
+                <div class="result-options-header">
+                    <div class="btn-group left-group">
+                        <button id="collab-toggle-ceiling" class="view-toggle-btn">천장</button>
+                        <button id="collab-toggle-view" class="view-toggle-btn" data-role="view-mode">개별</button>
+                    </div>
+                    <div class="btn-group right-group">
+                        <button id="collab-efficiency-toggle" class="view-toggle-btn" data-role="eff-mode" style="display:none;">Best</button>
+                    </div>
+                </div>
+
+                <!-- 서브탭 콘텐츠 -->
+                <div id="res-cb-collection" class="tab-content active">
+                    <div class="chart-row">
+                        <div class="chart-container"><canvas id="resultChartCollab"></canvas></div>
+                        <div class="legend-container" id="legendListCollab"></div>
+                    </div>
+                </div>
+                <div id="res-cb-total" class="tab-content">
+                    <div class="chart-row">
+                        <div class="chart-container chart-full"><canvas id="resultChartTotalCollab"></canvas></div>
+                    </div>
+                </div>
+                <div id="res-cb-efficiency" class="tab-content">
+                    <div class="chart-scroll-wrapper">
+                        <div class="chart-scroll-inner"><canvas id="efficiencyChartCollab"></canvas></div>
+                    </div>
+                </div>
+                <div id="res-cb-cdf" class="tab-content">
+                    <div class="chart-scroll-wrapper">
+                        <div class="chart-scroll-inner"><canvas id="cdfChartCollab"></canvas></div>
+                        <div class="cdf-input-area">
+                            <div class="input-item">
+                                <label for="targetProbabilityCollab">목표 확률 (%)</label>
+                                <input type="number" id="targetProbabilityCollab">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========== [Tab 4] 2성 가챠 ========== -->
         <section id="tab-2star" class="tab-content">
 
             <div class="reset-area">

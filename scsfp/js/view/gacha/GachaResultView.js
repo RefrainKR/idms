@@ -96,6 +96,11 @@ export class GachaResultView extends ResultView {
             targetM = M;
             targetLabel = '';
             showMultipleLines = false;
+        } else if (gachaType === 'collab') {
+            xLimit = 200;  // 콜라보는 제한 없으므로 넉넉히
+            targetM = M;
+            targetLabel = '';
+            showMultipleLines = false;
         } else if (gachaType === 'star2') {
             xLimit = 100;
             targetM = context.targetGroupInfo ? context.targetGroupInfo.M : M;
@@ -150,6 +155,13 @@ export class GachaResultView extends ResultView {
                 획득 확률: <strong>${Formatter.formatProbability(dp[M])}</strong>
                 ${guaranteedMsg}
             `;
+        } else if (gachaType === 'collab') {
+            return () => `
+                <strong>콜라보 가챠 결과</strong> (전체 ${N}종 중 ${M}종)<br>
+                가챠 횟수: ${context.totalPulls}회 (일반 ${context.normalPulls} + 스탭업 ${context.stepPulls})<br>
+                천장 교환: ${context.ceilingCount}회<br>
+                목표(${M}종) 올컴플릿 확률: <strong>${Formatter.formatProbability(dp[M])}</strong>
+            `;
         } else if (gachaType === 'star2') {
             return () => `
                 <strong>수집 결과</strong> (전체 ${N}종 중 ${M}종)<br>
@@ -163,8 +175,8 @@ export class GachaResultView extends ResultView {
     static _getLogic(gachaType, context) {
         if (gachaType === 'star3') {
             return () => this._generate3StarLogic(context);
-        } else if (gachaType === 'birthday') {
-            return () => this._generateBirthdayLogic(context);
+        } else if (gachaType === 'birthday' || gachaType === 'collab') {
+            return () => this._generateSimpleStepupLogic(context);
         } else if (gachaType === 'star2') {
             return () => this._generate2StarLogic(context);
         }
@@ -177,7 +189,7 @@ export class GachaResultView extends ResultView {
         this.render('star3', result, context, model, charts);
     }
 
-    // 3성 상세 로직 HTML 생성
+    // 3성 (주회 보상형) 상세 로직 HTML 생성
     static _generate3StarLogic(ctx) {
         const strike = (text, cond) => cond ? `<span style="text-decoration:line-through; color:#aaa;">${text}</span>` : text;
         
@@ -204,13 +216,14 @@ export class GachaResultView extends ResultView {
     }
 
     // ==========================================
-    // 생일 가챠 화면 렌더링
+    // 생일 가챠 화면 렌더링 (하위 호환)
     // ==========================================
     static renderBirthday(result, context, model, charts) {
         this.render('birthday', result, context, model, charts);
     }
 
-    static _generateBirthdayLogic(ctx) {
+    // 단순 스탭업 (확률 증가형) 상세 로직 HTML 생성 - Type B (생일/콜라보)
+    static _generateSimpleStepupLogic(ctx) {
         const isCeilingOff = ctx.ceilingMode === 'excluded';
         const strike = (text, cond) => cond ? `<span style="text-decoration:line-through; color:#aaa;">${text}</span>` : text;
 
@@ -238,6 +251,7 @@ export class GachaResultView extends ResultView {
         this.render('star2', result, context, model, charts);
     }
 
+    // 그룹별 스탭업 (확정 시스템형) 상세 로직 HTML 생성 - Type C (2성)
     static _generate2StarLogic(ctx) {
         const strike = (text, cond) => cond ? `<span style="text-decoration:line-through; color:#aaa;">${text}</span>` : text;
         const isCeilingOff = ctx.ceilingMode === 'excluded';
