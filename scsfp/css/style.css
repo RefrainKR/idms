@@ -708,7 +708,8 @@ button { font-family: inherit; }
 
 @media (max-width: 650px) {
     .section-content,
-    .loop-rewards-container {
+    .loop-rewards-container,
+    .subsection-group {
         grid-template-columns: 1fr;
     }
 
