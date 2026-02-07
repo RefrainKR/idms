@@ -82,31 +82,7 @@
     margin-bottom: 30px;
 }
 
-.platform-table h4 {
-    color: var(--primary);
-    font-size: 1.1rem;
-    margin-bottom: 10px;
-}
-
-/* 설정 요약 */
-.payment-settings-summary h4 {
-    color: var(--primary);
-    font-size: 1rem;
-}
-
-/* 종합 순위 */
-.top-ranking h4 {
-    color: var(--primary);
-    font-size: 1.1rem;
-}
-
 /* 손익분기점 분석 */
-.breakeven-analysis h4 {
-    color: var(--primary);
-    font-size: 1.1rem;
-    margin-bottom: 15px;
-}
-
 .breakeven-analysis h5 {
     color: var(--secondary);
     font-size: 1rem;
@@ -123,7 +99,7 @@
     overflow-x: auto;
     overflow-y: auto;
     max-height: 600px;
-    margin-bottom: 20px;
+    margin-bottom: 10px;
 }
 
 .payment-comparison-table {
@@ -195,7 +171,6 @@
 
 .cell-number {
     text-align: right;
-    font-family: 'Courier New', monospace;
 }
 
 .cell-extras {
@@ -207,7 +182,6 @@
     text-align: right;
     font-weight: 600;
     color: var(--accent-blue);
-    font-family: 'Courier New', monospace;
 }
 
 .cell-empty {

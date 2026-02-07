@@ -798,6 +798,17 @@ calculate() {
 6. **DP 배열은 0-인덱스** - 수집 개수 표현 (0부터 M개)
 7. **GACHA_RULES 상수 사용** - 하드코딩된 마법 숫자 (40, 200, 50 등) 대신
 8. **EfficiencyCalculator 사용** - ViewModel에 효율 계산 로직 중복 대신
+9. **HTML input 요소는 최소한의 속성만** - `type`과 `id`만 지정, `min`/`max`/`value`/`step` 등은 Model 기본값 + InputBinder options로 관리
+   ```html
+   <!-- ✅ 올바른 예 -->
+   <input type="number" id="pickupCount">
+
+   <!-- ❌ 잘못된 예 -->
+   <input type="number" id="pickupCount" min="1" max="10" value="3" step="1">
+   ```
+   - 이유: Model이 단일 진실 공급원(Single Source of Truth), HTML 속성과 Model 값 불일치 방지
+   - 기본값: Model constructor에서 `new Observable(기본값)` 설정
+   - 범위 제한: InputBinder 호출 시 `{ min, max, type }` options로 지정
 
 ## 관련 문서
 

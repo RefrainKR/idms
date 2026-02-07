@@ -1,73 +1,6 @@
 /* ========================================
-   2. Main Tab Content System
+   2. Gacha-Specific Subsection Styles
    ======================================== */
-
-.tab-content {
-    display: none;
-    animation: fadeIn 0.3s ease-in-out;
-}
-.tab-content.active { display: block; }
-
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(5px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-/* ========================================
-   3. Collapsible Sections
-   ======================================== */
-
-.collapsible-container {
-    margin-bottom: 5px;
-    border-bottom: 1px solid var(--border-light);
-    padding: 10px 0;
-}
-
-.section-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 5px;
-    cursor: pointer;
-}
-
-.section-title {
-    font-size: 1.1rem;
-    color: var(--primary-color);
-    margin: 0;
-    font-weight: bold;
-}
-
-.subsection-group {
-    grid-column: 1 / -1;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    padding: 15px 12px 12px 12px;
-    background-color: var(--gray-50);
-    border: 1.5px solid var(--border-color);
-    border-radius: var(--border-radius-sm);
-    margin-bottom: 10px;
-    position: relative;
-    margin-top: 15px;
-}
-
-.subsection-group:last-child {
-    margin-bottom: 0;
-}
-
-.subsection-title {
-    font-size: 0.95rem;
-    color: var(--primary-color);
-    font-weight: bold;
-    margin: 0;
-    grid-column: 1 / -1;
-    position: absolute;
-    top: -12px;
-    left: 10px;
-    background-color: var(--bg-card);
-    padding: 0 8px;
-}
 
 /* 그룹 레이아웃 요소는 전체 너비 사용 */
 .subsection-group .group-row {
@@ -83,73 +16,9 @@
     margin-bottom: 10px;
 }
 
-.toggle-btn {
-    background: none;
-    border: none;
-    font-size: 1.2rem;
-    color: var(--primary-color);
-    cursor: pointer;
-    padding: 0 5px;
-}
-
-.section-content {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-}
-
-.section-content.force-block { display: block; }
-
 /* ========================================
-   4. Input Elements
+   3. Gacha-Specific Input Styles
    ======================================== */
-
-input[type="number"], select {
-    width: 120px;
-    padding: 5px 8px;
-    border: 1px solid var(--border-dark);
-    border-radius: 5px;
-    font-size: 0.9rem;
-    text-align: right;
-    background-color: var(--input-bg);
-    transition: all 0.3s;
-    font-family: inherit;
-}
-
-input:focus, select:focus {
-    outline: none;
-    border-color: var(--primary-color);
-    background-color: #fff;
-    box-shadow: 0 0 5px rgba(40, 60, 134, 0.2);
-}
-
-input:disabled {
-    background-color: #f5f5f5;
-    color: #999;
-    cursor: not-allowed;
-}
-
-.input-item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
-
-.input-item label {
-    font-size: 0.9rem;
-    font-weight: bold;
-    color: #555;
-    margin-right: 10px;
-    flex: 1;
-    word-break: keep-all;
-    pointer-events: none;
-}
-
-.input-hint {
-    font-size: 0.9rem;
-    color: var(--text-muted);
-    margin-right: 5px;
-}
 
 .input-row-half {
     display: grid;
@@ -159,7 +28,7 @@ input:disabled {
 }
 
 /* ========================================
-   5. Group Inputs (2성 스탭업)
+   4. Group Inputs (2성 스탭업)
    ======================================== */
 
 .loop-rewards-container,
@@ -232,20 +101,10 @@ input:disabled {
 }
 
 /* ========================================
-   6. Buttons
+   5. Gacha-Specific Buttons
    ======================================== */
 
 button { font-family: inherit; }
-
-.preset-btn,
-.reset-btn,
-.view-toggle-btn,
-.sub-tab-btn {
-    cursor: pointer;
-    transition: all 0.2s;
-    font-weight: bold;
-    white-space: nowrap;
-}
 
 /* Reset & Preset Area */
 .reset-area {
@@ -260,36 +119,8 @@ button { font-family: inherit; }
     gap: 5px;
 }
 
-.preset-btn {
-    padding: 6px 12px;
-    background-color: var(--secondary-light);
-    color: var(--secondary-dark);
-    border: 1px solid var(--secondary-light);
-    border-radius: var(--border-radius-sm);
-    font-size: 0.85rem;
-}
-.preset-btn:hover {
-    background-color: var(--secondary);
-    color: white;
-}
-
-.reset-btn {
-    padding: 6px 8px;
-    background-color: var(--btn-gray-bg);
-    color: #555;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    font-size: 1rem;
-    line-height: 1;
-}
-.reset-btn:hover {
-    background-color: #e0e0e0;
-    border-color: #bbb;
-    color: #333;
-}
-
 /* ========================================
-   7. Toggle Buttons
+   6. Toggle Buttons
    ======================================== */
 
 .result-options-header {
@@ -302,100 +133,8 @@ button { font-family: inherit; }
     gap: 10px;
 }
 
-.btn-group {
-    display: flex;
-    gap: 5px;
-    flex-wrap: wrap;
-}
-
-.left-group { justify-content: flex-start; }
-.right-group {
-    justify-content: flex-end;
-    margin-left: auto;
-}
-
-.view-toggle-btn {
-    padding: 6px 8px;
-    min-width: 50px;
-    border: 1px solid var(--border-color);
-    border-radius: var(--border-radius-sm);
-    font-size: 0.85rem;
-    background-color: white;
-    color: var(--text-primary);
-    transition: all 0.2s ease;
-}
-
-/* Toggle States */
-.view-toggle-btn[data-state="included"],
-.view-toggle-btn[data-state="best"] {
-    background-color: var(--secondary);
-    color: white;
-    border-color: var(--secondary);
-}
-
-.view-toggle-btn[data-state="excluded"] {
-    background-color: var(--gray-200);
-    color: var(--text-muted);
-    text-decoration: line-through;
-    border-color: var(--gray-300);
-}
-
-.view-toggle-btn[data-state="worst"] {
-    background-color: white;
-    color: var(--danger);
-    border-color: var(--danger);
-}
-
-.view-toggle-btn[data-state="individual"],
-.view-toggle-btn[data-state="cumulative_less"],
-.view-toggle-btn[data-state="cumulative_more"] {
-    background-color: var(--gray-200);
-    border-color: var(--gray-300);
-    color: var(--text-color);
-}
-
-/* 2성 그룹별 색상 */
-.view-toggle-btn[data-state="A"] { color: var(--state-group-a); border-color: var(--state-group-a); background-color: #fff; }
-.view-toggle-btn[data-state="B"] { color: var(--state-group-b); border-color: var(--state-group-b); background-color: #fff; }
-.view-toggle-btn[data-state="C"] { color: var(--state-group-c); border-color: var(--state-group-c); background-color: #fff; }
-.view-toggle-btn[data-state="D"] { color: var(--state-group-d); border-color: var(--state-group-d); background-color: #fff; }
-
 /* ========================================
-   8. Sub Tab Navigation
-   ======================================== */
-
-.sub-tab-container {
-    margin-top: 20px;
-}
-
-.sub-tab-nav {
-    border-bottom: 1px solid var(--border-color);
-    background: var(--gray-100);
-    margin-bottom: 0;
-}
-
-.sub-tab-nav .tab-button {
-    min-width: 100px;
-    padding: 8px 10px;
-    background: transparent;
-    color: var(--text-secondary);
-    font-size: 0.85rem;
-    border-radius: var(--border-radius-sm);
-}
-
-.sub-tab-nav .tab-button:hover {
-    background: var(--bg-hover);
-    color: var(--text-primary);
-}
-
-.sub-tab-nav .tab-button.active {
-    background: var(--primary-dark);
-    color: var(--text-inverse);
-    box-shadow: var(--shadow-sm);
-}
-
-/* ========================================
-   9. Charts & Results
+   8. Charts & Results
    ======================================== */
 
 .chart-row {
@@ -502,7 +241,7 @@ button { font-family: inherit; }
 }
 
 /* ========================================
-   10. Summary & Logic Detail
+   9. Summary & Logic Detail
    ======================================== */
 
 .shared-result-container {
@@ -547,7 +286,7 @@ button { font-family: inherit; }
 .logic-list li { margin-bottom: 5px; }
 
 /* ========================================
-   11. Mobile Responsive
+   10. Mobile Responsive
    ======================================== */
 
 @media (max-width: 650px) {

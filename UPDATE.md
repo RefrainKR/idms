@@ -4,6 +4,212 @@
 
 ---
 
+## v1.9.2 (2026-02-07) - 과금 효율 분석 Phase 1 완료
+
+### 새로운 기능
+
+**1. 과금 효율 분석 기본 기능 구현**
+
+**목적**: 플랫폼별(ASOBI/Android/iOS) 패키지 비교 및 효율 계산 기능 제공
+
+**주요 기능**:
+- 엑셀 스타일 패키지 비교 테이블
+  - Y축: 패키지 이름
+  - X축: 플랫폼별 속성 (가격, 유료돌, 기타, 효율)
+- 카테고리별 분류 (상시/월 주기/한정)
+- 환율 변환 (100엔당 원화)
+- 플랫폼별 할인 적용
+  - 엔화 할인 (ASOBI/Android 전용, 상한 없음)
+  - 원화 할인 (iOS 전용, 상한 있음 - 숨김 처리)
+
+**2. 통화 표시 전환 기능**
+
+**통화 토글 버튼** (`payment-toggle-currency`):
+- 엔화(¥) ↔ 원화(₩) 전환
+- 초기 상태: 엔화 표시
+- 버튼 색상: 청록색 (secondary)
+- `data-state="included"` 속성으로 스타일 적용
+
+**효율 모드 토글 버튼** (`payment-toggle-efficiency`):
+- ¥/돌 ↔ 돌/¥ 전환
+- ₩/돌 ↔ 돌/₩ 전환
+- 버튼 텍스트가 현재 통화에 따라 동적 변경
+- 테이블 재렌더링으로 효율 계산 즉시 반영
+
+**3. 효율 표시 개선**
+
+**테이블 헤더** (th.header-attr):
+- 전체 형식 표시: "¥/돌", "돌/¥", "₩/돌", "돌/₩"
+- 효율 모드에 따라 동적 변경
+
+**테이블 셀** (td):
+- 간단한 단위만 표시: "1.79¥", "0.56돌" 등
+- 효율값 소수점 2자리 표시
+
+### UI/UX 개선
+
+**1. CSS 구조 정리**
+
+**CSS Reset 추가** (common.css:88-272):
+- normalize.css 기반 CSS Reset 적용
+- 브라우저 간 일관된 렌더링 보장
+- Box Sizing, 헤딩/단락 리셋 포함
+
+**공통 컴포넌트 통합** (common.css):
+- gacha.css와 payment.css의 중복 제거
+- 공통 버튼 스타일 통합
+  - `.preset-btn`: 프리셋 버튼
+  - `.reset-btn`: 리셋 버튼
+  - `.view-toggle-btn`: 뷰 토글 버튼
+- 공통 섹션 컴포넌트
+  - `.tab-content`: 탭 콘텐츠
+  - `.collapsible-container`: 접을 수 있는 섹션
+  - `.subsection-group`: 하위 섹션 그룹
+- `.category-title` 클래스 추가 (패키지 비교표 제목용)
+
+**2. 반응형 디자인**
+
+**모바일 환경** (@media max-width: 650px):
+- 폰트 크기 자동 조정
+- 입력 필드 크기 최적화
+- 테이블 가로 스크롤 지원
+
+### 기술적 구현
+
+**1. MVVM 아키텍처**
+
+**PaymentModel.js**:
+```javascript
+- exchangeRate: Observable(950)        // 100엔당 원화
+- jpyDiscountRate: Observable(0)       // 엔화 할인율 (%)
+- krwDiscountRate: Observable(0)       // 원화 할인율 (%)
+- krwDiscountCap: Observable(10000)    // 원화 할인 상한 (숨김)
+
+메서드:
+- applyJPYDiscount(basePrice)          // 엔화 할인 적용 (상한 없음)
+- applyKRWDiscount(basePrice)          // 원화 할인 적용 (상한 있음)
+- convertToKRW(jpy)                    // 엔화→원화 변환
+```
+
+**PaymentViewModel.js**:
+```javascript
+- bindInputs()                         // InputBinder로 양방향 바인딩
+- subscribeToModel()                   // Observable 변경 시 재계산
+- bindCurrencyToggle()                 // 통화/효율 토글 버튼 바인딩
+- updateEfficiencyButtonText()         // 효율 버튼 텍스트 동적 업데이트
+- toggleCurrency(currency)             // 통화 표시 전환 (CSS 클래스)
+- renderPackageTables()                // 테이블 렌더링 + 통화 상태 복원
+```
+
+**PaymentView.js**:
+```javascript
+- renderPackageTable(packageData, model)       // 전체 테이블 렌더링
+- _renderCategoryTable(category, ...)          // 카테고리별 테이블
+- _renderTableHeader(efficiencyMode)           // 헤더 (전체 형식)
+- _renderPackageRow(pkgId, category, ...)     // 패키지 행 (간단 형식)
+- _formatExtras(pkg)                           // 기타 재화 포맷팅
+```
+
+**2. 플랫폼별 가격 계산**
+
+**iOS (원화 기준)**:
+```javascript
+const basePriceKRW = pkg.price;
+const discountedPriceKRW = model.applyKRWDiscount(basePriceKRW);
+const basePriceJPY = Math.round((basePriceKRW / model.exchangeRate.value) * 100);
+const discountedPriceJPY = Math.round((discountedPriceKRW / model.exchangeRate.value) * 100);
+```
+
+**ASOBI/Android (엔화 기준)**:
+```javascript
+const basePriceJPY = pkg.price;
+const discountedPriceJPY = model.applyJPYDiscount(basePriceJPY);
+const basePriceKRW = Math.round((basePriceJPY / 100) * model.exchangeRate.value);
+const discountedPriceKRW = Math.round((discountedPriceJPY / 100) * model.exchangeRate.value);
+```
+
+**3. 효율 계산 로직**
+
+```javascript
+if (efficiencyMode === 'price-per-gem') {
+    // ¥/돌, ₩/돌 모드
+    efficiency = paidGems > 0 ? discountedPrice / paidGems : 0;
+    unit = currency === 'JPY' ? '¥' : '₩';
+} else {
+    // 돌/¥, 돌/₩ 모드
+    efficiency = discountedPrice > 0 ? paidGems / discountedPrice : 0;
+    unit = '돌';
+}
+```
+
+**4. LocalStorage 저장**
+
+**저장 키**: `shani_payment_config`
+
+**저장 데이터**:
+```javascript
+{
+    exchangeRate: 950,
+    jpyDiscountRate: 0,
+    krwDiscountRate: 0,
+    krwDiscountCap: 10000
+}
+```
+
+### 파일 변경 요약
+
+**신규 파일**:
+- `js/model/payment/PaymentModel.js`: 과금 데이터 모델
+- `js/viewmodel/payment/PaymentViewModel.js`: 프레젠테이션 로직
+- `js/view/payment/PaymentView.js`: UI 렌더링
+- `js/core/PaymentConstants.js`: 패키지 데이터 및 설정
+- `css/payment.css`: 과금 섹션 전용 스타일
+
+**수정 파일**:
+- `index.html`:
+  - payment-section 구현 (입력 필드, 토글 버튼, 테이블 컨테이너)
+  - 통화/효율 토글 버튼에 `data-state="included"` 추가
+  - "할인 상한 (원)" 필드 숨김 처리
+- `css/common.css`:
+  - normalize.css 기반 CSS Reset 추가 (88-272줄)
+  - gacha.css/payment.css 중복 제거 및 통합
+  - `.category-title` 클래스 추가
+  - 공통 버튼 스타일 통합
+- `css/gacha.css`:
+  - common.css로 이동한 중복 제거
+  - 섹션 번호 재정렬 (2-10)
+- `css/payment.css`:
+  - `.category-title` 중복 제거 (common.css 사용)
+  - 엑셀 스타일 테이블 스타일
+  - 통화별 열 숨김 클래스 (`.hide-krw`, `.hide-jpy`)
+- `js/main.js`:
+  - PaymentViewModel 초기화 및 섹션 등록
+
+### 제거된 기능
+
+**재화 가치 환산 로직 완전 제거**:
+- `rainbowCrystalValue` (무돌 가치)
+- `ourstreamValue` (OurSTREAM 가치)
+- `calculateEffectiveGems()` 메서드
+- "재화 가치 환산" 서브섹션 HTML
+
+**이유**: 무돌 가치는 ASOBI vs iOS 가격 차이로 결정되므로 별도 입력 불필요
+
+### 향후 계획
+
+**Phase 2 (v1.9.3 예정)**:
+- 효율 순위 표시 (플랫폼별 Best Deal 강조)
+- 손익분기점 분석 (월 주기 vs 상시 비교)
+- 차트 시각화 (효율 비교 차트)
+- 패키지별 필터링 (카테고리 선택)
+
+**Phase 3 (v1.9.4 예정)**:
+- 커스텀 패키지 추가 기능
+- 할인 시나리오 저장/불러오기
+- PDF 리포트 생성
+
+---
+
 ## v1.9.1 (2026-02-07) - SPA 구조 전환 및 UI/UX 개선
 
 ### 새로운 기능

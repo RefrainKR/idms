@@ -85,7 +85,191 @@
     --surface-blue: var(--primary-light);
 }
 
-* { box-sizing: border-box; }
+/* ========================================
+   CSS Reset (normalize.css 기반)
+   ======================================== */
+
+/* Document */
+html {
+    line-height: 1.15;
+    -webkit-text-size-adjust: 100%;
+}
+
+/* Sections */
+body {
+    margin: 0;
+}
+
+/* Grouping content */
+hr {
+    box-sizing: content-box;
+    height: 0;
+    overflow: visible;
+}
+
+pre {
+    font-family: monospace;
+    font-size: 1em;
+}
+
+/* Text-level semantics */
+abbr[title] {
+    border-bottom: none;
+    text-decoration: underline dotted;
+}
+
+b, strong {
+    font-weight: bolder;
+}
+
+code, kbd, samp {
+    font-family: monospace;
+    font-size: 1em;
+}
+
+small {
+    font-size: 80%;
+}
+
+sub, sup {
+    font-size: 75%;
+    line-height: 0;
+    position: relative;
+    vertical-align: baseline;
+}
+
+sub {
+    bottom: -0.25em;
+}
+
+sup {
+    top: -0.5em;
+}
+
+/* Embedded content */
+img {
+    border-style: none;
+}
+
+/* Forms */
+button, input, optgroup, select, textarea {
+    font-family: inherit;
+    font-size: 100%;
+    line-height: 1.15;
+    margin: 0;
+}
+
+button, input {
+    overflow: visible;
+}
+
+button, select {
+    text-transform: none;
+}
+
+button, [type="button"], [type="reset"], [type="submit"] {
+    -webkit-appearance: button;
+}
+
+button::-moz-focus-inner,
+[type="button"]::-moz-focus-inner,
+[type="reset"]::-moz-focus-inner,
+[type="submit"]::-moz-focus-inner {
+    border-style: none;
+    padding: 0;
+}
+
+button:-moz-focusring,
+[type="button"]:-moz-focusring,
+[type="reset"]:-moz-focusring,
+[type="submit"]:-moz-focusring {
+    outline: 1px dotted ButtonText;
+}
+
+fieldset {
+    padding: 0.35em 0.75em 0.625em;
+}
+
+legend {
+    box-sizing: border-box;
+    color: inherit;
+    display: table;
+    max-width: 100%;
+    padding: 0;
+    white-space: normal;
+}
+
+progress {
+    vertical-align: baseline;
+}
+
+textarea {
+    overflow: auto;
+}
+
+[type="checkbox"], [type="radio"] {
+    box-sizing: border-box;
+    padding: 0;
+}
+
+[type="number"]::-webkit-inner-spin-button,
+[type="number"]::-webkit-outer-spin-button {
+    height: auto;
+}
+
+[type="search"] {
+    -webkit-appearance: textfield;
+    outline-offset: -2px;
+}
+
+[type="search"]::-webkit-search-decoration {
+    -webkit-appearance: none;
+}
+
+::-webkit-file-upload-button {
+    -webkit-appearance: button;
+    font: inherit;
+}
+
+/* Interactive */
+details {
+    display: block;
+}
+
+summary {
+    display: list-item;
+}
+
+/* Misc */
+template {
+    display: none;
+}
+
+[hidden] {
+    display: none;
+}
+
+/* Box Sizing */
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+/* Headings and Paragraphs Reset */
+h1, h2, h3, h4, h5, h6 {
+    margin: 0;
+    padding: 0;
+    font-weight: inherit;
+    font-size: inherit;
+}
+
+p, ul, ol, dl, dd, blockquote, figure {
+    margin: 0;
+    padding: 0;
+}
+
+ul, ol {
+    list-style: none;
+}
 
 /* ========================================
    1. Base Layout
@@ -94,12 +278,11 @@
 body {
     font-family: 'Noto Sans KR', sans-serif;
     background-color: var(--bg-color);
-    margin: 0;
-    padding: 0;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
     color: var(--text-color);
+    line-height: 1.6;
 }
 
 /* Global Header (빈 공간, footer와 동일) */
@@ -273,8 +456,8 @@ footer {
 /* 공통 버튼 기본 스타일 */
 .preset-btn,
 .reset-btn,
-.view-toggle-btn,
-.sub-tab-btn {
+.view-toggle-btn {
+    padding: 8px 10px;
     cursor: pointer;
     transition: all 0.2s;
     font-weight: bold;
@@ -283,7 +466,7 @@ footer {
 
 /* Preset Button */
 .preset-btn {
-    padding: 6px 12px;
+    min-width: 60px;
     background-color: var(--secondary-light);
     color: var(--secondary-dark);
     border: 1px solid var(--secondary-light);
@@ -298,8 +481,7 @@ footer {
 
 /* Reset Button */
 .reset-btn {
-    padding: 6px 8px;
-    background-color: var(--btn-gray-bg);
+    background-color: var(--gray-50);
     color: #555;
     border: 1px solid #ccc;
     border-radius: 5px;
@@ -315,8 +497,7 @@ footer {
 
 /* View Toggle Button */
 .view-toggle-btn {
-    padding: 6px 8px;
-    min-width: 50px;
+    min-width: 60px;
     border: 1px solid var(--border-color);
     border-radius: var(--border-radius-sm);
     font-size: 0.85rem;
@@ -371,6 +552,189 @@ footer {
 .right-group {
     justify-content: flex-end;
     margin-left: auto;
+}
+
+/* ========================================
+   4. Common Section Components
+   ======================================== */
+
+/* Tab Content */
+.tab-content {
+    display: none;
+    animation: fadeIn 0.3s ease-in-out;
+}
+.tab-content.active { display: block; }
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+
+/* ========================================
+   Sub Tab Navigation
+   ======================================== */
+
+.sub-tab-container {
+    margin-top: 20px;
+}
+
+.sub-tab-nav {
+    border-bottom: 1px solid var(--border-color);
+    background: var(--gray-100);
+    margin-bottom: 0;
+}
+
+.sub-tab-nav .tab-button {
+    cursor: pointer;
+    transition: all 0.2s;
+    font-weight: bold;
+    white-space: nowrap;
+    min-width: 100px;
+    padding: 10px 12px;
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    border-radius: var(--border-radius-sm);
+}
+
+.sub-tab-nav .tab-button:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+}
+
+.sub-tab-nav .tab-button.active {
+    background: var(--primary-dark);
+    color: var(--text-inverse);
+    box-shadow: var(--shadow-sm);
+}
+
+/* Collapsible Sections */
+.collapsible-container {
+    margin-bottom: 5px;
+    border-bottom: 1px solid var(--border-light);
+    padding: 10px 0;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    cursor: pointer;
+}
+
+.section-title {
+    font-size: 1.1rem;
+    color: var(--primary-color);
+    margin: 0;
+    font-weight: bold;
+}
+
+.toggle-btn {
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    color: var(--primary-color);
+    cursor: pointer;
+    padding: 0 5px;
+}
+
+.section-content {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.section-content.force-block { display: block; }
+
+/* Subsection Groups */
+.subsection-group {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    padding: 15px 12px 12px 12px;
+    background-color: var(--gray-50);
+    border: 1.5px solid var(--border-color);
+    border-radius: var(--border-radius-sm);
+    margin-bottom: 10px;
+    position: relative;
+    margin-top: 15px;
+}
+
+.subsection-group:last-child {
+    margin-bottom: 0;
+}
+
+.subsection-title {
+    font-size: 0.95rem;
+    color: var(--primary-color);
+    font-weight: bold;
+    margin: 0;
+    grid-column: 1 / -1;
+    position: absolute;
+    top: -12px;
+    left: 10px;
+    background-color: var(--bg-card);
+    padding: 0 8px;
+}
+
+/* 카테고리 제목 (패키지 비교표 등) */
+.category-title {
+    font-size: 1rem;
+    color: var(--primary);
+    font-weight: bold;
+    margin-bottom: 10px;
+    margin-top: 0;
+}
+
+/* Input Elements */
+input[type="number"], select {
+    width: 120px;
+    padding: 6px 4px;
+    border: 1px solid var(--border-dark);
+    border-radius: 5px;
+    font-size: 0.9rem;
+    text-align: right;
+    background-color: var(--input-bg);
+    transition: all 0.3s;
+    font-family: inherit;
+}
+
+input:focus, select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    background-color: #fff;
+    box-shadow: 0 0 5px rgba(40, 60, 134, 0.2);
+}
+
+input:disabled {
+    background-color: #f5f5f5;
+    color: #999;
+    cursor: not-allowed;
+}
+
+.input-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.input-item label {
+    font-size: 0.9rem;
+    font-weight: bold;
+    color: #555;
+    margin-right: 10px;
+    flex: 1;
+    word-break: keep-all;
+    pointer-events: none;
+}
+
+.input-hint {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    margin-right: 5px;
 }
 
 /* ========================================

@@ -8,37 +8,45 @@ export class PaymentModel {
     constructor() {
         // 환율 설정 (100엔당 원화)
         this.exchangeRate = new Observable(950); // KRW per 100 JPY
-        this.carrierDiscount = new Observable(0); // 통신사 할인 (%)
-        this.cardDiscount = new Observable(0); // 카드 할인 (%)
-        this.cardDiscountCap = new Observable(5000); // 카드 할인 상한 (엔)
 
-        // 무료돌 가치 (역산 결과)
-        this.freeGemValue = new Observable(0); // 엔/개
+        // 엔화 결제 할인 설정 (ASOBI/Android 전용)
+        this.jpyDiscountRate = new Observable(0);      // 할인율 (%)
+
+        // 원화 결제 할인 설정 (iOS 전용)
+        this.krwDiscountRate = new Observable(0);      // 할인율 (%)
+        this.krwDiscountCap = new Observable(10000);   // 할인 상한 (원) - 숨김
     }
 
     /**
-     * 실제 지불 금액 계산 (할인 적용)
+     * 엔화 할인 적용 (ASOBI/Android 전용)
      * @param {number} basePrice - 기본 가격 (엔)
      * @returns {number} 할인 적용 후 가격 (엔)
      */
-    calculateActualPrice(basePrice) {
-        let price = basePrice;
-
-        // 1. 통신사 할인 적용
-        if (this.carrierDiscount.value > 0) {
-            price = price * (1 - this.carrierDiscount.value / 100);
+    applyJPYDiscount(basePrice) {
+        if (this.jpyDiscountRate.value === 0) {
+            return basePrice;
         }
 
-        // 2. 카드 할인 적용 (상한 있음)
-        if (this.cardDiscount.value > 0) {
-            const cardDiscountAmount = Math.min(
-                basePrice * (this.cardDiscount.value / 100),
-                this.cardDiscountCap.value
-            );
-            price = price - cardDiscountAmount;
+        const discountAmount = basePrice * (this.jpyDiscountRate.value / 100);
+        return Math.max(0, basePrice - discountAmount);
+    }
+
+    /**
+     * 원화 할인 적용 (iOS 전용)
+     * @param {number} basePrice - 기본 가격 (원)
+     * @returns {number} 할인 적용 후 가격 (원)
+     */
+    applyKRWDiscount(basePrice) {
+        if (this.krwDiscountRate.value === 0) {
+            return basePrice;
         }
 
-        return Math.max(0, price);
+        const discountAmount = Math.min(
+            basePrice * (this.krwDiscountRate.value / 100),
+            this.krwDiscountCap.value
+        );
+
+        return Math.max(0, basePrice - discountAmount);
     }
 
     /**
@@ -54,17 +62,17 @@ export class PaymentModel {
     toJSON() {
         return {
             exchangeRate: this.exchangeRate.value,
-            carrierDiscount: this.carrierDiscount.value,
-            cardDiscount: this.cardDiscount.value,
-            cardDiscountCap: this.cardDiscountCap.value
+            jpyDiscountRate: this.jpyDiscountRate.value,
+            krwDiscountRate: this.krwDiscountRate.value,
+            krwDiscountCap: this.krwDiscountCap.value
         };
     }
 
     fromJSON(data) {
         if (!data) return;
         if (data.exchangeRate !== undefined) this.exchangeRate.value = data.exchangeRate;
-        if (data.carrierDiscount !== undefined) this.carrierDiscount.value = data.carrierDiscount;
-        if (data.cardDiscount !== undefined) this.cardDiscount.value = data.cardDiscount;
-        if (data.cardDiscountCap !== undefined) this.cardDiscountCap.value = data.cardDiscountCap;
+        if (data.jpyDiscountRate !== undefined) this.jpyDiscountRate.value = data.jpyDiscountRate;
+        if (data.krwDiscountRate !== undefined) this.krwDiscountRate.value = data.krwDiscountRate;
+        if (data.krwDiscountCap !== undefined) this.krwDiscountCap.value = data.krwDiscountCap;
     }
 }

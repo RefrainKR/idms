@@ -532,17 +532,40 @@
         <section id="payment-section" class="app-section">
             <main class="main-content">
 
-            <!-- 환율 설정 -->
+            <!-- 환율 및 할인 설정 -->
             <div class="collapsible-container" data-collapsible="true">
                 <div class="section-header">
-                    <h3 class="section-title">환율 설정</h3>
+                    <h3 class="section-title">환율 및 할인 설정</h3>
                     <button class="toggle-btn" data-toggle-section>▼</button>
                 </div>
-                <div class="section-content force-block">
+                <div class="section-content">
                     <div class="subsection-group">
+                        <h4 class="subsection-title">환율</h4>
                         <div class="input-item">
                             <label for="payment-exchange-rate">엔/원(100엔)</label>
-                            <input type="number" id="payment-exchange-rate" min="0" step="1" value="950">
+                            <input type="number" id="payment-exchange-rate">
+                        </div>
+                    </div>
+
+                    <div class="subsection-group">
+                        <h4 class="subsection-title">엔화 결제 할인 (ASOBI/Android)</h4>
+                        <div class="input-item">
+                            <label for="payment-jpy-discount-rate">할인율 (%)</label>
+                            <span class="input-hint">카드 할인</span>
+                            <input type="number" id="payment-jpy-discount-rate">
+                        </div>
+                    </div>
+
+                    <div class="subsection-group">
+                        <h4 class="subsection-title">원화 결제 할인 (iOS)</h4>
+                        <div class="input-item">
+                            <label for="payment-krw-discount-rate">할인율 (%)</label>
+                            <span class="input-hint">통신사/페이 할인</span>
+                            <input type="number" id="payment-krw-discount-rate">
+                        </div>
+                        <div class="input-item" style="display: none;">
+                            <label for="payment-krw-discount-cap">할인 상한 (원)</label>
+                            <input type="number" id="payment-krw-discount-cap">
                         </div>
                     </div>
                 </div>
@@ -552,8 +575,7 @@
             <div id="payment-tab-system" class="main-tab-system">
                 <!-- 탭 네비게이션 -->
                 <nav class="main-tab-nav">
-                    <button class="tab-button active" data-tab="payment-tab-packages">패키지 비교</button>
-                    <button class="tab-button" data-tab="payment-tab-analysis">손익분기점</button>
+                    <button class="tab-button active" data-tab="payment-tab-packages">패키지</button>
                 </nav>
 
                 <!-- 탭 1: 패키지 비교 -->
@@ -564,9 +586,10 @@
                             <button class="toggle-btn" data-toggle-section>▼</button>
                         </div>
                         <div class="section-content force-block">
-                            <!-- 통화 토글 버튼 -->
+                            <!-- 토글 버튼 그룹 -->
                             <div class="btn-group" style="margin-bottom: 15px;">
-                                <button id="payment-toggle-currency" class="view-toggle-btn" data-currency="JPY">엔화 (¥)</button>
+                                <button id="payment-toggle-currency" class="view-toggle-btn" data-currency="JPY" data-state="included">엔화 (¥)</button>
+                                <button id="payment-toggle-efficiency" class="view-toggle-btn" data-mode="price-per-gem" data-state="included">¥/돌</button>
                             </div>
 
                             <div id="payment-package-table-container">
@@ -610,7 +633,7 @@
     <!-- 향후 저작권, 링크 등 추가 예정 -->
 </footer>
 
-<script type="module" src="js/main.js?v=1.9.0"></script>
+<script type="module" src="js/main.js?v=1.9.1"></script>
 
 </body>
 </html>
