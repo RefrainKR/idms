@@ -5,6 +5,7 @@ import { CollabGachaViewModel } from './viewmodel/gacha/CollabGachaViewModel.js'
 import { TabManager } from './view/component/TabManager.js';
 import { CollapsibleSection } from './view/component/CollapsibleSection.js';
 import { StorageManager } from './utils/StorageManager.js';
+import { SectionManager } from './core/SectionManager.js';
 
 // Chart.js and ChartDataLabels are loaded as global variables via CDN (see index.html)
 // Chart.js: https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js
@@ -15,7 +16,10 @@ window.onload = function() {
     // 0. 버전 체크 및 마이그레이션
     StorageManager.init();
 
-    // 1. ViewModel 초기화
+    // 1. 섹션 관리자 초기화
+    const sectionManager = new SectionManager();
+
+    // 2. ViewModel 초기화
     const star3VM = new Star3GachaViewModel();
     const star2VM = new Star2GachaViewModel();
     const birthdayVM = new BirthdayGachaViewModel();
@@ -26,10 +30,10 @@ window.onload = function() {
     birthdayVM.init();
     collabVM.init();
 
-    // 2. UI 컴포넌트 활성화
+    // 3. UI 컴포넌트 활성화
     new CollapsibleSection(); // 섹션 토글 기능
 
-    // 3. 메인 탭 네비게이션 설정
+    // 4. 메인 탭 네비게이션 설정
     const mainTabButtons = document.querySelectorAll('.main-tab-nav .tab-button');
 
     mainTabButtons.forEach(button => {

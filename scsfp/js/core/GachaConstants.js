@@ -1,5 +1,5 @@
 // 앱 버전 관리
-export const APP_VERSION = '1.9.0';
+export const APP_VERSION = '1.9.1';
 
 // 버전별 마이그레이션 설정
 export const VERSION_CONFIG = {

@@ -25,6 +25,16 @@ export class ResultView {
             if (generators.logic) {
                 logicContainer.innerHTML = generators.logic();
                 logicContainer.style.display = 'block';
+
+                // 동적으로 생성된 collapsible 섹션 초기화
+                const btn = logicContainer.querySelector('[data-toggle-section]');
+                const content = logicContainer.querySelector('.section-content');
+                if (btn && content) {
+                    // 초기 상태 설정 (기본: 접힌 상태)
+                    logicContainer.dataset.collapsed = 'true';
+                    content.style.display = 'none';
+                    btn.textContent = '▲';
+                }
             } else {
                 logicContainer.style.display = 'none';
                 logicContainer.innerHTML = '';

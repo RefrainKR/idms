@@ -268,11 +268,11 @@ export class GachaResultView extends ResultView {
         }
 
         return `
-            <div class="section-header" style="cursor: pointer;">
+            <div class="section-header">
                 <span class="logic-title">상세 계산 근거</span>
-                <button class="toggle-btn">▼</button>
+                <button class="toggle-btn" data-toggle-section>▼</button>
             </div>
-            <div class="logic-view">
+            <div class="section-content logic-view">
                 <ul class="logic-list">
                     <li>기본 ${ctx.p_indiv}% (${ctx.countNormal}회), Step4 개별 ${Formatter.probabilityBounded(ctx.p_step4_total/ctx.N/100, 3)} (${ctx.countStep4}회)</li>
                     <li>주회 보상: ${rewardHistory}</li>
@@ -295,11 +295,11 @@ export class GachaResultView extends ResultView {
         const strike = (text, cond) => cond ? `<span style="text-decoration:line-through; color:#aaa;">${text}</span>` : text;
 
         return `
-            <div class="section-header" style="cursor: pointer;">
+            <div class="section-header">
                 <span class="logic-title">상세 계산 근거</span>
-                <button class="toggle-btn">▼</button>
+                <button class="toggle-btn" data-toggle-section>▼</button>
             </div>
-            <div class="logic-view">
+            <div class="section-content logic-view">
                 <ul class="logic-list">
                     <li><strong>일반 가챠:</strong> ${ctx.normalRate}% (${ctx.normalPulls}회)</li>
                     <li><strong>스탭업 가챠:</strong> ${ctx.stepRate}% (${ctx.stepPulls}회)
@@ -348,11 +348,11 @@ export class GachaResultView extends ResultView {
         });
 
         return `
-            <div class="section-header" style="cursor: pointer;">
+            <div class="section-header">
                 <span class="logic-title">상세 계산 근거</span>
-                <button class="toggle-btn">▼</button>
+                <button class="toggle-btn" data-toggle-section>▼</button>
             </div>
-            <div class="logic-view">
+            <div class="section-content logic-view">
                 <ul class="logic-list">
                     <li><strong>확률 적용(일반):</strong> 일반 ${pNorm} (${normalBase}회), 보정(전체 95%, 개별 ${pHigh}) (${normalHigh}회)</li>
                     <li><strong>확률 적용(스탭업):</strong> 일반 (${totalStepNormal}회), 확정 (${totalStepGuar}회)

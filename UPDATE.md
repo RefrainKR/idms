@@ -4,6 +4,146 @@
 
 ---
 
+## v1.9.1 (2026-02-07) - SPA 구조 전환 및 UI/UX 개선
+
+### 새로운 기능
+
+**1. Multi-Section SPA 구조 도입**
+
+**목적**: 가챠 계산 외에 과금 효율 등 추가 기능 확장을 위한 아키텍처 준비
+
+**주요 변경사항**:
+- Single Page Application (SPA) 패턴 적용
+- 섹션별 display 토글 방식으로 전환
+- 브라우저 히스토리 API 연동 (URL 해시 기반)
+
+**구현 내용**:
+- **SectionManager.js** (신규 생성):
+  - 섹션 간 전환 관리 (가챠 계산 ↔ 과금 효율)
+  - 브라우저 히스토리 관리 (뒤로가기/앞으로가기 지원)
+  - URL 해시 기반 네비게이션 (#gacha, #payment)
+
+- **HTML 구조 개편**:
+  - 전역 aside 사이드바 추가 (PC: 고정 좌측, 모바일/태블릿: 상단)
+  - `#gacha-section` 및 `#payment-section` 래핑
+  - `#app-container` 도입으로 섹션 관리 계층 분리
+  - 헤더 숨김 처리 (사이드바로 네비게이션 통합)
+
+- **CSS 분할**:
+  - `common.css`: 재사용 가능한 공통 스타일 (CSS 변수, 레이아웃, 사이드바)
+  - `gacha.css`: 가챠 도메인 특화 스타일 (탭, 입력, 차트)
+
+**2. 반응형 사이드바 네비게이션**
+
+**Desktop (>768px)**:
+- 고정 좌측 사이드바 (200px)
+- 아이콘 + 텍스트 가로 배치
+- body에 `margin-left: 200px` 적용
+
+**Tablet (651-768px)**:
+- 상단 네비게이션 바 (static)
+- 아이콘 + 텍스트 가로 배치, 가운데 정렬
+- 전체 너비 사용
+
+**Mobile (≤650px)**:
+- 상단 네비게이션 바
+- 아이콘 + 텍스트 가로 배치, 가운데 정렬
+- 작은 폰트 크기 (0.8rem)
+
+### UI/UX 개선
+
+**1. CollapsibleSection 리팩토링**
+
+**문제**: 기존 토글 버튼이 동적으로 생성되는 "상세 계산 근거" 섹션에서 작동하지 않음
+
+**해결**:
+- **data-attribute 기반 관리**:
+  - `data-collapsible="true"`: collapsible 컨테이너 명시
+  - `data-toggle-section`: 토글 버튼 명시
+  - `data-collapsed`: 접힌/펼친 상태 추적
+
+- **초기화 로직 추가**:
+  - `initAllSections()`: 페이지 로드 시 모든 섹션 초기 상태 설정
+  - 동적 HTML 삽입 후 자동 초기화 지원
+
+- **이벤트 위임 개선**:
+  - `closest('[data-toggle-section]')`로 정확한 버튼만 타겟팅
+  - 전역 body 이벤트 리스너로 동적 요소 지원
+
+**적용 범위**:
+- 정적 HTML: 9개 섹션 (가챠 정보, 사용자 설정 등)
+- 동적 HTML: "상세 계산 근거" (3성/생일/콜라보/2성 각각)
+
+**2. 입력 필드 배경색 개선**
+
+- `--bg-input` 변수: `#f9f9f9` → `#ffffff` (순백색)
+- 모든 `input[type="number"]`와 `select` 요소에 적용
+- 깔끔하고 명확한 시각적 구분
+
+**3. 모바일 폰트 크기 조정**
+
+- 모바일 환경 (`@media (max-width: 650px)`)에서:
+  - `input`, `select` 폰트 크기를 `label`과 동일하게 조정 (0.8rem)
+  - 일관된 타이포그래피로 가독성 향상
+
+### 기술 부채 해결
+
+**1. 동적 HTML과 이벤트 리스너 분리**
+
+**기존 문제**:
+- ResultView에서 생성한 "상세 계산 근거" HTML에 인라인 `style="cursor: pointer;"` 사용
+- 이벤트 리스너가 CollapsibleSection에 집중되지 않음
+
+**개선**:
+- GachaResultView.js의 모든 동적 HTML에 `data-toggle-section` 추가
+- `.logic-view` → `.section-content logic-view`로 변경
+- ResultView.js에서 HTML 삽입 후 초기 상태 설정
+- 인라인 스타일 제거, CSS 클래스 기반 관리
+
+**2. 타이틀 및 메타데이터 업데이트**
+
+- `<title>`: "샤니송 픽업 확률 계산기" → "샤니송 유틸리티"
+- 다목적 툴로서의 정체성 반영
+
+### 파일 변경 요약
+
+**신규 파일**:
+- `js/core/SectionManager.js`: 섹션 전환 및 히스토리 관리
+- `css/common.css`: 공통 스타일 (CSS 분할)
+
+**수정 파일**:
+- `index.html`:
+  - 사이드바 추가, 섹션 구조 개편
+  - 9개 collapsible-container에 `data-collapsible` 추가
+  - payment-section 더미 추가
+  - `<title>` 변경
+- `css/gacha.css`:
+  - 가챠 전용 스타일 분리
+  - 모바일 input/select 폰트 크기 조정
+  - 충돌하는 미디어 쿼리 제거
+- `css/common.css`:
+  - 사이드바 반응형 스타일
+  - `--bg-input` 색상 변경
+- `js/view/component/CollapsibleSection.js`:
+  - 완전 리팩토링 (data-attribute 기반)
+  - `initAllSections()`, `updateButtonText()` 메서드 추가
+- `js/view/ResultView.js`:
+  - 동적 HTML 삽입 후 collapsible 초기화
+- `js/view/gacha/GachaResultView.js`:
+  - 3개 로직 생성 메서드에 `data-toggle-section` 추가
+  - `.logic-view` → `.section-content logic-view`
+- `js/main.js`:
+  - SectionManager 초기화 추가
+- `js/core/GachaConstants.js`:
+  - APP_VERSION: '1.9.0' → '1.9.1'
+
+### 향후 계획
+
+- Phase 2: 과금 효율 분석 기능 구현
+- Phase 3: 섹션별 독립 ViewModel 구조 확립
+
+---
+
 ## v1.9.0 (2026-02-07) - 콜라보 가챠 추가 및 아키텍처 재구성
 
 ### 새로운 기능

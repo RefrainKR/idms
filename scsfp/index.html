@@ -3,31 +3,53 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>샤니송 픽업 확률 계산기</title>
+    <title>샤니송 유틸리티</title>
 
     <!-- Chart.js Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
 
     <!-- CSS -->
-    <link rel="stylesheet" href="css/style.css?v=1.9.0">
+    <link rel="stylesheet" href="css/common.css?v=1.9.1">
+    <link rel="stylesheet" href="css/gacha.css?v=1.9.1">
 </head>
 <body>
 
-<div class="container">
-    <header>
-        <h1>샤니송 픽업 확률 계산기</h1>
-    </header>
+<!-- Global Header (숨김 처리) -->
+<header id="global-header" style="display: none;">
+</header>
 
-    <!-- Main Navigation Tabs -->
-    <nav class="tab-buttons main-tab-nav">
-        <button class="tab-button active" data-tab="tab-3star">3성</button>
-        <button class="tab-button" data-tab="tab-birthday">생일</button>
-        <button class="tab-button" data-tab="tab-collab">콜라보</button>
-        <button class="tab-button" data-tab="tab-2star">2성</button>
+<!-- Main Sidebar Navigation (Desktop: 고정 사이드바, Mobile: 상단 네비게이션) -->
+<aside id="main-sidebar">
+    <nav class="sidebar-nav">
+        <button class="sidebar-item active" data-section="gacha">
+            <span class="sidebar-icon">🎰</span>
+            <span class="sidebar-text">가챠 계산</span>
+        </button>
+        <button class="sidebar-item" data-section="payment">
+            <span class="sidebar-icon">💰</span>
+            <span class="sidebar-text">과금 효율</span>
+        </button>
     </nav>
+</aside>
 
-    <main id="main-tab-system">
+<!-- Main Content Container -->
+<div class="container">
+    <!-- Main Application Container -->
+    <div id="app-container">
+
+        <!-- ========== [Section 1] 가챠 계산 ========== -->
+        <section id="gacha-section" class="app-section active">
+
+            <!-- Main Navigation Tabs -->
+            <nav class="tab-buttons main-tab-nav">
+                <button class="tab-button active" data-tab="tab-3star">3성</button>
+                <button class="tab-button" data-tab="tab-birthday">생일</button>
+                <button class="tab-button" data-tab="tab-collab">콜라보</button>
+                <button class="tab-button" data-tab="tab-2star">2성</button>
+            </nav>
+
+            <main id="main-tab-system">
 
         <!-- ========== [Tab 1] 3성 가챠 ========== -->
         <section id="tab-3star" class="tab-content active">
@@ -39,10 +61,10 @@
             </div>
 
             <!-- 입력: 가챠 정보 -->
-            <div class="collapsible-container">
+            <div class="collapsible-container" data-collapsible="true">
                 <div class="section-header">
                     <h3 class="section-title">가챠 정보</h3>
-                    <button class="toggle-btn">▼</button>
+                    <button class="toggle-btn" data-toggle-section>▼</button>
                 </div>
                 <div class="section-content">
                     <div class="subsection-group">
@@ -73,9 +95,10 @@
             </div>
 
             <!-- 입력: 사용자 설정 -->
-            <div class="collapsible-container">
+            <div class="collapsible-container" data-collapsible="true">
                 <div class="section-header">
                     <h3 class="section-title">사용자 설정</h3>
+                    <button class="toggle-btn" data-toggle-section>▼</button>
                 </div>
                 <div class="section-content">
                     <div class="subsection-group">
@@ -157,10 +180,10 @@
             </div>
 
             <!-- 입력: 가챠 정보 -->
-            <div class="collapsible-container">
+            <div class="collapsible-container" data-collapsible="true">
                 <div class="section-header">
                     <h3 class="section-title">가챠 정보</h3>
-                    <button class="toggle-btn">▼</button>
+                    <button class="toggle-btn" data-toggle-section>▼</button>
                 </div>
                 <div class="section-content">
                     <div class="subsection-group">
@@ -186,9 +209,10 @@
             </div>
 
             <!-- 입력: 사용자 설정 -->
-            <div class="collapsible-container">
+            <div class="collapsible-container" data-collapsible="true">
                 <div class="section-header">
                     <h3 class="section-title">사용자 설정</h3>
+                    <button class="toggle-btn" data-toggle-section>▼</button>
                 </div>
                 <div class="section-content">
                     <div class="subsection-group">
@@ -271,10 +295,10 @@
             </div>
 
             <!-- 입력: 가챠 정보 -->
-            <div class="collapsible-container">
+            <div class="collapsible-container" data-collapsible="true">
                 <div class="section-header">
                     <h3 class="section-title">가챠 정보</h3>
-                    <button class="toggle-btn">▼</button>
+                    <button class="toggle-btn" data-toggle-section>▼</button>
                 </div>
                 <div class="section-content">
                     <div class="subsection-group">
@@ -300,9 +324,10 @@
             </div>
 
             <!-- 입력: 사용자 설정 -->
-            <div class="collapsible-container">
+            <div class="collapsible-container" data-collapsible="true">
                 <div class="section-header">
                     <h3 class="section-title">사용자 설정</h3>
+                    <button class="toggle-btn" data-toggle-section>▼</button>
                 </div>
                 <div class="section-content">
                     <div class="subsection-group">
@@ -383,10 +408,10 @@
 
             <!-- 입력: 기본 정보 -->
             <!-- 입력: 가챠 정보 -->
-            <div class="collapsible-container">
+            <div class="collapsible-container" data-collapsible="true">
                 <div class="section-header">
                     <h3 class="section-title">가챠 정보</h3>
-                    <button class="toggle-btn">▼</button>
+                    <button class="toggle-btn" data-toggle-section>▼</button>
                 </div>
                 <div class="section-content">
                     <div class="subsection-group">
@@ -417,9 +442,10 @@
             </div>
 
             <!-- 입력: 사용자 설정 -->
-            <div class="collapsible-container">
+            <div class="collapsible-container" data-collapsible="true">
                 <div class="section-header">
                     <h3 class="section-title">사용자 설정</h3>
+                    <button class="toggle-btn" data-toggle-section>▼</button>
                 </div>
                 <div class="section-content">
                     <div class="subsection-group subsection-group-block">
@@ -494,14 +520,38 @@
         <!-- 공통 결과 요약 -->
         <aside id="shared-result-area" class="shared-result-container">
             <div class="summary" id="globalSummary"></div>
-            <div class="logic-detail" id="globalLogic" style="display:none;"></div>
+            <div class="logic-detail" id="globalLogic" data-collapsible="true" style="display:none;"></div>
         </aside>
-    </main>
+            </main>
 
-    <footer>
-        <!-- 향후 저작권, 링크 등 추가 예정 -->
-    </footer>
+        </section>
+        <!-- ========== [Section 1] 가챠 계산 끝 ========== -->
+
+        <!-- ========== [Section 2] 과금 효율 ========== -->
+        <section id="payment-section" class="app-section">
+            <div class="collapsible-container" data-collapsible="true">
+                <div class="section-header">
+                    <h3 class="section-title">과금 효율 분석</h3>
+                    <button class="toggle-btn" data-toggle-section>▼</button>
+                </div>
+                <div class="section-content">
+                    <p style="text-align: center; padding: 40px 20px; color: var(--text-secondary);">
+                        과금 효율 기능은 준비 중입니다.
+                    </p>
+                </div>
+            </div>
+        </section>
+        <!-- ========== [Section 2] 과금 효율 끝 ========== -->
+
+    </div>
+    <!-- #app-container 끝 -->
 </div>
+<!-- .container 끝 -->
+
+<!-- Global Footer -->
+<footer id="global-footer">
+    <!-- 향후 저작권, 링크 등 추가 예정 -->
+</footer>
 
 <script type="module" src="js/main.js?v=1.9.0"></script>
 

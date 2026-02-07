@@ -1,41 +1,96 @@
+/**
+ * CollapsibleSection.js
+ * 접을 수 있는 섹션 컴포넌트 관리
+ *
+ * 사용법:
+ * <div class="collapsible-container" data-collapsible="true">
+ *   <div class="section-header">
+ *     <h3 class="section-title">제목</h3>
+ *     <button class="toggle-btn" data-toggle-section>▼</button>
+ *   </div>
+ *   <div class="section-content">내용</div>
+ * </div>
+ */
 export class CollapsibleSection {
     constructor() {
+        this.initAllSections();
         this.bindGlobalEvents();
     }
 
-    bindGlobalEvents() {
-        document.body.addEventListener('click', (e) => {
-            // [수정] 오직 toggle-btn 클래스를 가진 요소(또는 그 자식)를 클릭했을 때만 작동
-            const btn = e.target.closest('.toggle-btn');
+    /**
+     * 모든 collapsible 섹션 초기화
+     */
+    initAllSections() {
+        const containers = document.querySelectorAll('[data-collapsible]');
 
-            if (btn) {
-                const header = btn.closest('.section-header');
-                if (header) {
-                    this.toggleSection(header);
+        containers.forEach(container => {
+            const btn = container.querySelector('[data-toggle-section]');
+            const content = container.querySelector('.section-content');
+
+            if (btn && content) {
+                // 초기 상태 설정 (기본: 펼쳐진 상태)
+                if (!container.dataset.collapsed) {
+                    container.dataset.collapsed = 'false';
+                }
+
+                // 초기 버튼 텍스트 설정
+                this.updateButtonText(btn, container.dataset.collapsed === 'true');
+
+                // 초기 content 표시 상태 설정
+                if (container.dataset.collapsed === 'true') {
+                    content.style.display = 'none';
                 }
             }
         });
     }
 
-    toggleSection(header) {
-        const container = header.parentElement;
+    /**
+     * 전역 클릭 이벤트 바인딩 (이벤트 위임)
+     */
+    bindGlobalEvents() {
+        document.body.addEventListener('click', (e) => {
+            const btn = e.target.closest('[data-toggle-section]');
+
+            if (btn) {
+                const container = btn.closest('[data-collapsible]');
+                if (container) {
+                    this.toggleSection(container);
+                }
+            }
+        });
+    }
+
+    /**
+     * 섹션 토글
+     * @param {HTMLElement} container - collapsible-container 요소
+     */
+    toggleSection(container) {
         const content = container.querySelector('.section-content');
-        const btn = header.querySelector('.toggle-btn');
+        const btn = container.querySelector('[data-toggle-section]');
 
         if (!content || !btn) return;
 
-        const currentStyle = content.style.display;
-        const computedStyle = window.getComputedStyle(content).display;
-        const isHidden = currentStyle === 'none' || (currentStyle === '' && computedStyle === 'none');
+        const isCollapsed = container.dataset.collapsed === 'true';
 
-        if (isHidden) {
-            // 펼치기: 빈 값을 주어 CSS 설정을 따름 (Grid/Block 유지)
-            content.style.display = ''; 
-            btn.textContent = '▼';
+        if (isCollapsed) {
+            // 펼치기
+            content.style.display = '';
+            container.dataset.collapsed = 'false';
+            this.updateButtonText(btn, false);
         } else {
             // 접기
             content.style.display = 'none';
-            btn.textContent = '▲';
+            container.dataset.collapsed = 'true';
+            this.updateButtonText(btn, true);
         }
+    }
+
+    /**
+     * 버튼 텍스트 업데이트
+     * @param {HTMLElement} btn - 토글 버튼
+     * @param {boolean} isCollapsed - 접힌 상태 여부
+     */
+    updateButtonText(btn, isCollapsed) {
+        btn.textContent = isCollapsed ? '▲' : '▼';
     }
 }
