@@ -12,6 +12,7 @@
     <!-- CSS -->
     <link rel="stylesheet" href="css/common.css?v=1.9.1">
     <link rel="stylesheet" href="css/gacha.css?v=1.9.1">
+    <link rel="stylesheet" href="css/payment.css?v=1.9.1">
 </head>
 <body>
 
@@ -28,7 +29,7 @@
         </button>
         <button class="sidebar-item" data-section="payment">
             <span class="sidebar-icon">💰</span>
-            <span class="sidebar-text">과금 효율</span>
+            <span class="sidebar-text">과금 효율(개발중)</span>
         </button>
     </nav>
 </aside>
@@ -42,7 +43,7 @@
         <section id="gacha-section" class="app-section active">
 
             <!-- Main Navigation Tabs -->
-            <nav class="tab-buttons main-tab-nav">
+            <nav class="main-tab-nav">
                 <button class="tab-button active" data-tab="tab-3star">3성</button>
                 <button class="tab-button" data-tab="tab-birthday">생일</button>
                 <button class="tab-button" data-tab="tab-collab">콜라보</button>
@@ -529,17 +530,73 @@
 
         <!-- ========== [Section 2] 과금 효율 ========== -->
         <section id="payment-section" class="app-section">
+            <main class="main-content">
+
+            <!-- 환율 설정 -->
             <div class="collapsible-container" data-collapsible="true">
                 <div class="section-header">
-                    <h3 class="section-title">과금 효율 분석</h3>
+                    <h3 class="section-title">환율 설정</h3>
                     <button class="toggle-btn" data-toggle-section>▼</button>
                 </div>
-                <div class="section-content">
-                    <p style="text-align: center; padding: 40px 20px; color: var(--text-secondary);">
-                        과금 효율 기능은 준비 중입니다.
-                    </p>
+                <div class="section-content force-block">
+                    <div class="subsection-group">
+                        <div class="input-item">
+                            <label for="payment-exchange-rate">엔/원(100엔)</label>
+                            <input type="number" id="payment-exchange-rate" min="0" step="1" value="950">
+                        </div>
+                    </div>
                 </div>
             </div>
+
+            <!-- 메인 탭 시스템 -->
+            <div id="payment-tab-system" class="main-tab-system">
+                <!-- 탭 네비게이션 -->
+                <nav class="main-tab-nav">
+                    <button class="tab-button active" data-tab="payment-tab-packages">패키지 비교</button>
+                    <button class="tab-button" data-tab="payment-tab-analysis">손익분기점</button>
+                </nav>
+
+                <!-- 탭 1: 패키지 비교 -->
+                <div id="payment-tab-packages" class="tab-content active">
+                    <div class="collapsible-container" data-collapsible="true">
+                        <div class="section-header">
+                            <h3 class="section-title">플랫폼별 패키지 비교표</h3>
+                            <button class="toggle-btn" data-toggle-section>▼</button>
+                        </div>
+                        <div class="section-content force-block">
+                            <!-- 통화 토글 버튼 -->
+                            <div class="btn-group" style="margin-bottom: 15px;">
+                                <button id="payment-toggle-currency" class="view-toggle-btn" data-currency="JPY">엔화 (¥)</button>
+                            </div>
+
+                            <div id="payment-package-table-container">
+                                <p style="text-align: center; padding: 20px; color: var(--text-secondary);">
+                                    로딩 중...
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 탭 2: 손익분기점 -->
+                <div id="payment-tab-analysis" class="tab-content">
+                    <div class="collapsible-container" data-collapsible="true">
+                        <div class="section-header">
+                            <h3 class="section-title">손익분기점 분석</h3>
+                            <button class="toggle-btn" data-toggle-section>▼</button>
+                        </div>
+                        <div class="section-content force-block">
+                            <div id="payment-analysis-result">
+                                <p style="text-align: center; padding: 20px; color: var(--text-secondary);">
+                                    준비 중입니다.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            </main>
         </section>
         <!-- ========== [Section 2] 과금 효율 끝 ========== -->
 

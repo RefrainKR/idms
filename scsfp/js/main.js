@@ -2,6 +2,7 @@ import { Star3GachaViewModel } from './viewmodel/gacha/Star3GachaViewModel.js';
 import { Star2GachaViewModel } from './viewmodel/gacha/Star2GachaViewModel.js';
 import { BirthdayGachaViewModel } from './viewmodel/gacha/BirthdayGachaViewModel.js';
 import { CollabGachaViewModel } from './viewmodel/gacha/CollabGachaViewModel.js';
+import { PaymentViewModel } from './viewmodel/payment/PaymentViewModel.js';
 import { TabManager } from './view/component/TabManager.js';
 import { CollapsibleSection } from './view/component/CollapsibleSection.js';
 import { StorageManager } from './utils/StorageManager.js';
@@ -24,11 +25,13 @@ window.onload = function() {
     const star2VM = new Star2GachaViewModel();
     const birthdayVM = new BirthdayGachaViewModel();
     const collabVM = new CollabGachaViewModel();
+    const paymentVM = new PaymentViewModel();
 
     star3VM.init();
     star2VM.init();
     birthdayVM.init();
     collabVM.init();
+    paymentVM.init();
 
     // 3. UI 컴포넌트 활성화
     new CollapsibleSection(); // 섹션 토글 기능

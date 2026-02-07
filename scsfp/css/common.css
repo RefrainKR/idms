@@ -8,9 +8,9 @@
     --primary: #283c86;
     --primary-dark: #1f2e66;
     --primary-light: #e8ebf5;
-    --secondary: #4a66d5;
-    --secondary-dark: #3854b8;
-    --secondary-light: #e3e9fa;
+    --secondary: #3d7fb8;
+    --secondary-dark: #2a5f8f;
+    --secondary-light: #e3f0f8;
     --accent: #00D9A3;
 
     /* Neutral Colors */
@@ -29,12 +29,14 @@
     --warning: #ff9800;
     --danger: #dc3545;
     --info: #283c86;
+    --accent-blue: #2196f3;
 
     /* Surfaces */
     --bg-app: #dcdcdc;
     --bg-card: #ffffff;
     --bg-input: #ffffff;
     --bg-hover: #f0f0f0;
+    --bg-secondary: #f8f9fa;
     --surface-light: #fafafa;
     --surface-medium: #f8f9fa;
 
@@ -183,6 +185,8 @@ body {
     border: 2px solid var(--border-light);
     font-size: 1rem;
     border-radius: var(--border-radius-top-md);
+    font-weight: bold;
+    cursor: pointer;
 }
 
 .main-tab-nav .tab-button:hover {
@@ -260,6 +264,113 @@ footer {
 
 .sidebar-text {
     flex: 1;
+}
+
+/* ========================================
+   3. Common Buttons
+   ======================================== */
+
+/* 공통 버튼 기본 스타일 */
+.preset-btn,
+.reset-btn,
+.view-toggle-btn,
+.sub-tab-btn {
+    cursor: pointer;
+    transition: all 0.2s;
+    font-weight: bold;
+    white-space: nowrap;
+}
+
+/* Preset Button */
+.preset-btn {
+    padding: 6px 12px;
+    background-color: var(--secondary-light);
+    color: var(--secondary-dark);
+    border: 1px solid var(--secondary-light);
+    border-radius: var(--border-radius-sm);
+    font-size: 0.85rem;
+}
+
+.preset-btn:hover {
+    background-color: var(--secondary);
+    color: white;
+}
+
+/* Reset Button */
+.reset-btn {
+    padding: 6px 8px;
+    background-color: var(--btn-gray-bg);
+    color: #555;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 1rem;
+    line-height: 1;
+}
+
+.reset-btn:hover {
+    background-color: #e0e0e0;
+    border-color: #bbb;
+    color: #333;
+}
+
+/* View Toggle Button */
+.view-toggle-btn {
+    padding: 6px 8px;
+    min-width: 50px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-sm);
+    font-size: 0.85rem;
+    background-color: white;
+    color: var(--text-primary);
+    transition: all 0.2s ease;
+}
+
+/* Toggle States */
+.view-toggle-btn[data-state="included"],
+.view-toggle-btn[data-state="best"] {
+    background-color: var(--secondary);
+    color: white;
+    border-color: var(--secondary);
+}
+
+.view-toggle-btn[data-state="excluded"] {
+    background-color: var(--gray-200);
+    color: var(--text-muted);
+    text-decoration: line-through;
+    border-color: var(--gray-300);
+}
+
+.view-toggle-btn[data-state="worst"] {
+    background-color: white;
+    color: var(--danger);
+    border-color: var(--danger);
+}
+
+.view-toggle-btn[data-state="individual"],
+.view-toggle-btn[data-state="cumulative_less"],
+.view-toggle-btn[data-state="cumulative_more"] {
+    background-color: var(--gray-200);
+    border-color: var(--gray-300);
+    color: var(--text-color);
+}
+
+/* 2성 그룹별 색상 */
+.view-toggle-btn[data-state="A"] { color: var(--state-group-a); border-color: var(--state-group-a); background-color: #fff; }
+.view-toggle-btn[data-state="B"] { color: var(--state-group-b); border-color: var(--state-group-b); background-color: #fff; }
+.view-toggle-btn[data-state="C"] { color: var(--state-group-c); border-color: var(--state-group-c); background-color: #fff; }
+.view-toggle-btn[data-state="D"] { color: var(--state-group-d); border-color: var(--state-group-d); background-color: #fff; }
+
+/* Button Groups */
+.btn-group {
+    display: flex;
+    gap: 5px;
+    flex-wrap: wrap;
+}
+
+.left-group { justify-content: flex-start; }
+.right-group {
+    justify-content: flex-end;
+    margin-left: auto;
 }
 
 /* ========================================

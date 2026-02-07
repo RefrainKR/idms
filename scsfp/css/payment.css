@@ -1,0 +1,245 @@
+/* ========================================
+   과금 효율 분석 - 스타일시트
+   ======================================== */
+
+/* 과금 효율 섹션 전용 스타일 */
+#payment-section {
+    padding: 20px;
+}
+
+#payment-package-table-container {
+    width: 100%;
+    overflow-x: auto;
+}
+
+/* 통화 토글 버튼 커스터마이징 */
+#payment-toggle-currency.view-toggle-btn {
+    background: var(--secondary);
+    color: white;
+    border-color: var(--secondary);
+}
+
+#payment-toggle-currency.view-toggle-btn:hover {
+    background: var(--secondary-dark);
+    border-color: var(--secondary-dark);
+}
+
+/* 통화별 열 숨김 */
+.payment-comparison-table .hide-krw {
+    display: none;
+}
+
+.payment-comparison-table .hide-jpy {
+    display: none;
+}
+
+/* 계산하기 버튼 */
+.calculate-btn {
+    width: 100%;
+    padding: 12px 24px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.calculate-btn:hover {
+    background: var(--primary-dark);
+}
+
+.calculate-btn:active {
+    transform: scale(0.98);
+}
+
+/* 과금 효율 테이블 */
+.payment-table {
+    background: var(--bg-card);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.payment-table th {
+    font-weight: 600;
+    color: var(--text-primary);
+    border-bottom: 2px solid var(--border-color);
+}
+
+.payment-table td {
+    color: var(--text-primary);
+}
+
+.payment-table tbody tr:hover {
+    background: var(--bg-hover);
+}
+
+/* 플랫폼 테이블 컨테이너 */
+.platform-table {
+    margin-bottom: 30px;
+}
+
+.platform-table h4 {
+    color: var(--primary);
+    font-size: 1.1rem;
+    margin-bottom: 10px;
+}
+
+/* 설정 요약 */
+.payment-settings-summary h4 {
+    color: var(--primary);
+    font-size: 1rem;
+}
+
+/* 종합 순위 */
+.top-ranking h4 {
+    color: var(--primary);
+    font-size: 1.1rem;
+}
+
+/* 손익분기점 분석 */
+.breakeven-analysis h4 {
+    color: var(--primary);
+    font-size: 1.1rem;
+    margin-bottom: 15px;
+}
+
+.breakeven-analysis h5 {
+    color: var(--secondary);
+    font-size: 1rem;
+    margin-bottom: 10px;
+}
+
+.breakeven-analysis p {
+    margin: 5px 0;
+    font-size: 0.9rem;
+}
+
+/* 엑셀 스타일 테이블 */
+.payment-payment-comparison-table {
+    overflow-x: auto;
+    overflow-y: auto;
+    max-height: 600px;
+    margin-bottom: 20px;
+}
+
+.payment-comparison-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--bg-card);
+    font-size: 0.85rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+/* 헤더 스타일 */
+.payment-comparison-table thead {
+    background: var(--primary);
+    color: white;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.payment-comparison-table th {
+    padding: 10px 8px;
+    text-align: center;
+    font-weight: 600;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.payment-comparison-table .header-package {
+    background: var(--primary);
+    min-width: 100px;
+}
+
+.payment-comparison-table .header-platform {
+    background: var(--secondary-dark);
+    font-size: 0.9rem;
+}
+
+.payment-comparison-table .header-attr {
+    background: var(--secondary);
+    font-size: 0.8rem;
+    min-width: 70px;
+}
+
+/* 바디 스타일 */
+.payment-comparison-table tbody tr {
+    transition: background 0.2s;
+}
+
+.payment-comparison-table tbody tr:nth-child(even) {
+    background: var(--gray-50);
+}
+
+.payment-comparison-table tbody tr:hover {
+    background: var(--primary-light);
+}
+
+.payment-comparison-table td {
+    padding: 8px;
+    border: 1px solid var(--border-color);
+    text-align: center;
+}
+
+/* 셀 타입별 스타일 */
+.cell-package {
+    font-weight: 600;
+    background: var(--gray-100);
+    text-align: left;
+    padding-left: 12px;
+}
+
+.cell-number {
+    text-align: right;
+    font-family: 'Courier New', monospace;
+}
+
+.cell-extras {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.cell-efficiency {
+    text-align: right;
+    font-weight: 600;
+    color: var(--accent-blue);
+    font-family: 'Courier New', monospace;
+}
+
+.cell-empty {
+    color: var(--text-muted);
+    background: var(--gray-100);
+}
+
+/* 반응형 */
+@media (max-width: 768px) {
+    #payment-section {
+        padding: 15px;
+    }
+
+    .payment-table {
+        font-size: 0.8rem;
+    }
+
+    .payment-table th,
+    .payment-table td {
+        padding: 6px !important;
+    }
+
+    .payment-comparison-table {
+        font-size: 0.75rem;
+    }
+
+    .payment-comparison-table th,
+    .payment-comparison-table td {
+        padding: 6px 4px;
+    }
+
+    .breakeven-analysis > div[style*="grid"] {
+        grid-template-columns: 1fr !important;
+    }
+}
