@@ -373,43 +373,10 @@ calculate() {
 7. **GACHA_RULES 상수 사용** - 하드코딩된 마법 숫자 (40, 200, 50 등) 대신
 8. **EfficiencyCalculator 사용** - ViewModel에 효율 계산 로직 중복 대신
 
-## 업데이트 및 리팩토링 문서
+## 관련 문서
 
 프로젝트의 업데이트 히스토리와 향후 리팩토링 기회는 별도 문서로 관리됩니다:
 
 - **[UPDATE.md](UPDATE.md)**: 모든 업데이트 내역 (기능 추가, 버그 수정, 개선 사항)
-- **[REFACTORING.md](REFACTORING.md)**: 향후 리팩토링 기회 및 권장사항
-
-### 최근 주요 업데이트 요약
-
-**v1.7.2 (2026-01-21)**: HTML/CSS 리팩토링
-- ID 네이밍 통일화 (`{type}-{element}` 패턴)
-- Div Depth 축소 (11단계 → 8단계)
-- 시멘틱 HTML 적용
-
-**v1.7.1 (2026-01-20)**: 코드 품질 개선
-- 마법 숫자 상수화, EfficiencyCalculator 분리
-- Chart.js 성능 최적화
-
-**v1.7.0 (2026-01-19)**: CDF 역추적 기능 추가
-
-> 상세 내용은 [UPDATE.md](UPDATE.md) 참조
-
-## 프로젝트 상태
-
-### ✅ 완료된 개선 사항
-모든 기술 부채가 해결되었습니다:
-- **안정성**: 마법 숫자 상수화, DOM 조작 제거
-- **성능**: Chart.js 재렌더링 최적화
-- **확장성**: EfficiencyCalculator 분리, ProbabilityEngine 중앙화
-- **HTML/CSS**: ID 네이밍 통일화, 시멘틱 HTML, Div Depth 축소
-
-### 📋 향후 리팩토링 기회
-추가 리팩토링이 가능한 영역이 15개 식별되었습니다:
-- **High Priority** (3개): View/ViewModel 결합도, 메모리 누수 방지, Input 설정 명시화
-- **Medium Priority** (3개): Tab 관리 중복, Observable 의존성, 루프 패턴 추상화
-- **Low Priority** (9개): Toggle 패턴, 매직 문자열, DOM 헬퍼 등
-
-> 상세 내용은 [REFACTORING.md](REFACTORING.md) 참조
-
-**권장**: 현재 상태 유지 또는 High Priority 항목만 선택적 구현
+- **[REFACTORING.md](REFACTORING.md)**: 향후 리팩토링 기회 및 기술 부채 관리
+- **[PROJECT_STATUS.md](scsfp/PROJECT_STATUS.md)**: 코드베이스 구조, 알고리즘 상세 분석 (한글)

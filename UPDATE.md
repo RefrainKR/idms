@@ -4,24 +4,11 @@
 
 ---
 
-## v1.9.0 (2026-02-03) - 사이드바 네비게이션 및 가챠 타입 확장
+## v1.9.0 (2026-02-07) - 콜라보 가챠 추가 및 아키텍처 재구성
 
 ### 새로운 기능
 
-**1. 사이드바 네비게이션 추가**
-
-**데스크톱 레이아웃**:
-- 좌측 고정 사이드바(aside) 도입
-- 3성, 생일, 콜라보, 2성 탭을 사이드바에 배치
-- 사이드바 토글 버튼 (열기/닫기 아이콘)
-- SVG 아이콘으로 가챠 타입 시각화
-
-**모바일 레이아웃**:
-- 상단 네비게이션으로 전환
-- 탭 형태가 아닌 새로운 모바일 UI 패턴
-- 반응형 디자인 개선
-
-**2. 콜라보 가챠 분리**
+**1. 콜라보 가챠 분리**
 
 **기존**: "생일/본가(2탄)" 통합 탭
 **변경**: "생일"과 "콜라보" 분리
@@ -67,17 +54,7 @@
 - HTML: tab-collab 섹션 추가 (차트, 토글 버튼 포함)
 - GachaTypeConfig.js: collab 설정 추가
 
-**4. 사이드바 네비게이션 구현** (index.html, style.css, main.js):
-- 햄버거 토글 버튼 (header 좌측 상단)
-- 슬라이드 사이드바 (250px, 좌측)
-  - 우측 상단 닫기 버튼 (햄버거 아이콘)
-  - 4개 네비게이션 항목: 3성, 생일, 콜라보, 2성
-  - 항목 간 구분선 (border-bottom)
-  - 우측 모서리 둥글게 (border-radius: 0 12px 12px 0)
-- 외부 클릭 시 자동 닫힘
-- 애니메이션 제거 (즉각 반응)
-
-**5. 코드 체계화** (EfficiencyCalculator.js, GachaResultView.js):
+**4. 코드 체계화** (EfficiencyCalculator.js, GachaResultView.js):
 - 스탭업 가챠 타입 분류에 따른 메서드명 개선
   - Type A (3성): 주회 보상 시스템형
   - Type B (생일/콜라보): 단순 확률 증가형
@@ -86,15 +63,30 @@
 - `_generateBirthdayLogic` → `_generateSimpleStepupLogic`
 - 각 타입별 주석 추가로 명확한 분류
 
+**5. 공유 설정 시스템** (SharedSettings.js):
+- targetProbability를 3성/생일/콜라보 간 공유
+- 싱글톤 패턴으로 구현
+- LocalStorage에 단일 키로 저장 (`shani_gacha_shared`)
+- 한 탭에서 목표 확률 변경 시 다른 탭에도 자동 반영
+
+**6. 아키텍처 재구성**:
+- `core/Observable.js` → `utils/Observable.js` (범용 유틸리티로 분류)
+- `model/SharedSettings.js` → `core/SharedSettings.js` (도메인 서비스로 분류)
+- 폴더 구조 기준 명확화 (CLAUDE.md에 문서화)
+  - `utils/`: 프로젝트 간 재사용 가능 (도메인 독립)
+  - `core/`: 앱 특화 도메인 로직
+  - `model/`: 도메인 엔티티 (데이터 구조)
+
 **파일 변경 요약**:
-- **신규**: CollabGachaModel.js, CollabGachaViewModel.js
+- **신규**: CollabGachaModel.js, CollabGachaViewModel.js, SharedSettings.js
+- **이동**: Observable.js (core → utils), SharedSettings.js (model → core)
 - **수정**: GachaConstants.js, StorageManager.js, BirthdayGachaViewModel.js, BaseGachaViewModel.js
-- **수정**: index.html (사이드바, collab 섹션)
-- **수정**: style.css (사이드바, nav-item 스타일)
-- **수정**: main.js (사이드바 로직, collab 초기화)
-- **수정**: GachaResultView.js (collab 렌더링, 메서드명 개선)
-- **수정**: GachaTypeConfig.js (collab 설정)
-- **수정**: EfficiencyCalculator.js (메서드명 개선)
+- **수정**: index.html (collab 섹션, 탭 네비게이션)
+- **수정**: style.css (탭 네비게이션 스타일, 모바일 폰트 크기)
+- **수정**: main.js (collab 초기화, 탭 이벤트 리스너)
+- **수정**: GachaResultView.js (collab 렌더링, 메서드명 개선, 30일 제한 안내)
+- **수정**: EfficiencyCalculator.js (메서드명 개선, stepupLimit 파라미터 추가)
+- **수정**: CLAUDE.md (폴더 구조 기준 추가)
 
 ---
 
