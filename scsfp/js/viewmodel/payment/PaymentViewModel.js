@@ -13,6 +13,8 @@ export class PaymentViewModel {
         this.model = new PaymentModel();
         this.view = new PaymentView();
         this.isInitializing = true;
+        this._inputBinders = []; // InputBinder 인스턴스 저장
+        this._subscriptions = []; // Observable 구독 저장
     }
 
     /**
@@ -46,7 +48,8 @@ export class PaymentViewModel {
     bindInputs() {
         const exchangeRateInput = document.getElementById('payment-exchange-rate');
         if (exchangeRateInput) {
-            InputBinder.bind(exchangeRateInput, this.model.exchangeRate, { min: 0, type: 'int' });
+            const binder = new InputBinder(exchangeRateInput, this.model.exchangeRate, { min: 0, type: 'int' });
+            this._inputBinders.push(binder);
         }
     }
 
@@ -54,12 +57,13 @@ export class PaymentViewModel {
      * 모델 변경 구독
      */
     subscribeToModel() {
-        this.model.exchangeRate.subscribe(() => {
+        const unsubscribe = this.model.exchangeRate.subscribe(() => {
             if (!this.isInitializing) {
                 this.save();
                 this.renderPackageTables();
             }
         });
+        this._subscriptions.push(unsubscribe);
     }
 
     /**
@@ -168,5 +172,18 @@ export class PaymentViewModel {
     load() {
         const data = StorageManager.load(PAYMENT_CONFIG.KEY);
         this.model.fromJSON(data);
+    }
+
+    /**
+     * 리소스 정리
+     */
+    destroy() {
+        // 모든 InputBinder 해제
+        this._inputBinders.forEach(binder => binder.destroy());
+        this._inputBinders = [];
+
+        // 모든 Observable 구독 해제
+        this._subscriptions.forEach(unsubscribe => unsubscribe());
+        this._subscriptions = [];
     }
 }

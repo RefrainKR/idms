@@ -4,7 +4,11 @@
 
 ## 프로젝트 개요
 
-**샤니송 가챠 확률 시뮬레이터** - THE IDOLM@STER Shiny Colors Song for Prism의 가챠(뽑기) 확률 계산기. 동적 계획법(DP)과 쿠폰 컬렉터 알고리즘을 활용하여 3성/2성/생일 가챠 시스템의 수집 확률을 시뮬레이션합니다.
+**샤니송 유틸리티** - THE IDOLM@STER Shiny Colors Song for Prism을 위한 종합 도구 모음. 가챠 확률 계산기와 과금 효율 분석 기능을 제공합니다.
+
+- **가챠 확률 계산기**: 동적 계획법(DP)과 쿠폰 컬렉터 알고리즘을 활용하여 3성/2성/생일/콜라보 가챠 시스템의 수집 확률을 시뮬레이션
+- **과금 효율 분석**: 플랫폼별(아소비/Android/iOS) 패키지 비교 및 효율 계산 (Phase 2 예정)
+- **SPA 아키텍처**: 사이드바 네비게이션을 통한 섹션 전환(가챠 ↔ 과금) 및 히스토리 관리 지원
 
 **버전**: [UPDATE.md](UPDATE.md) 참조
 **언어**: Vanilla JavaScript (ES6 modules)
@@ -432,7 +436,7 @@ npx serve
 코드베이스는 Model-View-ViewModel 아키텍처를 따릅니다:
 
 - **Models** ([js/model/gacha/](scsfp/js/model/gacha/)): Observable 기반 상태 컨테이너
-  - [Star3GachaModel.js](scsfp/js/model/gacha/Star3GachaModel.js), [Star2GachaModel.js](scsfp/js/model/gacha/Star2GachaModel.js), [BirthdayGachaModel.js](scsfp/js/model/gacha/BirthdayGachaModel.js)
+  - [Star3GachaModel.js](scsfp/js/model/gacha/Star3GachaModel.js), [Star2GachaModel.js](scsfp/js/model/gacha/Star2GachaModel.js), [BirthdayGachaModel.js](scsfp/js/model/gacha/BirthdayGachaModel.js), [CollabGachaModel.js](scsfp/js/model/gacha/CollabGachaModel.js)
   - 도메인 엔티티의 데이터 구조 정의
 
 - **ViewModels** ([js/viewmodel/gacha/](scsfp/js/viewmodel/gacha/)): 프레젠테이션 로직
@@ -444,6 +448,7 @@ npx serve
   - DOM 조작 및 Chart.js 통합
 
 - **Core** ([js/core/](scsfp/js/core/)): 앱 특화 도메인 로직
+  - [SectionManager.js](scsfp/js/core/SectionManager.js): SPA 섹션 전환 및 히스토리 관리
   - [ProbabilityEngine.js](scsfp/js/core/ProbabilityEngine.js): DP 상태 전이, 컨벌루션
   - [GachaConstants.js](scsfp/js/core/GachaConstants.js): 모든 설정 상수 및 가챠 규칙
   - [EfficiencyCalculator.js](scsfp/js/core/EfficiencyCalculator.js): 효율 계산 서비스 클래스
@@ -501,6 +506,102 @@ npx serve
 
 1. [index.html](scsfp/index.html) - 메인 UI (3성/생일/2성 탭)
 2. [js/main.js](scsfp/js/main.js) - 앱 초기화, ViewModel 인스턴스 생성
+
+### ViewModel 생명주기 관리
+
+#### 현재 전략: Persistent ViewModels
+
+모든 ViewModel은 앱 시작 시 1회 생성되며, 섹션 전환 시에도 유지됩니다.
+
+```javascript
+// main.js - 앱 시작 시 모든 ViewModel 생성
+const star3VM = new Star3GachaViewModel(star3Model, star3View);
+const star2VM = new Star2GachaViewModel(star2Model, star2View);
+const bdVM = new BirthdayGachaViewModel(bdModel, bdView);
+const collabVM = new CollabGachaViewModel(collabModel, collabView);
+const paymentVM = new PaymentViewModel();
+
+// SectionManager: CSS로만 섹션 숨김/표시
+// ViewModel은 파괴하지 않고 계속 유지
+```
+
+**장점**:
+- ✅ 사용자 입력 데이터 유지 (섹션 전환 후 돌아와도 입력값 보존)
+- ✅ 섹션 전환 속도 빠름 (재생성 오버헤드 없음)
+- ✅ 메모리 사용량 예측 가능 (~5MB)
+
+#### destroy() 메서드
+
+모든 ViewModel에 `destroy()` 메서드가 구현되어 있습니다.
+
+```javascript
+class BaseGachaViewModel {
+    constructor() {
+        this._subscriptions = [];    // Observable 구독
+        this._inputBinders = [];      // InputBinder 인스턴스
+    }
+
+    destroy() {
+        // Observable 구독 해제
+        this._subscriptions.forEach(unsub => unsub());
+        this._subscriptions = [];
+
+        // InputBinder 해제
+        this._inputBinders.forEach(binder => binder.destroy());
+        this._inputBinders = [];
+    }
+}
+```
+
+**현재 상태**:
+- ✅ 모든 ViewModel에 구현 완료
+- ❌ **실제로 호출하지 않음** (브라우저가 페이지 종료 시 자동으로 메모리 정리)
+- 📝 향후 필요 시 활성화 예정
+
+#### destroy() 호출이 필요한 시점 (향후 고려사항)
+
+**필요 없는 경우** (현재 상태):
+- 섹션 5개 이하
+- ViewModel당 메모리 < 1MB
+- 사용자가 섹션 간 자주 이동
+- 입력값 보존이 중요한 UX
+
+**고려가 필요한 경우**:
+- 섹션 10개 이상으로 확장
+- 각 섹션이 Chart.js 인스턴스 10개 이상 사용
+- 모바일 환경 지원 (메모리 제한)
+- 장시간 사용 시 성능 저하 리포트 발생
+
+**필수인 경우**:
+- 동영상/3D 렌더링 섹션 추가
+- WebWorker 사용
+- IndexedDB 연결 관리
+- WebSocket 연결 관리
+
+#### InputBinder 설계
+
+[InputBinder.js](scsfp/js/view/component/InputBinder.js)는 Instance 기반 클래스로 설계되어 있습니다.
+
+```javascript
+// ViewModel에서 사용
+class BaseGachaViewModel {
+    bindInputs() {
+        const el = document.getElementById('someInput');
+        const binder = new InputBinder(el, observable, options);
+        this._inputBinders.push(binder); // 인스턴스 저장
+    }
+
+    destroy() {
+        // InputBinder가 자체적으로 리소스 정리
+        this._inputBinders.forEach(binder => binder.destroy());
+    }
+}
+```
+
+**설계 이유**:
+- ✅ 책임의 명확한 분리 (InputBinder가 자신의 생명주기 관리)
+- ✅ 메모리 누수 방지 (Observable 구독 + DOM 이벤트 리스너 모두 정리)
+- ✅ 디버깅 용이 (인스턴스 추적 가능)
 
 ### 핵심 알고리즘
 
@@ -576,6 +677,15 @@ GACHA_RULES = {
 - 스탭업 가챠: 2.0% 확률, 최대 30회
 - 30회째 스탭업: 100% 확정 획득
 - 천장: 200회마다 (합산)
+
+### 콜라보 가챠 ([CollabGachaViewModel.js](scsfp/js/viewmodel/gacha/CollabGachaViewModel.js))
+
+**기능**:
+- 생일 가챠와 유사하지만 스탭업 횟수 제한 없음 (9999회)
+- Step3 확정 기능 없음 (확률만 증가)
+- 프리셋 지원 (본가 2탄 등)
+- 일반 확률: 0.75% (본가 기준)
+- 스탭업 확률: 1.0% (본가 기준)
 
 ## 상태 관리
 

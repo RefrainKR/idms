@@ -8,6 +8,7 @@ export class BaseGachaViewModel {
         this.model = null;
         this.isInitializing = true;
         this._subscriptions = []; // 구독 해제 함수 저장
+        this._inputBinders = []; // InputBinder 인스턴스 저장
     }
 
     init() {
@@ -44,6 +45,10 @@ export class BaseGachaViewModel {
         // 모든 구독 해제
         this._subscriptions.forEach(unsubscribe => unsubscribe());
         this._subscriptions = [];
+
+        // 모든 InputBinder 해제
+        this._inputBinders.forEach(binder => binder.destroy());
+        this._inputBinders = [];
     }
 
     /**
@@ -76,7 +81,7 @@ export class BaseGachaViewModel {
 
     bindInputs() {
         if (!this.inputsMap) return;
-        
+
         const configMap = new Map();
         // [보완] this.config와 this.config.INPUTS가 존재하는지 안전하게 체크
         if (this.config && this.config.INPUTS) {
@@ -86,7 +91,7 @@ export class BaseGachaViewModel {
         for (const [id, obs] of Object.entries(this.inputsMap)) {
             const el = document.getElementById(id);
             if (!el) continue;
-            
+
             const setting = configMap.get(id) || {};
             let binderOptions = {
                 type: setting.type || 'float',  // CONFIG에서 명시적으로 가져옴
@@ -103,7 +108,9 @@ export class BaseGachaViewModel {
                 }
             }
 
-            InputBinder.bind(el, obs, binderOptions);
+            // InputBinder 인스턴스 생성 및 저장
+            const binder = new InputBinder(el, obs, binderOptions);
+            this._inputBinders.push(binder);
         }
     }
 

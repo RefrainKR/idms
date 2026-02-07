@@ -8,10 +8,10 @@
     --primary: #283c86;
     --primary-dark: #1f2e66;
     --primary-light: #e8ebf5;
-    --secondary: #3d7fb8;
-    --secondary-dark: #2a5f8f;
-    --secondary-light: #e3f0f8;
-    --accent: #00D9A3;
+    --secondary: #00796b;
+    --secondary-dark: #004d40;
+    --secondary-light: #e0f2f1;
+    --accent: #f57c00;
 
     /* Neutral Colors */
     --gray-50: #fafbfc;
@@ -465,4 +465,3 @@ body {
         font-size: 0.8rem !important;
     }
 }
-
