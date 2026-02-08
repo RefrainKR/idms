@@ -1,19 +1,3 @@
-// 앱 버전 관리
-export const APP_VERSION = '1.9.1';
-
-// 버전별 마이그레이션 설정
-export const VERSION_CONFIG = {
-    '1.9.0': {
-        changes: [
-            {
-                gacha: 'BIRTHDAY',
-                reason: 'fixed_values_applied',
-                action: 'reset'
-            }
-        ]
-    }
-};
-
 export const CONFIG = {
     STAR3: {
         KEY: 'shani_gacha_3star',

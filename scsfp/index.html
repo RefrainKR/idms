@@ -10,9 +10,9 @@
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
 
     <!-- CSS -->
-    <link rel="stylesheet" href="css/common.css?v=1.9.1">
-    <link rel="stylesheet" href="css/gacha.css?v=1.9.1">
-    <link rel="stylesheet" href="css/payment.css?v=1.9.1">
+    <link rel="stylesheet" href="css/common.css?v=1.9.3">
+    <link rel="stylesheet" href="css/gacha.css?v=1.9.3">
+    <link rel="stylesheet" href="css/payment.css?v=1.9.3">
 </head>
 <body>
 
@@ -551,7 +551,7 @@
                         <h4 class="subsection-title">엔화 결제 할인 (ASOBI/Android)</h4>
                         <div class="input-item">
                             <label for="payment-jpy-discount-rate">할인율 (%)</label>
-                            <span class="input-hint">카드 할인</span>
+                            <span class="input-hint">카드</span>
                             <input type="number" id="payment-jpy-discount-rate">
                         </div>
                     </div>
@@ -560,7 +560,7 @@
                         <h4 class="subsection-title">원화 결제 할인 (iOS)</h4>
                         <div class="input-item">
                             <label for="payment-krw-discount-rate">할인율 (%)</label>
-                            <span class="input-hint">통신사/페이 할인</span>
+                            <span class="input-hint">통신사/페이</span>
                             <input type="number" id="payment-krw-discount-rate">
                         </div>
                         <div class="input-item" style="display: none;">
@@ -588,6 +588,7 @@
                         <div class="section-content force-block">
                             <!-- 토글 버튼 그룹 -->
                             <div class="btn-group" style="margin-bottom: 15px;">
+                                <button id="payment-toggle-view" class="view-toggle-btn" data-view="all" data-state="included">All</button>
                                 <button id="payment-toggle-currency" class="view-toggle-btn" data-currency="JPY" data-state="included">엔화 (¥)</button>
                                 <button id="payment-toggle-efficiency" class="view-toggle-btn" data-mode="price-per-gem" data-state="included">¥/돌</button>
                             </div>
@@ -633,7 +634,7 @@
     <!-- 향후 저작권, 링크 등 추가 예정 -->
 </footer>
 
-<script type="module" src="js/main.js?v=1.9.1"></script>
+<script type="module" src="js/main.js?v=1.9.3"></script>
 
 </body>
 </html>

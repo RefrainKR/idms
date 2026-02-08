@@ -1,4 +1,5 @@
-import { APP_VERSION, VERSION_CONFIG, CONFIG } from '../core/GachaConstants.js';
+import { APP_VERSION, VERSION_CONFIG } from '../core/Constants.js';
+import { CONFIG } from '../core/GachaConstants.js';
 import { SharedSettings } from '../core/SharedSettings.js';
 
 export const StorageManager = {

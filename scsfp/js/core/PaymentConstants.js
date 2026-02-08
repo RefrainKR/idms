@@ -45,7 +45,7 @@ export const PACKAGES = {
         // 월 주기 패키지
         MONTHLY: {
             'monthly_platinum': {
-                name: '플라티나(월)',
+                name: '플라티나(월 1회)',
                 price: 10000,
                 paidGems: 10000,
                 rainbow: 50,
@@ -71,7 +71,7 @@ export const PACKAGES = {
         // 월 주기 패키지
         MONTHLY: {
             'monthly_b': {
-                name: 'B팩 (월 주기)',
+                name: 'B팩 (월 1회)',
                 price: 480,
                 paidGems: 360,
                 ourstream: 1,
@@ -97,7 +97,7 @@ export const PACKAGES = {
         // 월 주기 패키지
         MONTHLY: {
             'monthly_b': {
-                name: 'B팩 (월 주기)',
+                name: 'B팩 (월 1회)',
                 price: 4400,
                 paidGems: 360,
                 ourstream: 1,
@@ -117,40 +117,3 @@ export const PACKAGES = {
     }
 };
 
-/**
- * 보너스 재화 가치 추정
- * (향후 사용자 입력 또는 역산 기능으로 대체 가능)
- */
-export const BONUS_VALUES = {
-    RAINBOW_PER_YEN: 0, // 무돌 1개당 엔 가치 (미정)
-    WINGS_PER_YEN: 0, // 날개 1개당 엔 가치 (미정)
-    PIECES_PER_YEN: 0, // 피스 1개당 엔 가치 (미정)
-    OURSTREAM_PER_YEN: 0 // OurSTREAM 1개당 엔 가치 (감상용, 환산 불가)
-};
-
-/**
- * 플랫폼 표시 이름
- */
-export const PLATFORM_NAMES = {
-    ASOBI: '아소비 스토어',
-    ANDROID: 'Android',
-    IOS: 'iOS'
-};
-
-/**
- * 패키지 카테고리 표시 이름
- */
-export const CATEGORY_NAMES = {
-    NORMAL: '상시 패키지',
-    MONTHLY: '월 주기 패키지',
-    SUBSCRIPTION: '월정액 패스',
-    LIMITED: '한정 패키지'
-};
-
-/**
- * 통화 기호
- */
-export const CURRENCY_SYMBOLS = {
-    JPY: '¥',
-    KRW: '₩'
-};

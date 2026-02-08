@@ -15,6 +15,7 @@ export class PaymentViewModel {
         this.isInitializing = true;
         this._inputBinders = []; // InputBinder 인스턴스 저장
         this._subscriptions = []; // Observable 구독 저장
+        this._clickHandlerBound = false; // 클릭 이벤트 바인딩 여부
     }
 
     /**
@@ -40,6 +41,9 @@ export class PaymentViewModel {
 
         // 6. 통화 토글 버튼 바인딩 (렌더링 후)
         this.bindCurrencyToggle();
+
+        // 7. 패키지 셀 클릭 이벤트 바인딩
+        this.bindPackageCellClick();
     }
 
     /**
@@ -84,7 +88,8 @@ export class PaymentViewModel {
             this.model.exchangeRate,
             this.model.jpyDiscountRate,
             this.model.krwDiscountRate,
-            this.model.krwDiscountCap
+            this.model.krwDiscountCap,
+            this.model.baselinePackage // 기준 패키지 변경 시에도 재계산
         ];
 
         observables.forEach(observable => {
@@ -138,6 +143,7 @@ export class PaymentViewModel {
      * 통화 토글 버튼 바인딩
      */
     bindCurrencyToggle() {
+        const viewBtn = document.getElementById('payment-toggle-view');
         const currencyBtn = document.getElementById('payment-toggle-currency');
         const efficiencyBtn = document.getElementById('payment-toggle-efficiency');
 
@@ -145,6 +151,23 @@ export class PaymentViewModel {
 
         // 초기 상태: 엔화 표시, 원화 숨김
         this.toggleCurrency('JPY');
+
+        // 뷰 모드 토글 (All/Simple)
+        if (viewBtn) {
+            viewBtn.addEventListener('click', () => {
+                const currentView = viewBtn.dataset.view;
+                const newView = currentView === 'all' ? 'simple' : 'all';
+
+                // 버튼 텍스트 변경
+                viewBtn.textContent = newView === 'all' ? 'All' : 'Simple';
+
+                // 데이터 속성 업데이트
+                viewBtn.dataset.view = newView;
+
+                // 테이블 재렌더링
+                this.renderPackageTables();
+            });
+        }
 
         // 통화 토글
         currencyBtn.addEventListener('click', () => {
@@ -218,9 +241,74 @@ export class PaymentViewModel {
     }
 
     /**
+     * 패키지 셀 클릭 이벤트 바인딩 (이벤트 위임)
+     */
+    bindPackageCellClick() {
+        // 이미 바인딩되어 있으면 중복 방지
+        if (this._clickHandlerBound) return;
+
+        const container = document.getElementById('payment-package-table-container');
+        if (!container) return;
+
+        // 클릭 이벤트
+        container.addEventListener('click', (event) => {
+            const cell = event.target.closest('.platform-cell');
+            if (!cell) return;
+
+            const platform = cell.dataset.platform;
+            const category = cell.dataset.category;
+            const packageId = cell.dataset.package;
+
+            if (platform && category && packageId) {
+                // 기준 패키지 변경
+                this.model.baselinePackage.value = {
+                    platform,
+                    category,
+                    id: packageId
+                };
+            }
+        });
+
+        // Hover 이벤트 - 플랫폼별 그룹 hover
+        container.addEventListener('mouseover', (event) => {
+            const cell = event.target.closest('.platform-cell');
+            if (!cell) return;
+
+            const platform = cell.dataset.platform;
+            const category = cell.dataset.category;
+            const packageId = cell.dataset.package;
+
+            if (platform && category && packageId) {
+                // 같은 행(패키지)의 같은 플랫폼 셀들 찾기
+                const row = cell.closest('tr');
+                const platformCells = row.querySelectorAll(`.platform-cell[data-platform="${platform}"][data-category="${category}"][data-package="${packageId}"]`);
+                platformCells.forEach(c => c.classList.add('hover-group'));
+            }
+        });
+
+        container.addEventListener('mouseout', (event) => {
+            const cell = event.target.closest('.platform-cell');
+            if (!cell) return;
+
+            // 모든 hover-group 클래스 제거
+            const allCells = container.querySelectorAll('.platform-cell.hover-group');
+            allCells.forEach(c => c.classList.remove('hover-group'));
+        });
+
+        this._clickHandlerBound = true;
+    }
+
+    /**
      * 패키지 비교표 렌더링
      */
     renderPackageTables() {
+        const container = document.getElementById('payment-package-table-container');
+
+        // 스크롤 위치 저장
+        const scrollLeft = container ? container.scrollLeft : 0;
+        const scrollTop = container ? container.scrollTop : 0;
+
+        // 테이블 렌더링
         this.view.renderPackageTable(PACKAGES, this.model);
 
         // 렌더링 직후 통화 토글 다시 적용 (환율 변경 시에도 적용)
@@ -229,6 +317,16 @@ export class PaymentViewModel {
             const currentCurrency = toggleBtn.dataset.currency || 'JPY';
             this.toggleCurrency(currentCurrency);
         }
+
+        // 스크롤 위치 복원 (DOM 업데이트 후에 실행)
+        if (container && (scrollLeft > 0 || scrollTop > 0)) {
+            requestAnimationFrame(() => {
+                container.scrollLeft = scrollLeft;
+                container.scrollTop = scrollTop;
+            });
+        }
+
+        // 클릭 이벤트는 이벤트 위임으로 한 번만 바인딩되므로 재호출 불필요
     }
 
     /**

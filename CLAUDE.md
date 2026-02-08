@@ -7,10 +7,11 @@
 **샤니송 유틸리티** - THE IDOLM@STER Shiny Colors Song for Prism을 위한 종합 도구 모음. 가챠 확률 계산기와 과금 효율 분석 기능을 제공합니다.
 
 - **가챠 확률 계산기**: 동적 계획법(DP)과 쿠폰 컬렉터 알고리즘을 활용하여 3성/2성/생일/콜라보 가챠 시스템의 수집 확률을 시뮬레이션
-- **과금 효율 분석**: 플랫폼별(아소비/Android/iOS) 패키지 비교 및 효율 계산 (Phase 2 예정)
+- **과금 효율 분석**: 플랫폼별(ASOBI/Android/iOS) 패키지 비교, 효율 계산, 기준 패키지 선택 및 효율 배수 표시
 - **SPA 아키텍처**: 사이드바 네비게이션을 통한 섹션 전환(가챠 ↔ 과금) 및 히스토리 관리 지원
 
-**버전**: [UPDATE.md](UPDATE.md) 참조
+**현재 버전**: v1.9.3 (2026-02-08)
+**버전 히스토리**: [UPDATE.md](UPDATE.md) 참조
 **언어**: Vanilla JavaScript (ES6 modules)
 **기술 스택**: HTML5, CSS3, Chart.js 4.4.1
 
@@ -310,6 +311,38 @@ F팩 (プリズムジュエルF)
 ```
 
 ---
+
+#### 플랫폼별 결제 통화 규칙
+
+**CRITICAL: 플랫폼별 결제 가능 통화**:
+
+```
+ASOBI Store
+└─ 결제 통화: 엔화(¥)만 가능
+   └─ 원화(₩) 표시: 환산 참고용 (실제 결제 불가)
+
+Android (Google Play)
+└─ 결제 통화: 엔화(¥)만 가능
+   └─ 원화(₩) 표시: 환산 참고용 (실제 결제 불가)
+
+iOS (App Store)
+└─ 결제 통화: 원화(₩)만 가능
+   └─ 엔화(¥) 표시: 환산 참고용 (실제 결제 불가)
+```
+
+**할인 적용 원칙**:
+- ✅ **실제 결제 통화에 할인 적용 → 환산**
+  - ASOBI/Android: 엔화에 할인 적용 → 할인된 엔화를 원화로 환산
+  - iOS: 원화에 할인 적용 → 할인된 원화를 엔화로 환산
+- 📊 **환산 통화 표시**
+  - 환산 통화도 할인이 반영된 값으로 표시됨
+  - 예: iOS에서 원화 10% 할인 시
+    - 원화: 4,400₩ → 3,960₩ (할인 적용)
+    - 엔화 표시: 464¥ → 418¥ (할인된 원화를 환산)
+
+**표시 우선순위**:
+- ASOBI/Android: 엔화(¥) 먼저, 원화(₩) 나중
+- iOS: 원화(₩) 먼저, 엔화(¥) 나중
 
 #### 플랫폼 간 패키지 비교
 
@@ -695,22 +728,96 @@ GACHA_RULES = {
 - `isInitializing` 플래그로 로드 중 연쇄 재계산 방지
 
 **LocalStorage** ([StorageManager.js](scsfp/js/utils/StorageManager.js)):
-- 키: `shani_gacha_3star`, `shani_gacha_2star`, `shani_gacha_birthday`
-- 저장: 픽업 수, 확률, 주회 설정, 보상 선택
-- 미저장: 뽑기 횟수 (`normalPulls`, `stepPulls`) - 의도된 설계
+- 가챠: `shani_gacha_3star`, `shani_gacha_2star`, `shani_gacha_birthday`, `shani_gacha_collab`
+- 과금: `shani_payment_config`
+- 저장 내용:
+  - 가챠: 픽업 수, 확률, 주회 설정, 보상 선택 (뽑기 횟수 제외 - 의도된 설계)
+  - 과금: 환율, 할인율, 기준 패키지
 
 **입력 바인딩** ([InputBinder.js](scsfp/js/view/component/InputBinder.js)):
 - HTML 입력과 Observable 속성 간 양방향 바인딩
 - `ProbabilityValidator.clamp()`를 통한 자동 검증
 - 타입 변환: 'int' 또는 'float'
 
+## 과금 효율 분석 시스템 (v1.9.2~1.9.3)
+
+### 주요 기능
+
+**1. 플랫폼별 패키지 비교**
+- ASOBI/Android/iOS 3개 플랫폼 통합 비교
+- 카테고리: 상시/월 주기/한정
+- 통화 자동 변환 (엔화 ↔ 원화)
+- 할인 적용 (ASOBI/Android: 엔화%, iOS: 원화% + 상한)
+
+**2. 뷰 모드**
+- **All 모드**: 가격, 유료돌, 기타, 효율, 효율배수 전체 표시
+- **Simple 모드**: 기타, ¥/돌, 효율(x배) 3개 열만 표시
+
+**3. 기준 패키지 선택**
+- 패키지 클릭 시 기준 패키지로 설정
+- 초기 기준: ASOBI F팩
+- 효율 배수 계산: 항상 돌/100엔 기준
+- 기준 패키지는 1.000배로 표시
+
+**4. 시각 효과**
+- Hover: 플랫폼별 5개(Simple: 3개) 셀 동시 강조
+- Selected: 외곽선으로 그룹화 (내부 border 유지)
+
+### 아키텍처
+
+**Model** ([PaymentModel.js](scsfp/js/model/payment/PaymentModel.js)):
+```javascript
+- exchangeRate: Observable(950)           // 100엔당 원화
+- jpyDiscountRate: Observable(0)          // 엔화 할인율 (%)
+- krwDiscountRate: Observable(0)          // 원화 할인율 (%)
+- krwDiscountCap: Observable(10000)       // 원화 할인 상한
+- baselinePackage: Observable({...})      // 기준 패키지
+```
+
+**View** ([PaymentView.js](scsfp/js/view/payment/PaymentView.js)):
+- 단일 통합 테이블 렌더링 (카테고리 구분 행)
+- 뷰 모드에 따른 colspan 동적 조정
+- 소수점 3자리 표시 (효율, 효율배수)
+
+**ViewModel** ([PaymentViewModel.js](scsfp/js/viewmodel/payment/PaymentViewModel.js)):
+- 뷰 모드/통화/효율 토글 바인딩
+- 패키지 클릭/Hover 이벤트 (이벤트 위임)
+- 스크롤 위치 저장/복원
+
+**Constants** ([PaymentConstants.js](scsfp/js/core/PaymentConstants.js)):
+- 플랫폼별 패키지 데이터 (ASOBI, ANDROID, IOS)
+- 카테고리: NORMAL, MONTHLY, LIMITED
+
+### 설계 철학
+
+**플랫폼 간 가격 차이 기반 분석**:
+- ❌ 사용자가 무돌/OurSTREAM 가치를 임의 설정
+- ✅ 플랫폼 간 가격 차이로 자동 계산
+- **이유**: 특정 패키지를 살 때 어느 플랫폼이 유리한지 비교하는 것이 실용적
+
+**예시**:
+- ASOBI D팩: ¥3,200, 유료돌 2,700개, 무돌 15개
+- iOS D팩: ₩29,000, 유료돌 2,570개, 무돌 0개
+- 가격 차이 = 무돌 15개의 가치로 해석 가능
+
 ## 주요 파일
 
-- [GachaConstants.js](scsfp/js/core/GachaConstants.js): 모든 설정, 입력 정의, 프리셋, 가챠 규칙 (`GACHA_RULES`)
-- [ProbabilityEngine.js](scsfp/js/core/ProbabilityEngine.js): DP 알고리즘, 모든 확률 계산에 `ProbabilityValidator` 필수
-- [EfficiencyCalculator.js](scsfp/js/core/EfficiencyCalculator.js): 모든 가챠 타입의 효율 계산 서비스
-- [ProbabilityValidator.js](scsfp/js/utils/ProbabilityValidator.js): 확률 클램핑, 총 확률 계산 (`getTotalProb`), 누적 분포 보정
-- [PROJECT_STATUS.md](scsfp/PROJECT_STATUS.md): 코드베이스 구조, 기술 부채, 알고리즘 설명 상세 분석 (한글)
+**가챠 시스템**:
+- [GachaConstants.js](scsfp/js/core/GachaConstants.js): 가챠 설정, 프리셋, 규칙, **APP_VERSION**
+- [ProbabilityEngine.js](scsfp/js/core/ProbabilityEngine.js): DP 알고리즘, `ProbabilityValidator` 필수
+- [EfficiencyCalculator.js](scsfp/js/core/EfficiencyCalculator.js): 가챠 효율 계산 서비스
+- [ProbabilityValidator.js](scsfp/js/utils/ProbabilityValidator.js): 확률 검증 및 클램핑
+
+**과금 시스템**:
+- [PaymentConstants.js](scsfp/js/core/PaymentConstants.js): 플랫폼별 패키지 데이터
+- [PaymentModel.js](scsfp/js/model/payment/PaymentModel.js): 환율, 할인, 기준 패키지
+- [PaymentView.js](scsfp/js/view/payment/PaymentView.js): 테이블 렌더링
+- [PaymentViewModel.js](scsfp/js/viewmodel/payment/PaymentViewModel.js): 프레젠테이션 로직
+
+**문서**:
+- [PROJECT_STATUS.md](scsfp/PROJECT_STATUS.md): 코드베이스 구조, 알고리즘 상세 분석 (한글)
+- [UPDATE.md](UPDATE.md): 버전 히스토리
+- [REFACTORING.md](REFACTORING.md): 향후 리팩토링 기회
 
 ## Chart.js 연동
 
@@ -788,8 +895,38 @@ calculate() {
 ### 남은 항목
 - 현재 없음 (모든 기술 부채 해결 완료)
 
+## 버전 관리
+
+**현재 버전**: v1.9.3 (2026-02-08)
+
+**버전 관리 위치**:
+1. `GachaConstants.js` - `APP_VERSION` 상수 (런타임 버전 체크)
+2. `index.html` - CSS/JS 캐시 버스팅 (`?v=1.9.3`)
+3. `UPDATE.md` - 버전 히스토리 문서화
+4. `CLAUDE.md` - 현재 버전 명시
+
+**버전 업데이트 체크리스트**:
+- [ ] `GachaConstants.js`: `APP_VERSION` 수정
+- [ ] `index.html`: CSS/JS 버전 태그 수정 (총 4곳)
+- [ ] `UPDATE.md`: 새 버전 섹션 추가
+- [ ] `CLAUDE.md`: 현재 버전 업데이트
+
+**캐시 버스팅**:
+```html
+<link rel="stylesheet" href="css/common.css?v=1.9.3">
+<link rel="stylesheet" href="css/gacha.css?v=1.9.3">
+<link rel="stylesheet" href="css/payment.css?v=1.9.3">
+<script type="module" src="js/main.js?v=1.9.3"></script>
+```
+
+**버전 마이그레이션**:
+- `StorageManager.js`가 `APP_VERSION` 체크
+- 버전 변경 시 `VERSION_CONFIG`에 따라 자동 마이그레이션
+- 사용자 데이터 보존하면서 설정 업데이트
+
 ## 필수 규칙
 
+**가챠 시스템**:
 1. **모든 확률 계산은 반드시 ProbabilityValidator 사용** - 안전성
 2. **`isInitializing = true` 동안 Observable 값 수정 금지** - 연쇄 방지
 3. **Chart.js는 CDN의 전역 변수** - import 문 없음
@@ -798,7 +935,14 @@ calculate() {
 6. **DP 배열은 0-인덱스** - 수집 개수 표현 (0부터 M개)
 7. **GACHA_RULES 상수 사용** - 하드코딩된 마법 숫자 (40, 200, 50 등) 대신
 8. **EfficiencyCalculator 사용** - ViewModel에 효율 계산 로직 중복 대신
-9. **HTML input 요소는 최소한의 속성만** - `type`과 `id`만 지정, `min`/`max`/`value`/`step` 등은 Model 기본값 + InputBinder options로 관리
+
+**과금 시스템**:
+1. **효율 계산 정확도**: 반올림 전 원본 값 사용, 표시 시점에만 `.toFixed(3)`
+2. **효율 배수**: 항상 돌/100엔 기준으로 계산
+3. **플랫폼 간 가격 차이 기반 분석**: 재화 가치 임의 설정 금지
+
+**공통**:
+1. **HTML input 요소는 최소한의 속성만** - `type`과 `id`만 지정, `min`/`max`/`value`/`step` 등은 Model 기본값 + InputBinder options로 관리
    ```html
    <!-- ✅ 올바른 예 -->
    <input type="number" id="pickupCount">

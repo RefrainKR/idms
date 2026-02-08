@@ -15,6 +15,10 @@ export class PaymentModel {
         // 원화 결제 할인 설정 (iOS 전용)
         this.krwDiscountRate = new Observable(0);      // 할인율 (%)
         this.krwDiscountCap = new Observable(10000);   // 할인 상한 (원) - 숨김
+
+        // 기준 패키지 설정 (효율 배수 계산용)
+        // 형식: { platform: 'ASOBI', category: 'NORMAL', id: 'F' }
+        this.baselinePackage = new Observable({ platform: 'ASOBI', category: 'NORMAL', id: 'F' });
     }
 
     /**
@@ -64,7 +68,8 @@ export class PaymentModel {
             exchangeRate: this.exchangeRate.value,
             jpyDiscountRate: this.jpyDiscountRate.value,
             krwDiscountRate: this.krwDiscountRate.value,
-            krwDiscountCap: this.krwDiscountCap.value
+            krwDiscountCap: this.krwDiscountCap.value,
+            baselinePackage: this.baselinePackage.value
         };
     }
 
@@ -74,5 +79,6 @@ export class PaymentModel {
         if (data.jpyDiscountRate !== undefined) this.jpyDiscountRate.value = data.jpyDiscountRate;
         if (data.krwDiscountRate !== undefined) this.krwDiscountRate.value = data.krwDiscountRate;
         if (data.krwDiscountCap !== undefined) this.krwDiscountCap.value = data.krwDiscountCap;
+        if (data.baselinePackage !== undefined) this.baselinePackage.value = data.baselinePackage;
     }
 }

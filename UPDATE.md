@@ -4,6 +4,176 @@
 
 ---
 
+## v1.9.3 (2026-02-08) - 과금 효율 분석 UI/UX 개선
+
+### 새로운 기능
+
+**1. All/Simple 뷰 모드 토글**
+- Simple 모드: 기타, ¥/돌, 효율(x배) 3개 열만 표시
+- All 모드: 가격, 유료돌 포함 전체 5개 열 표시
+- 버튼 위치: 통화/효율 토글 앞
+
+**2. 기준 패키지 선택 및 효율 배수 표시**
+- 패키지 클릭 시 기준 패키지로 설정
+- 초기 기준: ASOBI F팩
+- 모든 패키지의 효율 배수(x배) 계산 및 표시
+- 기준 패키지는 1.000배로 표시
+
+**3. 플랫폼별 그룹 시각 효과**
+- Hover: 같은 플랫폼의 5개(Simple 모드: 3개) 셀 동시 강조
+- Selected: 외곽선으로 그룹화 표시 (내부 border 유지)
+- 시각적으로 플랫폼 단위 인식 향상
+
+### UI/UX 개선
+
+**1. 테이블 구조 통합**
+- 여러 개별 테이블 → 단일 통합 테이블
+- 카테고리 구분: 구분 행으로 표시 (상시/월 주기/한정)
+- 헤더 1개로 통합 (중복 제거)
+- 스크롤 처리: 컨테이너 레벨에서 통합 관리
+
+**2. 카테고리 구분 행 스타일**
+- 세로 패딩: 12px → 6px (컴팩트화)
+- 색상: section-title과 동일한 청록색
+- Colspan: 뷰 모드에 따라 동적 조정 (All: 16, Simple: 10)
+
+**3. 소수점 표시 개선**
+- 효율 (¥/돌): 2자리 → 3자리
+- 효율 배수 (x배): 2자리 → 3자리
+- 계산 정확도: 반올림 전 원본 값으로 계산 (오차 최소화)
+
+**4. 텍스트 개선**
+- "효율 배수" → "효율(x배)"
+- "1.25x" → "1.25배"
+- 더 자연스러운 한국어 표현
+
+### 기술적 구현
+
+**1. 뷰 모드 전환 시스템**
+```javascript
+// PaymentViewModel.js
+viewBtn.addEventListener('click', () => {
+    const newView = currentView === 'all' ? 'simple' : 'all';
+    viewBtn.dataset.view = newView;
+    this.renderPackageTables();
+});
+
+// PaymentView.js
+const colspan = viewMode === 'simple' ? '3' : '5';
+const simpleClass = viewMode === 'simple' ? ' hide-simple' : '';
+```
+
+**2. 기준 패키지 선택**
+```javascript
+// PaymentModel.js
+this.baselinePackage = new Observable({
+    platform: 'ASOBI',
+    category: 'NORMAL',
+    id: 'F'
+});
+
+// 효율 배수 계산 (항상 돌/100엔 기준)
+const currentEfficiency = discountedPriceJPY > 0 ? paidGems / discountedPriceJPY : 0;
+const efficiencyMultiplier = baselineEfficiency > 0
+    ? currentEfficiency / baselineEfficiency
+    : 0;
+```
+
+**3. 플랫폼별 그룹 Hover**
+```javascript
+// JavaScript 이벤트 위임
+container.addEventListener('mouseover', (event) => {
+    const cell = event.target.closest('.platform-cell');
+    const row = cell.closest('tr');
+    const platformCells = row.querySelectorAll(
+        `.platform-cell[data-platform="${platform}"]...`
+    );
+    platformCells.forEach(c => c.classList.add('hover-group'));
+});
+
+// CSS
+.platform-cell.hover-group {
+    background: var(--secondary-light) !important;
+}
+```
+
+**4. 선택된 패키지 외곽선**
+```css
+/* 좌측 끝 */
+.platform-cell.selected.platform-first {
+    box-shadow: inset 2px 0 0 0 var(--secondary),
+                inset 0 2px 0 0 var(--secondary),
+                inset 0 -2px 0 0 var(--secondary);
+}
+
+/* 중간 */
+.platform-cell.selected:not(.platform-first):not(.platform-last) {
+    box-shadow: inset 0 2px 0 0 var(--secondary),
+                inset 0 -2px 0 0 var(--secondary);
+}
+
+/* 우측 끝 */
+.platform-cell.selected.platform-last {
+    box-shadow: inset -2px 0 0 0 var(--secondary),
+                inset 0 2px 0 0 var(--secondary),
+                inset 0 -2px 0 0 var(--secondary);
+}
+```
+
+### 코드 정리
+
+**1. 사용하지 않는 코드 제거**
+- `PaymentCalculator.js` 파일 삭제 (미사용)
+- `BONUS_VALUES` 상수 제거 (부가 재화 가치 임의 설정 방식 폐기)
+- `PLATFORM_NAMES`, `CATEGORY_NAMES`, `CURRENCY_SYMBOLS` 제거 (미사용)
+
+**2. 설계 철학 변경**
+- **기존**: 사용자가 무돌/OurSTREAM 가치를 임의 설정
+- **변경**: 플랫폼 간 가격 차이로 자동 계산
+- **이유**: 특정 패키지를 살 때 어느 플랫폼이 유리한지 비교하는 것이 실용적
+
+### 파일 변경 요약
+
+**수정 파일**:
+- `index.html`: All/Simple 토글 버튼 추가
+- `css/payment.css`:
+  - `.hide-simple` 클래스 추가
+  - 플랫폼 그룹 hover/selected 스타일
+  - 카테고리 구분 행 스타일 개선
+- `js/model/payment/PaymentModel.js`:
+  - `baselinePackage` Observable 추가
+  - toJSON/fromJSON 업데이트
+- `js/view/payment/PaymentView.js`:
+  - viewMode 파라미터 추가
+  - colspan 동적 조정
+  - simpleClass 적용
+  - 소수점 3자리 (toFixed(3))
+  - platform-first/platform-last 클래스 추가
+- `js/viewmodel/payment/PaymentViewModel.js`:
+  - 뷰 모드 토글 바인딩
+  - 패키지 클릭 이벤트 (이벤트 위임)
+  - 플랫폼 그룹 hover 이벤트
+  - baselinePackage 구독 추가
+- `js/core/PaymentConstants.js`:
+  - BONUS_VALUES 제거
+  - PLATFORM_NAMES, CATEGORY_NAMES, CURRENCY_SYMBOLS 제거
+
+**삭제 파일**:
+- `js/core/PaymentCalculator.js`: 미사용 파일 제거
+
+### 성능 최적화
+
+**1. 이벤트 처리 최적화**
+- 클릭/Hover 이벤트: 이벤트 위임 사용
+- `_clickHandlerBound` 플래그로 중복 바인딩 방지
+- 스크롤 위치 저장/복원 (requestAnimationFrame)
+
+**2. 계산 최적화**
+- 기준 패키지 효율: 전체 테이블에서 1회만 계산
+- 하위 메서드로 전달하여 재계산 방지
+
+---
+
 ## v1.9.2 (2026-02-07) - 과금 효율 분석 Phase 1 완료
 
 ### 새로운 기능
