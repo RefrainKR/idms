@@ -45,7 +45,7 @@ export const PACKAGES = {
         // 월 주기 패키지
         MONTHLY: {
             'monthly_platinum': {
-                name: '플라티나(월 1회)',
+                name: '플라티나',
                 price: 10000,
                 paidGems: 10000,
                 rainbow: 50,
@@ -71,7 +71,7 @@ export const PACKAGES = {
         // 월 주기 패키지
         MONTHLY: {
             'monthly_b': {
-                name: 'B팩 (월 1회)',
+                name: 'B팩',
                 price: 480,
                 paidGems: 360,
                 ourstream: 1,
@@ -97,7 +97,7 @@ export const PACKAGES = {
         // 월 주기 패키지
         MONTHLY: {
             'monthly_b': {
-                name: 'B팩 (월 1회)',
+                name: 'B팩',
                 price: 4400,
                 paidGems: 360,
                 ourstream: 1,

@@ -149,8 +149,14 @@ export class PaymentViewModel {
 
         if (!currencyBtn) return;
 
-        // 초기 상태: 엔화 표시, 원화 숨김
-        this.toggleCurrency('JPY');
+        // 초기 상태: 원화 표시, 엔화 숨김
+        currencyBtn.dataset.currency = 'KRW';
+        currencyBtn.textContent = '원화 (₩)';
+        this.toggleCurrency('KRW');
+        this.renderRainbowCrystalAnalysis();
+
+        // 효율 버튼 초기 텍스트 설정
+        this.updateEfficiencyButtonText(efficiencyBtn, 'KRW');
 
         // 뷰 모드 토글 (All/Simple)
         if (viewBtn) {
@@ -182,6 +188,9 @@ export class PaymentViewModel {
 
             // 통화 표시 전환
             this.toggleCurrency(newCurrency);
+
+            // 무돌 분석 테이블 재렌더링
+            this.renderRainbowCrystalAnalysis();
 
             // 효율 버튼 텍스트도 업데이트
             this.updateEfficiencyButtonText(efficiencyBtn, newCurrency);
@@ -318,6 +327,9 @@ export class PaymentViewModel {
             this.toggleCurrency(currentCurrency);
         }
 
+        // 무돌 분석 테이블 렌더링
+        this.renderRainbowCrystalAnalysis();
+
         // 스크롤 위치 복원 (DOM 업데이트 후에 실행)
         if (container && (scrollLeft > 0 || scrollTop > 0)) {
             requestAnimationFrame(() => {
@@ -327,6 +339,13 @@ export class PaymentViewModel {
         }
 
         // 클릭 이벤트는 이벤트 위임으로 한 번만 바인딩되므로 재호출 불필요
+    }
+
+    /**
+     * 무돌(虹の結晶) 분석 테이블 렌더링
+     */
+    renderRainbowCrystalAnalysis() {
+        this.view.renderRainbowCrystalAnalysis(PACKAGES, this.model);
     }
 
     /**

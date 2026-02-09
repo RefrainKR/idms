@@ -63,6 +63,114 @@ export class PaymentModel {
         return (jpy / 100) * this.exchangeRate.value;
     }
 
+    /**
+     * 무돌(虹の結晶) 가격 계산
+     * ASOBI와 iOS 패키지 비교를 통해 무돌의 암묵적 가치를 역산
+     *
+     * @param {object} packageData - 전체 패키지 데이터 (PACKAGES 객체)
+     * @returns {Array} 무돌 가격 분석 결과 배열
+     *
+     * 각 항목 형식:
+     * {
+     *   packageId: 'D',
+     *   asobiPrice: { jpy: 3200, krw: 30400 },
+     *   iosPrice: { jpy: 305, krw: 29000 },
+     *   gemDiff: 130,
+     *   normalizedPriceDiff: { jpy: 15, krw: 1468 },
+     *   rainbowCrystals: 15,
+     *   pricePerCrystal: { jpy: 1.0, krw: 97.87 },
+     *   isNegative: false,
+     *   fallbackPrice: { jpy: 1.2, krw: 114.0 } // 음수일 경우만
+     * }
+     */
+    calculateRainbowCrystalPrices(packageData) {
+        const results = [];
+        const targetPackages = ['D', 'E', 'F']; // D, E, F팩만 비교 (무돌 있음)
+
+        targetPackages.forEach(pkgId => {
+            const asobiPkg = packageData.ASOBI?.NORMAL?.[pkgId];
+            const iosPkg = packageData.IOS?.NORMAL?.[pkgId];
+
+            if (!asobiPkg || !iosPkg) return;
+
+            // ASOBI에 무돌이 없으면 스킵
+            if (!asobiPkg.rainbow || asobiPkg.rainbow === 0) return;
+
+            // Step 1: iOS 유료돌 단가 계산 (무돌 없으므로 순수)
+            const iosPriceKRW = iosPkg.price; // 원화 기준
+            const iosDiscountedKRW = this.applyKRWDiscount(iosPriceKRW);
+            const iosGemPriceKRW = iosDiscountedKRW / iosPkg.paidGems;
+
+            // Step 2: ASOBI 가격을 원화로 환산 (할인 적용 후)
+            const asobiPriceJPY = asobiPkg.price;
+            const asobiDiscountedJPY = this.applyJPYDiscount(asobiPriceJPY);
+            const asobiDiscountedKRW = this.convertToKRW(asobiDiscountedJPY);
+
+            // Step 3: ASOBI 유료돌을 iOS 기준 가격으로 정규화
+            const asobiNormalizedGemValueKRW = asobiPkg.paidGems * iosGemPriceKRW;
+
+            // Step 4: 차액 = 무돌의 총 가치
+            const rainbowCrystalTotalValueKRW = asobiDiscountedKRW - asobiNormalizedGemValueKRW;
+
+            // Step 5: 무돌 1개 가격
+            const pricePerCrystalKRW = rainbowCrystalTotalValueKRW / asobiPkg.rainbow;
+
+            // 엔화로도 계산
+            const pricePerCrystalJPY = (pricePerCrystalKRW / this.exchangeRate.value) * 100;
+
+            // 음수 체크
+            const isNegative = rainbowCrystalTotalValueKRW < 0;
+
+            // 음수일 경우 할인 전 가격으로 재계산 (옵션 C)
+            let fallbackPrice = null;
+            if (isNegative) {
+                const asobiBasePriceKRW = this.convertToKRW(asobiPriceJPY);
+                const fallbackTotalValueKRW = asobiBasePriceKRW - asobiNormalizedGemValueKRW;
+                const fallbackPricePerCrystalKRW = fallbackTotalValueKRW / asobiPkg.rainbow;
+                const fallbackPricePerCrystalJPY = (fallbackPricePerCrystalKRW / this.exchangeRate.value) * 100;
+
+                fallbackPrice = {
+                    jpy: fallbackPricePerCrystalJPY,
+                    krw: fallbackPricePerCrystalKRW,
+                    total: {
+                        jpy: fallbackPricePerCrystalJPY * asobiPkg.rainbow,
+                        krw: fallbackPricePerCrystalKRW * asobiPkg.rainbow
+                    }
+                };
+            }
+
+            results.push({
+                packageId: pkgId,
+                asobiPrice: {
+                    jpy: asobiDiscountedJPY,
+                    krw: Math.round(asobiDiscountedKRW)
+                },
+                iosPrice: {
+                    jpy: Math.round((iosDiscountedKRW / this.exchangeRate.value) * 100),
+                    krw: iosDiscountedKRW
+                },
+                gemDiff: asobiPkg.paidGems - iosPkg.paidGems,
+                normalizedPriceDiff: {
+                    jpy: Math.round((rainbowCrystalTotalValueKRW / this.exchangeRate.value) * 100),
+                    krw: Math.round(rainbowCrystalTotalValueKRW)
+                },
+                rainbowCrystals: asobiPkg.rainbow,
+                pricePerCrystal: {
+                    jpy: pricePerCrystalJPY,
+                    krw: pricePerCrystalKRW,
+                    total: {
+                        jpy: pricePerCrystalJPY * asobiPkg.rainbow,
+                        krw: pricePerCrystalKRW * asobiPkg.rainbow
+                    }
+                },
+                isNegative,
+                fallbackPrice
+            });
+        });
+
+        return results;
+    }
+
     toJSON() {
         return {
             exchangeRate: this.exchangeRate.value,

@@ -60,7 +60,7 @@ export class PaymentView {
         const baselineEfficiency = this._getBaselineEfficiency(packageData, model);
 
         // 통합 테이블 생성
-        let html = '<table class="payment-comparison-table">';
+        let html = '<table class="data-table payment-comparison-table">';
 
         // 헤더 (1번만)
         html += this._renderTableHeader(efficiencyMode, viewMode);
@@ -243,15 +243,15 @@ export class PaymentView {
 
                     // 할인 표시
                     const priceKRWDisplay = discountedPriceKRW < basePriceKRW
-                        ? `<s>${basePriceKRW.toLocaleString()}</s> ${discountedPriceKRW.toLocaleString()}`
-                        : discountedPriceKRW.toLocaleString();
+                        ? `<s>${basePriceKRW.toLocaleString()}₩</s> ${discountedPriceKRW.toLocaleString()}₩`
+                        : `${discountedPriceKRW.toLocaleString()}₩`;
                     const priceJPYDisplay = discountedPriceJPY < basePriceJPY
-                        ? `<s>${basePriceJPY.toLocaleString()}</s> ${discountedPriceJPY.toLocaleString()}`
-                        : discountedPriceJPY.toLocaleString();
+                        ? `<s>${basePriceJPY.toLocaleString()}¥</s> ${discountedPriceJPY.toLocaleString()}¥`
+                        : `${discountedPriceJPY.toLocaleString()}¥`;
 
                     html += `<td class="cell-number platform-cell${selectedClass}${firstClass} currency-krw hide-krw${simpleClass}" data-platform="${platform}" data-category="${category}" data-package="${pkgId}">${priceKRWDisplay}</td>`;
                     html += `<td class="cell-number platform-cell${selectedClass} currency-jpy${simpleClass}" data-platform="${platform}" data-category="${category}" data-package="${pkgId}">${priceJPYDisplay}</td>`;
-                    html += `<td class="cell-number platform-cell${selectedClass}${simpleClass}" data-platform="${platform}" data-category="${category}" data-package="${pkgId}">${paidGems.toLocaleString()}</td>`;
+                    html += `<td class="cell-number platform-cell${selectedClass}${simpleClass}" data-platform="${platform}" data-category="${category}" data-package="${pkgId}">${paidGems.toLocaleString()}돌</td>`;
                     html += `<td class="cell-extras platform-cell${selectedClass}" data-platform="${platform}" data-category="${category}" data-package="${pkgId}">${extras}</td>`;
                     html += `<td class="cell-efficiency platform-cell${selectedClass} currency-krw hide-krw" data-platform="${platform}" data-category="${category}" data-package="${pkgId}">${krwEfficiency.toFixed(3)}${krwUnit}</td>`;
                     html += `<td class="cell-efficiency platform-cell${selectedClass} currency-jpy" data-platform="${platform}" data-category="${category}" data-package="${pkgId}">${yenEfficiency.toFixed(3)}${yenUnit}</td>`;
@@ -286,15 +286,15 @@ export class PaymentView {
 
                     // 할인 표시
                     const priceJPYDisplay = discountedPriceJPY < basePriceJPY
-                        ? `<s>${basePriceJPY.toLocaleString()}</s> ${discountedPriceJPY.toLocaleString()}`
-                        : discountedPriceJPY.toLocaleString();
+                        ? `<s>${basePriceJPY.toLocaleString()}¥</s> ${discountedPriceJPY.toLocaleString()}¥`
+                        : `${discountedPriceJPY.toLocaleString()}¥`;
                     const priceKRWDisplay = discountedPriceKRW < basePriceKRW
-                        ? `<s>${basePriceKRW.toLocaleString()}</s> ${discountedPriceKRW.toLocaleString()}`
-                        : discountedPriceKRW.toLocaleString();
+                        ? `<s>${basePriceKRW.toLocaleString()}₩</s> ${discountedPriceKRW.toLocaleString()}₩`
+                        : `${discountedPriceKRW.toLocaleString()}₩`;
 
                     html += `<td class="cell-number platform-cell${selectedClass}${firstClass} currency-jpy${simpleClass}" data-platform="${platform}" data-category="${category}" data-package="${pkgId}" data-currency="jpy">${priceJPYDisplay}</td>`;
                     html += `<td class="cell-number platform-cell${selectedClass} currency-krw hide-krw${simpleClass}" data-platform="${platform}" data-category="${category}" data-package="${pkgId}" data-currency="krw">${priceKRWDisplay}</td>`;
-                    html += `<td class="cell-number platform-cell${selectedClass}${simpleClass}" data-platform="${platform}" data-category="${category}" data-package="${pkgId}">${paidGems.toLocaleString()}</td>`;
+                    html += `<td class="cell-number platform-cell${selectedClass}${simpleClass}" data-platform="${platform}" data-category="${category}" data-package="${pkgId}">${paidGems.toLocaleString()}돌</td>`;
                     html += `<td class="cell-extras platform-cell${selectedClass}" data-platform="${platform}" data-category="${category}" data-package="${pkgId}">${extras}</td>`;
                     html += `<td class="cell-efficiency platform-cell${selectedClass} currency-jpy" data-platform="${platform}" data-category="${category}" data-package="${pkgId}">${yenEfficiency.toFixed(3)}${yenUnit}</td>`;
                     html += `<td class="cell-efficiency platform-cell${selectedClass} currency-krw hide-krw" data-platform="${platform}" data-category="${category}" data-package="${pkgId}">${krwEfficiency.toFixed(3)}${krwUnit}</td>`;
@@ -320,9 +320,90 @@ export class PaymentView {
         if (pkg.rainbow) extras.push(`무돌×${pkg.rainbow}`);
         if (pkg.wings) extras.push(`날개×${pkg.wings}`);
         if (pkg.pieces) extras.push(`피스×${pkg.pieces}`);
-        if (pkg.ourstream) extras.push(`OurSTREAM×${pkg.ourstream}`);
+        if (pkg.ourstream) extras.push(`STREAM×${pkg.ourstream}`);
         if (pkg.totalFreeGems) extras.push(`무료돌×${pkg.totalFreeGems}`);
 
         return extras.length > 0 ? extras.join(', ') : '-';
+    }
+
+    /**
+     * 무돌(虹の結晶) 가격 분석 테이블 렌더링
+     * @param {object} packageData - 패키지 데이터
+     * @param {PaymentModel} model - PaymentModel 인스턴스
+     */
+    renderRainbowCrystalAnalysis(packageData, model) {
+        const container = document.getElementById('rainbow-crystal-table-container');
+        if (!container) return;
+
+        // 통화 토글 상태 확인
+        const currencyBtn = document.getElementById('payment-toggle-currency');
+        const showKRW = currencyBtn?.dataset.currency === 'KRW';
+
+        // 무돌 가격 계산
+        const results = model.calculateRainbowCrystalPrices(packageData);
+
+        if (results.length === 0) {
+            container.innerHTML = '<p style="text-align: center; color: var(--text-secondary);">분석 가능한 데이터가 없습니다.</p>';
+            return;
+        }
+
+        let html = '<table class="data-table rainbow-crystal-table">';
+
+        // 헤더
+        html += `
+            <thead>
+                <tr>
+                    <th>패키지</th>
+                    <th>개수</th>
+                    <th>개당 가격${showKRW ? '(₩)' : '(¥)'}</th>
+                    <th>전체 가격${showKRW ? '(₩)' : '(¥)'}</th>
+                    <th>권장</th>
+                </tr>
+            </thead>
+        `;
+
+        // 바디
+        html += '<tbody>';
+
+        results.forEach(result => {
+            const totalPrice = showKRW ? result.pricePerCrystal.total.krw : result.pricePerCrystal.total.jpy;
+            const unitPrice = showKRW ? result.pricePerCrystal.krw : result.pricePerCrystal.jpy;
+            const currency = showKRW ? '₩' : '¥';
+            const isNegative = result.isNegative;
+
+            // 전체 가격 표시 (소수점 없이 반올림, 음수면 빨간색)
+            const roundedTotalPrice = Math.round(totalPrice);
+            const priceClass = isNegative ? 'price-negative' : '';
+            const totalPriceDisplay = `<span class="${priceClass}">${roundedTotalPrice.toLocaleString()}${currency}</span>`;
+
+            // 개당 가격 표시 (소수점 3자리까지, 음수면 빨간색)
+            const unitPriceDisplay = `<span class="${priceClass}">${unitPrice.toFixed(3)}${currency}</span>`;
+
+            // 권장 구매처: 음수 (ASOBI 더 비쌈) → "ASOBI", 양수 (iOS 더 비쌈) → "복합적"
+            const recommendation = isNegative ? 'ASOBI' : '복합적';
+
+            html += `
+                <tr>
+                    <td class="cell-package">${result.packageId}팩</td>
+                    <td class="cell-number">${result.rainbowCrystals}개</td>
+                    <td class="cell-price">${unitPriceDisplay}</td>
+                    <td class="cell-price">${totalPriceDisplay}</td>
+                    <td class="cell-recommendation">${recommendation}</td>
+                </tr>
+            `;
+        });
+
+        html += '</tbody>';
+        html += '</table>';
+
+        // 참고 정보 추가
+        html += `
+            <p class="table-reference-info">
+                ※ ASOBI와 iOS의 가격 차이를 통해 무돌의 암묵적 가치를 역산합니다.
+                유료돌 개수를 정규화하여 순수한 무돌의 가치만 추출합니다.
+            </p>
+        `;
+
+        container.innerHTML = html;
     }
 }

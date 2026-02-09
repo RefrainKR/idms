@@ -106,28 +106,9 @@
     margin-bottom: 10px;
 }
 
+/* payment-comparison-table: common.css의 .data-table 상속 */
 .payment-comparison-table {
-    width: 100%;
-    border-collapse: collapse;
-    background: var(--bg-card);
-    font-size: 0.85rem;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-}
-
-/* 헤더 스타일 */
-.payment-comparison-table thead {
-    background: var(--primary);
-    color: white;
-    position: sticky;
-    top: 0;
-    z-index: 10;
-}
-
-.payment-comparison-table th {
-    padding: 10px 8px;
-    text-align: center;
-    font-weight: 600;
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    /* .data-table 기본 스타일 상속 */
 }
 
 .payment-comparison-table .header-package {
@@ -143,65 +124,44 @@
 .payment-comparison-table .header-attr {
     background: var(--secondary);
     font-size: 0.8rem;
-    min-width: 70px;
+    min-width: 75px;
 }
 
-/* 바디 스타일 */
-.payment-comparison-table tbody tr {
-    transition: background 0.2s;
+/* 바디 스타일: .data-table 기본 스타일 상속 */
+
+/* 셀 타입별 스타일: .data-table 기본 스타일 상속 + 추가 스타일 */
+.payment-comparison-table .cell-package {
+    text-align: center; /* 기본 .data-table의 left 대신 center */
 }
 
-.payment-comparison-table tbody tr:nth-child(even) {
-    background: var(--gray-50);
-}
-
-.payment-comparison-table tbody tr:hover {
-    background: var(--primary-light);
-}
-
-.payment-comparison-table td {
-    padding: 8px;
-    border: 1px solid var(--border-color);
-    text-align: center;
-}
-
-/* 셀 타입별 스타일 */
-.cell-package {
-    font-weight: 600;
-    background: var(--gray-100);
-    text-align: left;
-    padding-left: 12px;
-}
-
-.cell-number {
-    text-align: right;
+.payment-comparison-table .cell-number {
     white-space: normal; /* 줄바꿈 허용 */
     line-height: 1.4; /* 행간 조정 */
 }
 
 /* 할인 가격 표시 - 강제 줄바꿈 */
-.cell-number s {
+.payment-comparison-table .cell-number s {
     display: block; /* 취소선 가격을 블록으로 만들어 줄바꿈 강제 */
 }
 
-.cell-extras {
+.payment-comparison-table .cell-extras {
     font-size: 0.75rem;
     color: var(--text-secondary);
 }
 
-.cell-efficiency {
+.payment-comparison-table .cell-efficiency {
     text-align: right;
     font-weight: 600;
     color: var(--accent-blue);
 }
 
-.cell-multiplier {
+.payment-comparison-table .cell-multiplier {
     text-align: center;
     font-weight: 700;
     color: var(--primary);
 }
 
-.cell-empty {
+.payment-comparison-table .cell-empty {
     color: var(--text-muted);
     background: var(--gray-100);
 }
@@ -249,6 +209,36 @@
     border-top: 2px solid var(--border-color);
     border-bottom: 2px solid var(--border-color);
     color: var(--primary);
+}
+
+/* 무돌(虹の結晶) 가격 분석 테이블 */
+/* rainbow-crystal-table: common.css의 .data-table 상속 + 추가 스타일 */
+.rainbow-crystal-table {
+    /* font-size: 0.85rem (기본 .data-table과 동일) */
+}
+
+.rainbow-crystal-table tbody tr:hover:not(.row-average) {
+    background: var(--primary-light);
+}
+
+.rainbow-crystal-table .cell-package {
+    text-align: center; /* 기본 .data-table의 left 대신 center */
+}
+
+.rainbow-crystal-table .cell-number {
+    text-align: center; /* 기본 .data-table의 right 대신 center */
+}
+
+.rainbow-crystal-table .cell-recommendation {
+    text-align: center;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+/* 음수 가격 스타일 */
+.rainbow-crystal-table .price-negative {
+    color: var(--error-red);
+    font-weight: 700;
 }
 
 /* 반응형 */
