@@ -113,7 +113,7 @@
 
 .payment-comparison-table .header-package {
     background: var(--primary);
-    min-width: 100px;
+    min-width: 75px;
 }
 
 .payment-comparison-table .header-platform {
@@ -262,6 +262,29 @@
 
     .payment-comparison-table th,
     .payment-comparison-table td {
+        padding: 6px 4px;
+    }
+
+    /* 헤더 폰트 크기 조정 */
+    .payment-comparison-table .header-package {
+        min-width: 70px;
+    }
+
+    .payment-comparison-table .header-platform {
+        font-size: 0.75rem;
+    }
+
+    .payment-comparison-table .header-attr {
+        font-size: 0.7rem;
+        min-width: 70px;
+    }
+
+    .rainbow-crystal-table {
+        font-size: 0.75rem;
+    }
+
+    .rainbow-crystal-table th,
+    .rainbow-crystal-table td {
         padding: 6px 4px;
     }
 

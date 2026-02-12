@@ -88,7 +88,6 @@ export class PaymentViewModel {
             this.model.exchangeRate,
             this.model.jpyDiscountRate,
             this.model.krwDiscountRate,
-            this.model.krwDiscountCap,
             this.model.baselinePackage // 기준 패키지 변경 시에도 재계산
         ];
 
