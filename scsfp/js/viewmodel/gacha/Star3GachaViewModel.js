@@ -7,6 +7,7 @@ import { ToggleButton } from '../../view/component/ToggleButton.js';
 import { CONFIG, TOGGLE_STATES, GACHA_RULES } from '../../core/GachaConstants.js';
 import { ProbabilityValidator } from '../../utils/ProbabilityValidator.js';
 import { getGachaConfig, applyTabVisibility } from '../../view/gacha/GachaTypeConfig.js';
+import { RainbowCrystalCalculator } from '../../core/RainbowCrystalCalculator.js';
 
 export class Star3GachaViewModel extends BaseGachaViewModel {
     constructor() {
@@ -24,7 +25,7 @@ export class Star3GachaViewModel extends BaseGachaViewModel {
             'targetProbability3': this.model.targetProbability
         };
         
-        this.chartRefs = { collection: { current: null }, total: { current: null }, efficiency: { current: null }, cdf: { current: null } };
+        this.chartRefs = { collection: { current: null }, total: { current: null }, efficiency: { current: null }, cdf: { current: null }, rainbow: { current: null } };
     }
 
     init() {
@@ -55,6 +56,11 @@ export class Star3GachaViewModel extends BaseGachaViewModel {
 
         const config = getGachaConfig('star3');
         applyTabVisibility(config, tabId);
+
+        // 무돌 탭으로 전환 시 차트 렌더링
+        if (tabId === 'res-3s-rainbow') {
+            this.renderRainbowExpectationChart();
+        }
     }
         
     renderPresetButtons() {
@@ -248,6 +254,100 @@ export class Star3GachaViewModel extends BaseGachaViewModel {
             step4Mode: this.model.step4Mode.value,
             randomMode: this.model.randomMode.value,
             targetProb: this.model.targetProbability.value / 100
+        });
+    }
+
+    /**
+     * 무돌 기대값 차트 렌더링
+     */
+    renderRainbowExpectationChart() {
+        const canvas = document.getElementById('rainbowExpectationChart');
+        if (!canvas) return;
+
+        // 200회까지 누적 무돌 기대값 계산
+        const data = RainbowCrystalCalculator.star3Cumulative(200);
+
+        // 기존 차트 파괴
+        if (this.chartRefs.rainbow.current) {
+            this.chartRefs.rainbow.current.destroy();
+        }
+
+        // 차트 데이터 준비
+        const labels = data.map(d => d.pulls);
+        const values = data.map(d => d.expected);
+
+        // 차트 생성
+        const ctx = canvas.getContext('2d');
+        this.chartRefs.rainbow.current = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: '누적 무돌 기대값',
+                    data: values,
+                    borderColor: 'rgb(75, 192, 192)',
+                    backgroundColor: 'rgba(75, 192, 192, 0.1)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.1,
+                    pointRadius: 0,
+                    pointHoverRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: '일반 3성 가챠 - 무돌 획득 기대값',
+                        font: { size: 16, weight: 'bold' }
+                    },
+                    legend: {
+                        display: true,
+                        position: 'top'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return `${context.parsed.y.toFixed(2)}개`;
+                            }
+                        }
+                    },
+                    datalabels: {
+                        display: false
+                    }
+                },
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: '뽑기 횟수',
+                            font: { size: 14, weight: 'bold' }
+                        },
+                        ticks: {
+                            maxTicksLimit: 20
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: '누적 무돌 개수',
+                            font: { size: 14, weight: 'bold' }
+                        },
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return value.toFixed(0) + '개';
+                            }
+                        }
+                    }
+                },
+                interaction: {
+                    intersect: false,
+                    mode: 'index'
+                }
+            }
         });
     }
 }
