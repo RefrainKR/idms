@@ -36,32 +36,23 @@ window.onload = function() {
     // 3. UI 컴포넌트 활성화
     new CollapsibleSection(); // 섹션 토글 기능
 
-    // 4. 메인 탭 네비게이션 설정
-    const mainTabButtons = document.querySelectorAll('.main-tab-nav .tab-button');
-
-    mainTabButtons.forEach(button => {
-        button.addEventListener('click', () => {
-            const targetTab = button.dataset.tab;
-
-            // 모든 탭 버튼 비활성화
-            mainTabButtons.forEach(btn => btn.classList.remove('active'));
-            button.classList.add('active');
-
-            // 모든 탭 콘텐츠 숨김
-            document.querySelectorAll('#main-tab-system > .tab-content').forEach(tab => {
-                tab.classList.remove('active');
-            });
-
-            // 선택된 탭 표시
-            document.getElementById(targetTab).classList.add('active');
-
+    // 4. 메인 탭 네비게이션 설정 (가챠 섹션)
+    const gachaSection = document.querySelector('#gacha-section');
+    if (gachaSection) {
+        new TabManager(gachaSection, (tabId) => {
             // ViewModel 계산 트리거
-            if (targetTab === 'tab-3star') star3VM.calculate();
-            else if (targetTab === 'tab-birthday') birthdayVM.calculate();
-            else if (targetTab === 'tab-collab') collabVM.calculate();
-            else if (targetTab === 'tab-2star') star2VM.calculate();
+            if (tabId === 'tab-3star') star3VM.calculate();
+            else if (tabId === 'tab-birthday') birthdayVM.calculate();
+            else if (tabId === 'tab-collab') collabVM.calculate();
+            else if (tabId === 'tab-2star') star2VM.calculate();
         });
-    });
+    }
+
+    // 5. 메인 탭 네비게이션 설정 (과금 효율 섹션)
+    const paymentTabSystem = document.querySelector('#payment-tab-system');
+    if (paymentTabSystem) {
+        new TabManager(paymentTabSystem);
+    }
 
     // 서브 탭 시스템 연결
     const sub3 = document.getElementById('sub-tab-system-3star');

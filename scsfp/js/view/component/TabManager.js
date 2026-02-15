@@ -5,8 +5,9 @@ export class TabManager {
 
         const wrapperClass = options.wrapperClass || 'tab-content-wrapper';
 
-        // 1. 해당 컨테이너의 직계 버튼 그룹 찾기 (.tab-buttons 또는 .sub-tab-nav)
-        const btnContainer = this.container.querySelector('.tab-buttons, .sub-tab-nav');
+        // 1. 해당 컨테이너의 직계 버튼 그룹 찾기
+        // main-tab-nav, gacha-tab-nav, payment-tab-nav, tab-buttons, sub-tab-nav 모두 지원
+        const btnContainer = this.container.querySelector('.main-tab-nav, .gacha-tab-nav, .payment-tab-nav, .tab-buttons, .sub-tab-nav');
 
         // 2. wrapper가 있으면 사용, 없으면 container 자체에서 tab-content 검색
         let contentContainer = this.container.querySelector(`.${wrapperClass}`);

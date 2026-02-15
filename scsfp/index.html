@@ -29,7 +29,7 @@
         </button>
         <button class="sidebar-item" data-section="payment">
             <span class="sidebar-icon">💰</span>
-            <span class="sidebar-text">과금 효율(개발중)</span>
+            <span class="sidebar-text">과금 효율</span>
         </button>
     </nav>
 </aside>
@@ -43,7 +43,7 @@
         <section id="gacha-section" class="app-section active">
 
             <!-- Main Navigation Tabs -->
-            <nav class="main-tab-nav">
+            <nav class="main-tab-nav gacha-tab-nav">
                 <button class="tab-button active" data-tab="tab-3star">3성</button>
                 <button class="tab-button" data-tab="tab-birthday">생일</button>
                 <button class="tab-button" data-tab="tab-collab">콜라보</button>
@@ -574,8 +574,9 @@
             <!-- 메인 탭 시스템 -->
             <div id="payment-tab-system" class="main-tab-system">
                 <!-- 탭 네비게이션 -->
-                <nav class="main-tab-nav">
+                <nav class="main-tab-nav payment-tab-nav">
                     <button class="tab-button active" data-tab="payment-tab-packages">패키지</button>
+                    <button class="tab-button" data-tab="payment-tab-rainbow">무돌</button>
                 </nav>
 
                 <!-- 탭 1: 패키지 비교 -->
@@ -600,11 +601,13 @@
                             </div>
                         </div>
                     </div>
+                </div>
 
-                    <!-- 무돌(虹の結晶) 가격 분석 -->
+                <!-- 탭 2: 무돌 분석 -->
+                <div id="payment-tab-rainbow" class="tab-content">
                     <div class="collapsible-container" data-collapsible="true">
                         <div class="section-header">
-                            <h3 class="section-title">무돌(虹の結晶) 가격 분석</h3>
+                            <h3 class="section-title">패키지 분석</h3>
                             <button class="toggle-btn" data-toggle-section>▼</button>
                         </div>
                         <div class="section-content force-block">
@@ -617,7 +620,7 @@
                     </div>
                 </div>
 
-                <!-- 탭 2: 손익분기점 -->
+                <!-- 탭 3: 손익분기점 -->
                 <div id="payment-tab-analysis" class="tab-content">
                     <div class="collapsible-container" data-collapsible="true">
                         <div class="section-header">
