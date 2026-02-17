@@ -4,7 +4,7 @@ import { ProbabilityEngine } from '../../core/ProbabilityEngine.js';
 import { EfficiencyCalculator } from '../../core/EfficiencyCalculator.js';
 import { GachaResultView } from '../../view/gacha/GachaResultView.js';
 import { ToggleButton } from '../../view/component/ToggleButton.js';
-import { CONFIG, TOGGLE_STATES, GACHA_RULES } from '../../core/GachaConstants.js';
+import { CONFIG, TOGGLE_STATES, GACHA_RULES } from '../../config/GachaConfig.js';
 import { ProbabilityValidator } from '../../utils/ProbabilityValidator.js';
 import { getGachaConfig, applyTabVisibility } from '../../view/gacha/GachaTypeConfig.js';
 

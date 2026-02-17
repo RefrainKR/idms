@@ -10,7 +10,7 @@
 - **과금 효율 분석**: 플랫폼별(ASOBI/Android/iOS) 패키지 비교, 효율 계산, 기준 패키지 선택 및 효율 배수 표시
 - **SPA 아키텍처**: 사이드바 네비게이션을 통한 섹션 전환(가챠 ↔ 과금) 및 히스토리 관리 지원
 
-**현재 버전**: v1.9.4 (2026-02-09)
+**현재 버전**: v1.9.5 (2026-02-17)
 
 **문서 참조**:
 - **버전 히스토리**: [@docs/UPDATE.md](docs/UPDATE.md)
@@ -54,9 +54,14 @@ npx serve
 - **Core** ([js/core/](scsfp/js/core/)): 앱 특화 도메인 로직
   - [SectionManager.js](scsfp/js/core/SectionManager.js): SPA 섹션 전환 및 히스토리 관리
   - [ProbabilityEngine.js](scsfp/js/core/ProbabilityEngine.js): DP 상태 전이, 컨벌루션
-  - [GachaConstants.js](scsfp/js/core/GachaConstants.js): 모든 설정 상수 및 가챠 규칙
+  - [Constants.js](scsfp/js/core/Constants.js): 불변 상수 (게임 규칙, 수학 상수, 앱 버전)
   - [EfficiencyCalculator.js](scsfp/js/core/EfficiencyCalculator.js): 효율 계산 서비스 클래스
   - [SharedSettings.js](scsfp/js/core/SharedSettings.js): 가챠 간 공유 설정 관리 (싱글톤)
+
+- **Config** ([js/config/](scsfp/js/config/)): 변경 가능한 설정값
+  - [GachaConfig.js](scsfp/js/config/GachaConfig.js): 가챠 입력 설정, 프리셋, 의존성
+  - [PaymentConfig.js](scsfp/js/config/PaymentConfig.js): 플랫폼별 패키지 데이터
+  - [UIConfig.js](scsfp/js/config/UIConfig.js): UI 포맷, 차트 스타일, Observable 기본값
 
 - **Utils** ([js/utils/](scsfp/js/utils/)): 프로젝트 간 재사용 가능한 범용 컴포넌트
   - [Observable.js](scsfp/js/utils/Observable.js): 반응형 데이터 바인딩 패턴
@@ -217,7 +222,7 @@ class BaseGachaViewModel {
 - `runRandomTicket(dp, poolSize)`: 랜덤 티켓 보상 (각 아이템당 1/poolSize)
 - `convolve(dpA, dpB)`: 독립 확률 분포 합성 (2성 그룹 분석용)
 
-**가챠 규칙** ([GachaConstants.js:59-78](scsfp/js/core/GachaConstants.js#L59-L78)):
+**가챠 규칙** ([Constants.js](scsfp/js/core/Constants.js)):
 ```javascript
 GACHA_RULES = {
   STAR3: {
@@ -370,16 +375,101 @@ GACHA_RULES = {
 - iOS D팩: ₩29,000, 유료돌 2,570개, 무돌 0개
 - 가격 차이 = 무돌 15개의 가치로 해석 가능
 
+## Constants vs Config 설계 철학 (v1.9.5)
+
+**원칙**: 하드코딩을 최대한 자제하고, 변경 가능한 설정은 Config 파일로 분리하여 유연하게 구성
+
+### js/core/Constants.js (불변 상수)
+절대 변경되지 않는 값들만 포함:
+- `APP_VERSION`: 앱 버전 관리
+- `GACHA_RULES`: 게임 시스템 규칙 (Step 주기, 천장, 확정 시스템)
+- `PROBABILITY_MODE`: 확률 표시 모드 (개별/누적)
+- `MATH_CONSTANTS`: 수학 상수 (EPSILON, PERCENTAGE_MULTIPLIER)
+- `FORMATTING_RULES`: 소수점 자릿수 규칙
+
+**사용 예시**:
+```javascript
+import { GACHA_RULES, MATH_CONSTANTS } from '../core/Constants.js';
+
+// 하드코딩 금지
+model.stepMax.value = value * 40; // ❌
+
+// Constants 사용
+model.stepMax.value = value * GACHA_RULES.STAR3.STEPUP_CYCLE; // ✅
+```
+
+### js/config/GachaConfig.js (가챠 설정)
+사용자가 변경 가능한 가챠 설정:
+- `INPUTS`: 입력 필드 설정 (min, max, step, 기본값, 레이블)
+- `PRESETS`: 가챠 타입별 프리셋 (본가 2탄, 생일 등)
+- `DEPENDENCIES`: 입력 간 의존성 처리
+- `TOGGLE_STATES`: UI 토글 상태 관리
+
+**특징**:
+- `GACHA_RULES`와 `PROBABILITY_MODE`을 Constants.js에서 re-export
+- 설정 변경 시 UI에 즉시 반영
+- InputBinder가 이 설정을 참조하여 입력 범위 제한
+
+### js/config/PaymentConfig.js (과금 설정)
+플랫폼별 패키지 데이터:
+- `PACKAGES`: ASOBI/ANDROID/iOS 패키지 정보
+- `PAYMENT_CONFIG`: 입력 필드 설정 (환율, 할인율)
+
+### js/config/UIConfig.js (UI 설정)
+UI 표시 및 차트 스타일:
+- `FORMAT`: 소수점 자릿수 (FORMATTING_RULES를 re-export)
+- `CHART`: 차트 패딩, 폰트 크기, 투명도, 라인 스타일
+- `CHART_POINT`: 포인트 반지름, 강조 간격
+- `CHART_RANGE`: 차트 X축 제한, 최대 가챠 횟수
+- `OBSERVABLE_DEFAULTS`: Model 초기값 (가챠/과금 모든 타입)
+
+**하드코딩 제거 예시**:
+```javascript
+// 하드코딩 (❌)
+const data = RainbowCrystalCalculator.star3Cumulative(200);
+pointRadius: idx === 0 ? 4 : (idx % 40 === 0 ? 3 : 1)
+
+// UIConfig 사용 (✅)
+import { CHART_RANGE, CHART_POINT } from '../../config/UIConfig.js';
+const data = RainbowCrystalCalculator.star3Cumulative(CHART_RANGE.RAINBOW_MAX_PULLS);
+pointRadius: idx === 0 ? CHART_POINT.RADIUS.ORIGIN :
+             (idx % CHART_POINT.EMPHASIS_INTERVAL.STAR3_CYCLE === 0
+              ? CHART_POINT.RADIUS.CEILING_EMPHASIS
+              : CHART_POINT.RADIUS.DEFAULT)
+```
+
+### Observable과 InputBinder의 역할 분리
+
+**Observable** (Model 계층):
+- 반응형 데이터 상태 관리
+- 값 변경 시 구독자에게 알림
+- Model의 모든 속성은 Observable 인스턴스
+
+**InputBinder** (View 계층):
+- HTML input ↔ Observable 양방향 동기화
+- 입력 검증 (ProbabilityValidator 사용)
+- 타입 변환 (int/float)
+- Config의 min/max/step 적용
+
+**둘 다 필수인 이유**:
+- Observable만: View 동기화 불가, 수동 DOM 조작 필요
+- InputBinder만: 상태 변경 알림 불가, 의존성 체인 처리 불가
+- 둘 다: MVVM 패턴 완성, 책임 분리, 재사용성 향상
+
 ## 주요 파일
 
+**Constants & Config**:
+- [Constants.js](scsfp/js/core/Constants.js): 불변 상수 (게임 규칙, 수학 상수, **APP_VERSION**)
+- [GachaConfig.js](scsfp/js/config/GachaConfig.js): 가챠 입력 설정, 프리셋, 의존성
+- [PaymentConfig.js](scsfp/js/config/PaymentConfig.js): 플랫폼별 패키지 데이터
+- [UIConfig.js](scsfp/js/config/UIConfig.js): UI 포맷, 차트 스타일, Observable 기본값
+
 **가챠 시스템**:
-- [GachaConstants.js](scsfp/js/core/GachaConstants.js): 가챠 설정, 프리셋, 규칙, **APP_VERSION**
 - [ProbabilityEngine.js](scsfp/js/core/ProbabilityEngine.js): DP 알고리즘, `ProbabilityValidator` 필수
 - [EfficiencyCalculator.js](scsfp/js/core/EfficiencyCalculator.js): 가챠 효율 계산 서비스
 - [ProbabilityValidator.js](scsfp/js/utils/ProbabilityValidator.js): 확률 검증 및 클램핑
 
 **과금 시스템**:
-- [PaymentConstants.js](scsfp/js/core/PaymentConstants.js): 플랫폼별 패키지 데이터
 - [PaymentModel.js](scsfp/js/model/payment/PaymentModel.js): 환율, 할인, 기준 패키지
 - [PaymentView.js](scsfp/js/view/payment/PaymentView.js): 테이블 렌더링
 - [PaymentViewModel.js](scsfp/js/viewmodel/payment/PaymentViewModel.js): 프레젠테이션 로직
@@ -411,12 +501,14 @@ Chart.register(ChartDataLabels); // CDN의 전역 변수
 
 ### 새 가챠 타입 추가
 
-1. [GachaConstants.js](scsfp/js/core/GachaConstants.js)에 `CONFIG.NEW_TYPE` 추가
-2. [js/model/gacha/](scsfp/js/model/gacha/)에 `NewTypeGachaModel.js` 생성
-3. [BaseGachaViewModel](scsfp/js/viewmodel/gacha/BaseGachaViewModel.js) 상속하여 `NewTypeGachaViewModel.js` 생성
-4. [GachaResultView.js](scsfp/js/view/gacha/GachaResultView.js)에 렌더링 로직 추가
-5. [index.html](scsfp/index.html)에 탭 추가
-6. [main.js](scsfp/js/main.js)에 인스턴스 추가
+1. [Constants.js](scsfp/js/core/Constants.js)에 `GACHA_RULES.NEW_TYPE` 추가 (천장, 확정 규칙)
+2. [GachaConfig.js](scsfp/js/config/GachaConfig.js)에 `CONFIG.NEW_TYPE` 추가 (입력 설정, 프리셋)
+3. [UIConfig.js](scsfp/js/config/UIConfig.js)에 `OBSERVABLE_DEFAULTS.NEW_TYPE` 추가 (초기값)
+4. [js/model/gacha/](scsfp/js/model/gacha/)에 `NewTypeGachaModel.js` 생성
+5. [BaseGachaViewModel](scsfp/js/viewmodel/gacha/BaseGachaViewModel.js) 상속하여 `NewTypeGachaViewModel.js` 생성
+6. [GachaResultView.js](scsfp/js/view/gacha/GachaResultView.js)에 렌더링 로직 추가
+7. [index.html](scsfp/index.html)에 탭 추가
+8. [main.js](scsfp/js/main.js)에 인스턴스 추가
 
 ### 확률 계산 안전성
 
@@ -467,26 +559,26 @@ calculate() {
 
 ## 버전 관리
 
-**현재 버전**: v1.9.4 (2026-02-09)
+**현재 버전**: v1.9.5 (2026-02-17)
 
 **버전 관리 위치**:
-1. `GachaConstants.js` - `APP_VERSION` 상수 (런타임 버전 체크)
-2. `index.html` - CSS/JS 캐시 버스팅 (`?v=1.9.3`)
+1. `Constants.js` - `APP_VERSION` 상수 (런타임 버전 체크)
+2. `index.html` - CSS/JS 캐시 버스팅 (`?v=1.9.5`)
 3. `UPDATE.md` - 버전 히스토리 문서화
 4. `CLAUDE.md` - 현재 버전 명시
 
 **버전 업데이트 체크리스트**:
-- [ ] `GachaConstants.js`: `APP_VERSION` 수정
+- [ ] `Constants.js`: `APP_VERSION` 수정
 - [ ] `index.html`: CSS/JS 버전 태그 수정 (총 4곳)
 - [ ] `UPDATE.md`: 새 버전 섹션 추가
 - [ ] `CLAUDE.md`: 현재 버전 업데이트
 
 **캐시 버스팅**:
 ```html
-<link rel="stylesheet" href="css/common.css?v=1.9.3">
-<link rel="stylesheet" href="css/gacha.css?v=1.9.3">
-<link rel="stylesheet" href="css/payment.css?v=1.9.3">
-<script type="module" src="js/main.js?v=1.9.3"></script>
+<link rel="stylesheet" href="css/common.css?v=1.9.5">
+<link rel="stylesheet" href="css/gacha.css?v=1.9.5">
+<link rel="stylesheet" href="css/payment.css?v=1.9.5">
+<script type="module" src="js/main.js?v=1.9.5"></script>
 ```
 
 **버전 마이그레이션**:
@@ -512,7 +604,17 @@ calculate() {
 3. **플랫폼 간 가격 차이 기반 분석**: 재화 가치 임의 설정 금지
 
 **공통**:
-1. **HTML input 요소는 최소한의 속성만** - `type`과 `id`만 지정, `min`/`max`/`value`/`step` 등은 Model 기본값 + InputBinder options로 관리
+1. **하드코딩 금지** - 숫자, 문자열 리터럴 대신 Constants/Config 사용
+   - ❌ `value * 40`, `pulls < 200`, `epsilon = 1e-9`
+   - ✅ `value * GACHA_RULES.STAR3.STEPUP_CYCLE`, `pulls < GACHA_RULES.STAR3.CEILING_INTERVAL`, `MATH_CONSTANTS.EPSILON`
+   - 예외: 0, 1, 100 등 수학적 의미가 명확한 값
+
+2. **Config 기반 초기화** - Model 기본값과 InputBinder 범위는 Config에서 일괄 관리
+   - Model: `OBSERVABLE_DEFAULTS`에서 초기값 로드
+   - InputBinder: `CONFIG.INPUTS`에서 min/max/step 로드
+   - 장점: 설정 변경 시 한 곳만 수정, 일관성 유지
+
+3. **HTML input 요소는 최소한의 속성만** - `type`과 `id`만 지정, `min`/`max`/`value`/`step` 등은 Config로 관리
    ```html
    <!-- ✅ 올바른 예 -->
    <input type="number" id="pickupCount">
@@ -520,9 +622,9 @@ calculate() {
    <!-- ❌ 잘못된 예 -->
    <input type="number" id="pickupCount" min="1" max="10" value="3" step="1">
    ```
-   - 이유: Model이 단일 진실 공급원(Single Source of Truth), HTML 속성과 Model 값 불일치 방지
-   - 기본값: Model constructor에서 `new Observable(기본값)` 설정
-   - 범위 제한: InputBinder 호출 시 `{ min, max, type }` options로 지정
+   - 이유: Config가 단일 진실 공급원(Single Source of Truth), HTML 속성과 Config 값 불일치 방지
+   - 기본값: `OBSERVABLE_DEFAULTS`에서 설정
+   - 범위 제한: `CONFIG.INPUTS`에서 설정
 
 ## 관련 문서
 

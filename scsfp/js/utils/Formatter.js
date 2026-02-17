@@ -1,3 +1,6 @@
+import { FORMAT } from '../config/UIConfig.js';
+import { MATH_CONSTANTS } from '../core/Constants.js';
+
 /**
  * js/lib/Formatter.js
  * 숫자 및 확률 포맷팅 유틸리티
@@ -17,7 +20,7 @@ export class Formatter {
      * probabilityFraction(0.00123) → "0.123%"
      * probabilityFraction(0.5) → "50.000%"
      */
-    static probabilityFraction(probability, decimals = 3) {
+    static probabilityFraction(probability, decimals = FORMAT.DECIMAL_PLACES.PROBABILITY) {
         // 정확히 0
         if (probability === 0) {
             return `0.${'0'.repeat(decimals)}%`;
@@ -57,9 +60,9 @@ export class Formatter {
      * probabilityBounded(0.999997) → "99.999%↑"
      * probabilityBounded(1) → "100.000%"
      */
-    static probabilityBounded(probability, decimals = 3) {
+    static probabilityBounded(probability, decimals = FORMAT.DECIMAL_PLACES.PROBABILITY) {
         // 부동소수점 오차 허용 범위 (epsilon)
-        const EPSILON = 1e-9;
+        const EPSILON = MATH_CONSTANTS.EPSILON;
 
         // 정확히 0 (오차 범위 포함)
         if (probability <= EPSILON) {
@@ -93,6 +96,6 @@ export class Formatter {
      * @deprecated 대신 probabilityFraction 사용 권장
      */
     static formatProbability(probability) {
-        return this.probabilityFraction(probability, 3);
+        return this.probabilityFraction(probability, FORMAT.DECIMAL_PLACES.PROBABILITY);
     }
 }

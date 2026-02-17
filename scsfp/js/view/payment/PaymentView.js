@@ -1,3 +1,5 @@
+import { FORMAT } from '../../config/UIConfig.js';
+
 /**
  * PaymentView.js
  * 과금 효율 계산 결과 렌더링 (엑셀 스타일 테이블)
@@ -253,9 +255,9 @@ export class PaymentView {
                     html += `<td class="cell-number platform-cell${selectedClass} currency-jpy${simpleClass}" data-platform="${platform}" data-category="${category}" data-package="${pkgId}">${priceJPYDisplay}</td>`;
                     html += `<td class="cell-number platform-cell${selectedClass}${simpleClass}" data-platform="${platform}" data-category="${category}" data-package="${pkgId}">${paidGems.toLocaleString()}돌</td>`;
                     html += `<td class="cell-extras platform-cell${selectedClass}" data-platform="${platform}" data-category="${category}" data-package="${pkgId}">${extras}</td>`;
-                    html += `<td class="cell-efficiency platform-cell${selectedClass} currency-krw hide-krw" data-platform="${platform}" data-category="${category}" data-package="${pkgId}">${krwEfficiency.toFixed(3)}${krwUnit}</td>`;
-                    html += `<td class="cell-efficiency platform-cell${selectedClass} currency-jpy" data-platform="${platform}" data-category="${category}" data-package="${pkgId}">${yenEfficiency.toFixed(3)}${yenUnit}</td>`;
-                    html += `<td class="cell-multiplier platform-cell${selectedClass}${lastClass}" data-platform="${platform}" data-category="${category}" data-package="${pkgId}">${efficiencyMultiplier.toFixed(3)}배</td>`;
+                    html += `<td class="cell-efficiency platform-cell${selectedClass} currency-krw hide-krw" data-platform="${platform}" data-category="${category}" data-package="${pkgId}">${krwEfficiency.toFixed(FORMAT.DECIMAL_PLACES.EFFICIENCY)}${krwUnit}</td>`;
+                    html += `<td class="cell-efficiency platform-cell${selectedClass} currency-jpy" data-platform="${platform}" data-category="${category}" data-package="${pkgId}">${yenEfficiency.toFixed(FORMAT.DECIMAL_PLACES.EFFICIENCY)}${yenUnit}</td>`;
+                    html += `<td class="cell-multiplier platform-cell${selectedClass}${lastClass}" data-platform="${platform}" data-category="${category}" data-package="${pkgId}">${efficiencyMultiplier.toFixed(FORMAT.DECIMAL_PLACES.EFFICIENCY)}배</td>`;
                 } else {
                     // ASOBI, Android: 엔화만 결제 가능 (엔화 할인 → 원화로 환산)
                     const basePriceJPY = pkg.price;
@@ -296,9 +298,9 @@ export class PaymentView {
                     html += `<td class="cell-number platform-cell${selectedClass} currency-krw hide-krw${simpleClass}" data-platform="${platform}" data-category="${category}" data-package="${pkgId}" data-currency="krw">${priceKRWDisplay}</td>`;
                     html += `<td class="cell-number platform-cell${selectedClass}${simpleClass}" data-platform="${platform}" data-category="${category}" data-package="${pkgId}">${paidGems.toLocaleString()}돌</td>`;
                     html += `<td class="cell-extras platform-cell${selectedClass}" data-platform="${platform}" data-category="${category}" data-package="${pkgId}">${extras}</td>`;
-                    html += `<td class="cell-efficiency platform-cell${selectedClass} currency-jpy" data-platform="${platform}" data-category="${category}" data-package="${pkgId}">${yenEfficiency.toFixed(3)}${yenUnit}</td>`;
-                    html += `<td class="cell-efficiency platform-cell${selectedClass} currency-krw hide-krw" data-platform="${platform}" data-category="${category}" data-package="${pkgId}">${krwEfficiency.toFixed(3)}${krwUnit}</td>`;
-                    html += `<td class="cell-multiplier platform-cell${selectedClass}${lastClass}" data-platform="${platform}" data-category="${category}" data-package="${pkgId}">${efficiencyMultiplier.toFixed(3)}배</td>`;
+                    html += `<td class="cell-efficiency platform-cell${selectedClass} currency-jpy" data-platform="${platform}" data-category="${category}" data-package="${pkgId}">${yenEfficiency.toFixed(FORMAT.DECIMAL_PLACES.EFFICIENCY)}${yenUnit}</td>`;
+                    html += `<td class="cell-efficiency platform-cell${selectedClass} currency-krw hide-krw" data-platform="${platform}" data-category="${category}" data-package="${pkgId}">${krwEfficiency.toFixed(FORMAT.DECIMAL_PLACES.EFFICIENCY)}${krwUnit}</td>`;
+                    html += `<td class="cell-multiplier platform-cell${selectedClass}${lastClass}" data-platform="${platform}" data-category="${category}" data-package="${pkgId}">${efficiencyMultiplier.toFixed(FORMAT.DECIMAL_PLACES.EFFICIENCY)}배</td>`;
                 }
             } else {
                 // 해당 플랫폼에 패키지 없음 (viewMode에 따라 colspan 조정)
@@ -377,7 +379,7 @@ export class PaymentView {
             const totalPriceDisplay = `<span class="${priceClass}">${roundedTotalPrice.toLocaleString()}${currency}</span>`;
 
             // 개당 가격 표시 (소수점 3자리까지, 음수면 빨간색)
-            const unitPriceDisplay = `<span class="${priceClass}">${unitPrice.toFixed(3)}${currency}</span>`;
+            const unitPriceDisplay = `<span class="${priceClass}">${unitPrice.toFixed(FORMAT.DECIMAL_PLACES.RAINBOW_PRICE)}${currency}</span>`;
 
             // 권장 구매처: 음수 (ASOBI 더 비쌈) → "ASOBI", 양수 (iOS 더 비쌈) → "복합적"
             const recommendation = isNegative ? 'ASOBI' : '복합적';

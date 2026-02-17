@@ -1,19 +1,22 @@
 import { Observable } from '../../utils/Observable.js';
 import { SharedSettings } from '../../core/SharedSettings.js';
+import { OBSERVABLE_DEFAULTS } from '../../config/UIConfig.js';
 
 export class Star3GachaModel {
     constructor() {
-        this.pickupCount = new Observable(2);
-        this.pickupRate = new Observable(1.0);
-        this.targetCount = new Observable(0);
+        const defaults = OBSERVABLE_DEFAULTS.STAR3;
 
-        this.maxLoops = new Observable(2);
-        this.stepMax = new Observable(80);
-        this.step4Rate = new Observable(40.0);
+        this.pickupCount = new Observable(defaults.PICKUP_COUNT.value);
+        this.pickupRate = new Observable(defaults.PICKUP_RATE.value);
+        this.targetCount = new Observable(defaults.TARGET_COUNT.value);
+
+        this.maxLoops = new Observable(defaults.MAX_LOOPS.value);
+        this.stepMax = new Observable(defaults.STEP_MAX.value);
+        this.step4Rate = new Observable(defaults.STEP4_RATE.value);
         this.loopRewards = new Observable({});
 
-        this.normalPulls = new Observable(0);
-        this.stepPulls = new Observable(0);
+        this.normalPulls = new Observable(defaults.NORMAL_PULLS.value);
+        this.stepPulls = new Observable(defaults.STEP_PULLS.value);
 
         this.ceilingMode = new Observable('included');
         this.randomMode = new Observable('included');

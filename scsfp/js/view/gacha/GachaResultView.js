@@ -3,6 +3,7 @@ import { Formatter } from '../../utils/Formatter.js';
 import { ChartAdapter } from '../../utils/ChartAdapter.js';
 import { ChartUtils } from '../../utils/ChartUtils.js';
 import { getGachaConfig, getActiveSubTab } from './GachaTypeConfig.js';
+import { FORMAT, CHART, CHART_RANGE } from '../../config/UIConfig.js';
 
 export class GachaResultView extends ResultView {
 
@@ -64,7 +65,7 @@ export class GachaResultView extends ResultView {
     static _renderTotalTab(gachaType, config, M, dpTotal, viewMode, context, charts) {
         const expected = dpTotal.reduce((acc, p, i) => acc + i * p, 0);
         const summaryFn = () => `
-            타겟(${M}종) 총 획득 기대 수: 약 <strong>${expected.toFixed(3)}개</strong><br>
+            타겟(${M}종) 총 획득 기대 수: 약 <strong>${expected.toFixed(FORMAT.DECIMAL_PLACES.PROBABILITY)}개</strong><br>
             <span style="font-size:0.85rem; color:#666;">※ 유효 픽업 ${M}종의 획득 개수 합계입니다.</span><br>
             <span style="font-size:0.85rem; color:#dc3545;">※ 천장 포함 버튼이 활성화 되어있는지 확인하세요.</span>
         `;
@@ -92,17 +93,17 @@ export class GachaResultView extends ResultView {
             targetLabel = '';
             showMultipleLines = false;
         } else if (gachaType === 'birthday') {
-            xLimit = 30;  // 스탭업 30회 기준
+            xLimit = CHART_RANGE.EFFICIENCY_X_LIMIT.BIRTHDAY;
             targetM = M;
             targetLabel = '';
             showMultipleLines = false;
         } else if (gachaType === 'collab') {
-            xLimit = 200;  // 콜라보는 제한 없으므로 넉넉히
+            xLimit = CHART_RANGE.EFFICIENCY_X_LIMIT.COLLAB;
             targetM = M;
             targetLabel = '';
             showMultipleLines = false;
         } else if (gachaType === 'star2') {
-            xLimit = 100;
+            xLimit = CHART_RANGE.EFFICIENCY_X_LIMIT.STAR2;
             targetM = context.targetGroupInfo ? context.targetGroupInfo.M : M;
             targetLabel = context.targetGroupInfo ? context.targetGroupInfo.id : '';
             showMultipleLines = true;
@@ -409,7 +410,7 @@ export class GachaResultView extends ResultView {
                 label: '일반 가챠',
                 data: finalNorm,
                 borderColor: '#283c86',
-                borderDash: [5, 5],
+                borderDash: CHART.LINE_DASH,
                 tension: 0.1,
                 pointRadius: (ctx) => (ctx.dataIndex % 10 === 0 ? 3.5 : 0),
                 pointHitRadius: getHitRadius,
@@ -472,7 +473,7 @@ export class GachaResultView extends ResultView {
                 label: `스탭업 가챠 (목표 ${M}명)`,
                 data: cdfDataStepup,
                 borderColor: '#45a247',
-                backgroundColor: 'rgba(69, 162, 71, 0.1)',
+                backgroundColor: `rgba(69, 162, 71, ${CHART.OPACITY.MIN})`,
                 fill: true,
                 tension: 0.3,
                 pointRadius: 0,
@@ -484,14 +485,14 @@ export class GachaResultView extends ResultView {
                 label: `일반 가챠 (목표 ${M}명)`,
                 data: cdfDataNormal,
                 borderColor: '#283c86',
-                backgroundColor: 'rgba(40, 60, 134, 0.1)',
+                backgroundColor: `rgba(40, 60, 134, ${CHART.OPACITY.MIN})`,
                 fill: true,
                 tension: 0.3,
                 pointRadius: 0,
                 pointHoverRadius: 5,
                 pointHitRadius: 10,
                 borderWidth: 2,
-                borderDash: [5, 5]
+                borderDash: CHART.LINE_DASH
             }
         ];
 
@@ -569,10 +570,10 @@ export class GachaResultView extends ResultView {
                     x: {
                         title: { display: true, text: '가챠 횟수' },
                         ticks: {
-                            maxTicksLimit: 21,
+                            maxTicksLimit: CHART.MAX_TICKS.CDF_AXIS,
                             callback: function(val) {
                                 const label = this.getLabelForValue(val);
-                                return Number(label) % 50 === 0 ? label : '';
+                                return Number(label) % CHART.CDF_INTERVAL === 0 ? label : '';
                             }
                         }
                     }
@@ -591,7 +592,7 @@ export class GachaResultView extends ResultView {
                     const yPos = yAxis.getPixelForValue(targetProb);
 
                     ctx.save();
-                    ctx.setLineDash([5, 5]);
+                    ctx.setLineDash(CHART.LINE_DASH);
                     ctx.strokeStyle = '#999';
                     ctx.lineWidth = 1.5;
 
@@ -627,8 +628,8 @@ export class GachaResultView extends ResultView {
             const actualProbStepup = cdfDataStepup[targetPullsStepup] || 0;
             const actualProbNormal = cdfDataNormal[targetPullsNormal] || 0;
 
-            const stepupProbText = Formatter.probabilityBounded(actualProbStepup / 100, 2);
-            const normalProbText = Formatter.probabilityBounded(actualProbNormal / 100, 2);
+            const stepupProbText = Formatter.probabilityBounded(actualProbStepup / 100, FORMAT.DECIMAL_PLACES.EFFICIENCY);
+            const normalProbText = Formatter.probabilityBounded(actualProbNormal / 100, FORMAT.DECIMAL_PLACES.EFFICIENCY);
 
             summaryEl.innerHTML = `
                 <strong>🎯 목표 확률 역추적 분석 (목표 ${M}명)</strong><br>

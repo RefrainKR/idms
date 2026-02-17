@@ -5,6 +5,7 @@
  * [개선] destroy/recreate 대신 update() 사용으로 성능 최적화
  */
 import { Formatter } from './Formatter.js';
+import { CHART, FORMAT } from '../config/UIConfig.js';
 
 export class ChartAdapter {
 
@@ -41,16 +42,16 @@ export class ChartAdapter {
                 responsive: true,
                 maintainAspectRatio: false,
                 animation: false,
-                layout: { padding: 10 },
+                layout: { padding: CHART.PADDING.PIE },
                 plugins: {
                     title: { display: false },
                     legend: { display: false },
                     datalabels: {
                         color: '#fff',
-                        font: { weight: 'bold', size: 14 },
+                        font: { weight: 'bold', size: CHART.FONT_SIZE.PIE_LABEL },
                         formatter: (value, context) => {
                             if (value < 3) return null;
-                            const percentText = Formatter.probabilityBounded(value / 100, 2);
+                            const percentText = Formatter.probabilityBounded(value / 100, FORMAT.DECIMAL_PLACES.RAINBOW_EXPECTED);
                             return `${context.chart.data.labels[context.dataIndex]}\n${percentText}`;
                         },
                         textAlign: 'center',
@@ -105,19 +106,19 @@ export class ChartAdapter {
                 responsive: true,
                 maintainAspectRatio: false,
                 animation: false,
-                layout: { padding: { top: 30, bottom: 10 } },
+                layout: { padding: { top: CHART.PADDING.BAR_TOP, bottom: CHART.PADDING.BAR_BOTTOM } },
                 plugins: {
                     legend: { display: false },
                     datalabels: {
                         color: '#444',
                         anchor: 'end',
                         align: 'top',
-                        font: { weight: 'bold', size: 10 },
+                        font: { weight: 'bold', size: CHART.FONT_SIZE.BAR_LABEL },
                         formatter: (value) => {
                             // 매우 작은 값도 화살표 표기로 표시
-                            const formatted = Formatter.probabilityBounded(parseFloat(value) / 100, 2);
+                            const formatted = Formatter.probabilityBounded(parseFloat(value) / 100, FORMAT.DECIMAL_PLACES.RAINBOW_EXPECTED);
                             // 정확히 0%인 경우만 숨김
-                            if (formatted === '0.00%') return null;
+                            if (formatted === `0.${'0'.repeat(FORMAT.DECIMAL_PLACES.RAINBOW_EXPECTED)}%`) return null;
                             return formatted;
                         }
                     },
@@ -177,7 +178,7 @@ export class ChartAdapter {
                         callbacks: {
                             label: (context) => {
                                 let label = context.dataset.label.split(' ')[0] || '';
-                                const probText = Formatter.probabilityBounded(context.raw / 100, 3);
+                                const probText = Formatter.probabilityBounded(context.raw / 100, FORMAT.DECIMAL_PLACES.PROBABILITY);
                                 return ` ${label}: ${probText}`;
                             },
                             footer: (items) => {
@@ -185,7 +186,7 @@ export class ChartAdapter {
                                 const v1 = parseFloat(items[0].raw);
                                 const v2 = parseFloat(items[1].raw);
                                 const diff = Math.abs(v1 - v2) / 100;
-                                const diffText = Formatter.probabilityBounded(diff, 3).replace('%', '');
+                                const diffText = Formatter.probabilityBounded(diff, FORMAT.DECIMAL_PLACES.PROBABILITY).replace('%', '');
                                 return ` 차이: ${diffText}%p`;
                             }
                         },
@@ -199,7 +200,7 @@ export class ChartAdapter {
                         title: { display: true, text: '가챠 횟수' },
                         grid: { display: false },
                         ticks: {
-                            maxTicksLimit: 21,
+                            maxTicksLimit: CHART.MAX_TICKS.CDF_AXIS,
                             callback: function(val) {
                                 const label = this.getLabelForValue(val);
                                 return Number(label) % 20 === 0 ? label : '';

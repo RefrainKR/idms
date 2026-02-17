@@ -4,10 +4,11 @@ import { ProbabilityEngine } from '../../core/ProbabilityEngine.js';
 import { EfficiencyCalculator } from '../../core/EfficiencyCalculator.js';
 import { GachaResultView } from '../../view/gacha/GachaResultView.js';
 import { ToggleButton } from '../../view/component/ToggleButton.js';
-import { CONFIG, TOGGLE_STATES, GACHA_RULES } from '../../core/GachaConstants.js';
+import { CONFIG, TOGGLE_STATES, GACHA_RULES } from '../../config/GachaConfig.js';
 import { ProbabilityValidator } from '../../utils/ProbabilityValidator.js';
 import { getGachaConfig, applyTabVisibility } from '../../view/gacha/GachaTypeConfig.js';
 import { RainbowCrystalCalculator } from '../../core/RainbowCrystalCalculator.js';
+import { CHART_RANGE, CHART, FORMAT } from '../../config/UIConfig.js';
 
 export class Star3GachaViewModel extends BaseGachaViewModel {
     constructor() {
@@ -264,8 +265,8 @@ export class Star3GachaViewModel extends BaseGachaViewModel {
         const canvas = document.getElementById('rainbowExpectationChart');
         if (!canvas) return;
 
-        // 200회까지 누적 무돌 기대값 계산
-        const data = RainbowCrystalCalculator.star3Cumulative(200);
+        // 누적 무돌 기대값 계산
+        const data = RainbowCrystalCalculator.star3Cumulative(CHART_RANGE.RAINBOW_MAX_PULLS);
 
         // 기존 차트 파괴
         if (this.chartRefs.rainbow.current) {
@@ -301,7 +302,7 @@ export class Star3GachaViewModel extends BaseGachaViewModel {
                     title: {
                         display: true,
                         text: '일반 3성 가챠 - 무돌 획득 기대값',
-                        font: { size: 16, weight: 'bold' }
+                        font: { size: CHART.FONT_SIZE.CHART_TITLE, weight: 'bold' }
                     },
                     legend: {
                         display: true,
@@ -310,7 +311,7 @@ export class Star3GachaViewModel extends BaseGachaViewModel {
                     tooltip: {
                         callbacks: {
                             label: function(context) {
-                                return `${context.parsed.y.toFixed(2)}개`;
+                                return `${context.parsed.y.toFixed(FORMAT.DECIMAL_PLACES.RAINBOW_EXPECTED)}개`;
                             }
                         }
                     },
@@ -323,22 +324,22 @@ export class Star3GachaViewModel extends BaseGachaViewModel {
                         title: {
                             display: true,
                             text: '뽑기 횟수',
-                            font: { size: 14, weight: 'bold' }
+                            font: { size: CHART.FONT_SIZE.AXIS_TITLE, weight: 'bold' }
                         },
                         ticks: {
-                            maxTicksLimit: 20
+                            maxTicksLimit: CHART.MAX_TICKS.X_AXIS
                         }
                     },
                     y: {
                         title: {
                             display: true,
                             text: '누적 무돌 개수',
-                            font: { size: 14, weight: 'bold' }
+                            font: { size: CHART.FONT_SIZE.AXIS_TITLE, weight: 'bold' }
                         },
                         beginAtZero: true,
                         ticks: {
                             callback: function(value) {
-                                return value.toFixed(0) + '개';
+                                return value.toFixed(FORMAT.DECIMAL_PLACES.PERCENTAGE) + '개';
                             }
                         }
                     }

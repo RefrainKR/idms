@@ -5,7 +5,7 @@
 import { ProbabilityEngine } from '../core/ProbabilityEngine.js';
 import { ChartAdapter } from '../utils/ChartAdapter.js';
 import { Formatter } from '../utils/Formatter.js';
-import { PROBABILITY_MODE } from '../core/GachaConstants.js';
+import { PROBABILITY_MODE } from '../config/GachaConfig.js';
 
 export class ResultView {
     

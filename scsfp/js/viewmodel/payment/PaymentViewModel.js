@@ -1,8 +1,9 @@
 import { PaymentModel } from '../../model/payment/PaymentModel.js';
 import { PaymentView } from '../../view/payment/PaymentView.js';
-import { PAYMENT_CONFIG, PACKAGES } from '../../core/PaymentConstants.js';
+import { PAYMENT_CONFIG, PACKAGES } from '../../config/PaymentConfig.js';
 import { StorageManager } from '../../utils/StorageManager.js';
 import { InputBinder } from '../../view/component/InputBinder.js';
+import { OBSERVABLE_DEFAULTS } from '../../config/UIConfig.js';
 
 /**
  * PaymentViewModel.js
@@ -53,28 +54,46 @@ export class PaymentViewModel {
         // 환율
         const exchangeRateInput = document.getElementById('payment-exchange-rate');
         if (exchangeRateInput) {
-            const binder = new InputBinder(exchangeRateInput, this.model.exchangeRate, { min: 0, type: 'int' });
+            const config = OBSERVABLE_DEFAULTS.PAYMENT.EXCHANGE_RATE;
+            const binder = new InputBinder(exchangeRateInput, this.model.exchangeRate, {
+                min: config.min,
+                max: config.max,
+                type: 'int'
+            });
             this._inputBinders.push(binder);
         }
 
         // 엔화 할인율 (ASOBI/Android)
         const jpyDiscountRateInput = document.getElementById('payment-jpy-discount-rate');
         if (jpyDiscountRateInput) {
-            const binder = new InputBinder(jpyDiscountRateInput, this.model.jpyDiscountRate, { min: 0, max: 100, type: 'float' });
+            const config = OBSERVABLE_DEFAULTS.PAYMENT.JPY_DISCOUNT_RATE;
+            const binder = new InputBinder(jpyDiscountRateInput, this.model.jpyDiscountRate, {
+                min: config.min,
+                max: config.max,
+                type: 'float'
+            });
             this._inputBinders.push(binder);
         }
 
         // 원화 할인율 (iOS)
         const krwDiscountRateInput = document.getElementById('payment-krw-discount-rate');
         if (krwDiscountRateInput) {
-            const binder = new InputBinder(krwDiscountRateInput, this.model.krwDiscountRate, { min: 0, max: 100, type: 'float' });
+            const config = OBSERVABLE_DEFAULTS.PAYMENT.KRW_DISCOUNT_RATE;
+            const binder = new InputBinder(krwDiscountRateInput, this.model.krwDiscountRate, {
+                min: config.min,
+                max: config.max,
+                type: 'float'
+            });
             this._inputBinders.push(binder);
         }
 
         // 원화 할인 상한 (숨김 처리됨)
         const krwDiscountCapInput = document.getElementById('payment-krw-discount-cap');
         if (krwDiscountCapInput) {
-            const binder = new InputBinder(krwDiscountCapInput, this.model.krwDiscountCap, { min: 0, type: 'int' });
+            const binder = new InputBinder(krwDiscountCapInput, this.model.krwDiscountCap, {
+                min: 0,
+                type: 'int'
+            });
             this._inputBinders.push(binder);
         }
     }

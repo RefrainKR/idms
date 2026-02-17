@@ -1,16 +1,19 @@
 import { Observable } from '../../utils/Observable.js';
+import { OBSERVABLE_DEFAULTS } from '../../config/UIConfig.js';
 
 export class Star2GachaModel {
     constructor() {
-        this.countNormal = new Observable(28);
-        this.rateTotal = new Observable(28.0);
-        this.normalPulls = new Observable(0);
+        const defaults = OBSERVABLE_DEFAULTS.STAR2;
+
+        this.countNormal = new Observable(defaults.COUNT_NORMAL.value);
+        this.rateTotal = new Observable(defaults.RATE_TOTAL.value);
+        this.normalPulls = new Observable(defaults.NORMAL_PULLS.value);
 
         // 그룹별 데이터 (Observable 개별 생성)
-        this.countStepA = new Observable(8); this.pullsStepA = new Observable(0); this.targetCountA = new Observable(0);
-        this.countStepB = new Observable(7); this.pullsStepB = new Observable(0); this.targetCountB = new Observable(0);
-        this.countStepC = new Observable(7); this.pullsStepC = new Observable(0); this.targetCountC = new Observable(0);
-        this.countStepD = new Observable(6); this.pullsStepD = new Observable(0); this.targetCountD = new Observable(0);
+        this.countStepA = new Observable(defaults.GROUP_A_COUNT.value); this.pullsStepA = new Observable(defaults.GROUP_A_PULLS.value); this.targetCountA = new Observable(0);
+        this.countStepB = new Observable(defaults.GROUP_B_COUNT.value); this.pullsStepB = new Observable(defaults.GROUP_B_PULLS.value); this.targetCountB = new Observable(0);
+        this.countStepC = new Observable(defaults.GROUP_C_COUNT.value); this.pullsStepC = new Observable(defaults.GROUP_C_PULLS.value); this.targetCountC = new Observable(0);
+        this.countStepD = new Observable(defaults.GROUP_D_COUNT.value); this.pullsStepD = new Observable(defaults.GROUP_D_PULLS.value); this.targetCountD = new Observable(0);
 
         // 옵션 (상태)
         this.ceilingMode = new Observable('included');

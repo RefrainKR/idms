@@ -1,17 +1,20 @@
 import { Observable } from '../../utils/Observable.js';
 import { SharedSettings } from '../../core/SharedSettings.js';
+import { OBSERVABLE_DEFAULTS } from '../../config/UIConfig.js';
 
 export class BirthdayGachaModel {
     constructor() {
+        const defaults = OBSERVABLE_DEFAULTS.BIRTHDAY;
+
         // 생일 가챠 기본 설정 (변경 가능성 대비)
-        this.pickupCount = new Observable(1);
-        this.normalRate = new Observable(1.5);
-        this.stepRate = new Observable(2.0);
+        this.pickupCount = new Observable(defaults.PICKUP_COUNT.value);
+        this.normalRate = new Observable(defaults.NORMAL_RATE.value);
+        this.stepRate = new Observable(defaults.STEP_RATE.value);
 
         // 사용자 입력
-        this.targetCount = new Observable(0);
-        this.normalPulls = new Observable(0);
-        this.stepPulls = new Observable(0);
+        this.targetCount = new Observable(defaults.TARGET_COUNT.value);
+        this.normalPulls = new Observable(defaults.NORMAL_PULLS.value);
+        this.stepPulls = new Observable(defaults.STEP_PULLS.value);
 
         // 옵션
         this.ceilingMode = new Observable('included');

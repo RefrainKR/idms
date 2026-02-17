@@ -1,6 +1,10 @@
 /**
- * PaymentConstants.js
- * 과금 효율 계산에 사용되는 상수 정의
+ * PaymentConfig.js
+ * 과금 효율 계산 설정 (Configuration)
+ *
+ * 이 파일은 과금 관련 설정값들을 포함합니다:
+ * - PAYMENT_CONFIG: 저장 키 및 기본 설정
+ * - PACKAGES: 플랫폼별 패키지 정보 (게임 데이터)
  *
  * 출처: CLAUDE.md - 유료돌 패키지 정보
  */

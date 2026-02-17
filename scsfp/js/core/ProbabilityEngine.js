@@ -1,4 +1,4 @@
-import { PROBABILITY_MODE, GACHA_RULES } from './GachaConstants.js';
+import { PROBABILITY_MODE, GACHA_RULES } from '../config/GachaConfig.js';
 import { ProbabilityValidator } from '../utils/ProbabilityValidator.js';
 
 export class ProbabilityEngine {

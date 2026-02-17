@@ -1,5 +1,5 @@
 import { ProbabilityEngine } from './ProbabilityEngine.js';
-import { GACHA_RULES } from './GachaConstants.js';
+import { GACHA_RULES } from '../config/GachaConfig.js';
 
 /**
  * EfficiencyCalculator - 가챠 효율 계산 로직을 중앙화한 서비스 클래스

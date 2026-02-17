@@ -1,4 +1,5 @@
 import { Observable } from '../utils/Observable.js';
+import { OBSERVABLE_DEFAULTS } from '../config/UIConfig.js';
 
 /**
  * 가챠 타입 간 공유되는 설정값 관리
@@ -12,7 +13,8 @@ export class SharedSettings {
         }
 
         // 공유 목표 확률 (3성, 생일, 콜라보 공통)
-        this.targetProbability = new Observable(90);
+        const defaults = OBSERVABLE_DEFAULTS.SHARED;
+        this.targetProbability = new Observable(defaults.TARGET_PROBABILITY.value);
 
         SharedSettings.instance = this;
     }

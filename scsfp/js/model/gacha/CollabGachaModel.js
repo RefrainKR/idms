@@ -1,17 +1,20 @@
 import { Observable } from '../../utils/Observable.js';
 import { SharedSettings } from '../../core/SharedSettings.js';
+import { OBSERVABLE_DEFAULTS } from '../../config/UIConfig.js';
 
 export class CollabGachaModel {
     constructor() {
+        const defaults = OBSERVABLE_DEFAULTS.COLLAB;
+
         // 콜라보 가챠 기본 설정 (프리셋으로 변경 가능)
-        this.pickupCount = new Observable(5);
-        this.normalRate = new Observable(0.75);
-        this.stepRate = new Observable(1.0);
+        this.pickupCount = new Observable(defaults.PICKUP_COUNT.value);
+        this.normalRate = new Observable(defaults.NORMAL_RATE.value);
+        this.stepRate = new Observable(defaults.STEP_RATE.value);
 
         // 사용자 입력
-        this.targetCount = new Observable(0);
-        this.normalPulls = new Observable(0);
-        this.stepPulls = new Observable(0);
+        this.targetCount = new Observable(defaults.TARGET_COUNT.value);
+        this.normalPulls = new Observable(defaults.NORMAL_PULLS.value);
+        this.stepPulls = new Observable(defaults.STEP_PULLS.value);
 
         // 옵션
         this.ceilingMode = new Observable('included');

@@ -1,3 +1,16 @@
+/**
+ * GachaConfig.js
+ * 가챠 관련 설정 (Configuration)
+ *
+ * 이 파일은 사용자가 변경 가능한 설정값들을 포함합니다:
+ * - CONFIG: 각 가챠 타입별 입력 필드, 프리셋, 의존성
+ * - TOGGLE_STATES: UI 토글 버튼 상태 정의
+ *
+ * 게임 규칙 상수(GACHA_RULES, PROBABILITY_MODE)는 Constants.js에서 re-export됩니다.
+ */
+
+import { GACHA_RULES, PROBABILITY_MODE } from '../core/Constants.js';
+
 export const CONFIG = {
     STAR3: {
         KEY: 'shani_gacha_3star',
@@ -31,7 +44,7 @@ export const CONFIG = {
                 // maxLoops가 변경되면 stepMax를 자동 업데이트
                 source: 'maxLoops',
                 handler: (value, model, viewModel) => {
-                    model.stepMax.value = value * 40; // GACHA_RULES.STAR3.STEPUP_CYCLE
+                    model.stepMax.value = value * GACHA_RULES.STAR3.STEPUP_CYCLE;
                     if (viewModel && viewModel.updateLoopUI) {
                         viewModel.updateLoopUI();
                     }
@@ -146,33 +159,9 @@ const groupDefaults = [8, 7, 7, 6];
     });
 });
 
-// 가챠 규칙 상수 정의
-export const GACHA_RULES = {
-    STAR3: {
-        STEPUP_CYCLE: 40,              // Step4가 나오는 주기 (40회마다)
-        CEILING_INTERVAL: 200,         // 천장 발동 횟수 (일반+스탭업 합산)
-        STEPUP_CEILING_INTERVAL: 200   // 스탭업 천장 (통합)
-    },
-    STAR2: {
-        HIGH_RATE_INTERVAL: 10,        // 95% 보정 주기 (일반 가챠)
-        STEPUP_GUARANTEE_FIRST: 5,     // 첫 확정 (5회)
-        STEPUP_GUARANTEE_INTERVAL: 10, // 확정 간격 (이후 10회마다)
-        NORMAL_CEILING_INTERVAL: 100,  // 일반 천장 (100회당)
-        STEPUP_CEILING_INTERVAL: 50    // 스탭업 천장 (50회당)
-    },
-    BIRTHDAY: {
-        STEPUP_MAX: 30,                // 스탭업 최대 횟수
-        STEPUP_GUARANTEE: 30,          // 30회째 확정 획득
-        CEILING_INTERVAL: 200          // 천장 (일반+스탭업 합산)
-    }
-};
-
-// 확률 모드 상수 정의
-export const PROBABILITY_MODE = {
-    INDIVIDUAL: 'individual',
-    CUMULATIVE_LESS: 'cumulative_less',
-    CUMULATIVE_MORE: 'cumulative_more'
-};
+// GACHA_RULES, PROBABILITY_MODE는 Constants.js에서 관리됩니다.
+// 하위 호환성을 위해 re-export합니다.
+export { GACHA_RULES, PROBABILITY_MODE } from '../core/Constants.js';
 
 export const TOGGLE_STATES = {
     VIEW: [

@@ -4,6 +4,101 @@
 
 ---
 
+## v1.9.5 (2026-02-17) - Constants/Config 리팩토링 및 하드코딩 제거
+
+### 아키텍처 개선
+
+**1. Constants vs Config 분리**
+- 불변 상수 (Constants.js) vs 변경 가능한 설정 (Config 파일들) 명확히 분리
+- 기존 파일 재구성:
+  - `GachaConstants.js` → `config/GachaConfig.js` (설정) + `Constants.js` (게임 규칙)
+  - `PaymentConstants.js` → `config/PaymentConfig.js`
+  - `UIConstants.js` → `config/UIConfig.js`
+- 새로운 폴더 구조: `js/config/` 생성
+
+**2. Constants.js (불변 상수)**
+- `APP_VERSION`: 앱 버전 관리
+- `GACHA_RULES`: 게임 시스템 규칙 (Step 주기, 천장, 확정 시스템)
+- `PROBABILITY_MODE`: 확률 표시 모드 (개별/누적)
+- `MATH_CONSTANTS`: 수학 상수 (EPSILON, PERCENTAGE_MULTIPLIER)
+- `FORMATTING_RULES`: 소수점 자릿수 규칙
+
+**3. Config 파일들 (변경 가능한 설정)**
+- `GachaConfig.js`: 입력 설정, 프리셋, 의존성, 토글 상태
+- `PaymentConfig.js`: 플랫폼별 패키지 데이터
+- `UIConfig.js`: UI 포맷, 차트 스타일, Observable 기본값
+
+### 하드코딩 제거
+
+**1. 숫자 리터럴을 Constants로 대체**
+- ❌ `value * 40` → ✅ `value * GACHA_RULES.STAR3.STEPUP_CYCLE`
+- ❌ `pulls < 200` → ✅ `pulls < GACHA_RULES.STAR3.CEILING_INTERVAL`
+- ❌ `epsilon = 1e-9` → ✅ `MATH_CONSTANTS.EPSILON`
+
+**2. Chart 설정 중앙화**
+- 하드코딩된 차트 범위 200 → `CHART_RANGE.RAINBOW_MAX_PULLS`
+- 포인트 반지름 (4, 3, 1) → `CHART_POINT.RADIUS.*`
+- 강조 간격 40 → `CHART_POINT.EMPHASIS_INTERVAL.STAR3_CYCLE`
+- 폰트 크기, 패딩, 투명도 등 모든 차트 스타일 상수화
+
+**3. Observable 기본값 통합**
+- Model 초기값을 `OBSERVABLE_DEFAULTS`에서 일괄 관리
+- 입력 범위 (min/max/step)를 `CONFIG.INPUTS`에서 관리
+- HTML에서 하드코딩된 속성 제거 (type과 id만 유지)
+
+### 기술적 개선
+
+**1. Re-export 패턴 적용**
+- `GachaConfig.js`가 `GACHA_RULES`, `PROBABILITY_MODE`를 re-export
+- `UIConfig.js`가 `FORMATTING_RULES`를 re-export
+- 하위 호환성 유지하면서 점진적 리팩토링 지원
+
+**2. Import 경로 일괄 업데이트** (20+ 파일)
+- `GachaConstants` → `GachaConfig` (8개 파일)
+- `PaymentConstants` → `PaymentConfig` (1개 파일)
+- `UIConstants` → `UIConfig` (13개 파일)
+- 상대 경로 정확성 검증 및 수정
+
+**3. 설계 원칙 확립**
+- Single Source of Truth: Config가 모든 설정의 단일 진실 공급원
+- 유연성: 설정 변경 시 한 곳만 수정
+- 일관성: 동일한 값이 여러 곳에 중복 정의되지 않음
+
+### 문서화
+
+**1. CLAUDE.md 업데이트**
+- "Constants vs Config 설계 철학" 섹션 추가
+- 각 파일의 역할과 사용 예시 명시
+- Observable과 InputBinder의 역할 분리 설명
+- 하드코딩 금지 원칙 강조
+
+**2. 버전 관리 체크리스트 업데이트**
+- Constants.js 경로로 수정
+- 캐시 버스팅 버전 예시 업데이트
+
+### 파일 변경
+
+**새로운 파일**:
+- `js/config/GachaConfig.js` (from GachaConstants.js)
+- `js/config/PaymentConfig.js` (from PaymentConstants.js)
+- `js/config/UIConfig.js` (new)
+
+**삭제된 파일**:
+- `js/core/GachaConstants.js` → config로 이동
+- `js/core/PaymentConstants.js` → config로 이동
+
+**확장된 파일**:
+- `js/core/Constants.js`: 27 bytes → 3,341 bytes (불변 상수 추가)
+
+**Import 업데이트된 파일** (20+ 파일):
+- ViewModel: Star3, Star2, Birthday, Collab, Payment
+- Model: Star3, Star2, Birthday, Collab, Payment
+- Utils: ChartAdapter, ChartUtils, Formatter, StorageManager
+- Core: EfficiencyCalculator, ProbabilityEngine
+- View: ResultView, GachaResultView, PaymentView
+
+---
+
 ## v1.9.4 (2026-02-09) - 무돌 가격 분석 및 CSS 표준화
 
 ### 새로운 기능
