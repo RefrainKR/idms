@@ -10,7 +10,7 @@
 - **과금 효율 분석**: 플랫폼별(ASOBI/Android/iOS) 패키지 비교, 효율 계산, 기준 패키지 선택 및 효율 배수 표시
 - **SPA 아키텍처**: 사이드바 네비게이션을 통한 섹션 전환(가챠 ↔ 과금) 및 히스토리 관리 지원
 
-**현재 버전**: v1.9.5 (2026-02-17)
+**현재 버전**: v1.9.5 (2026-02-23)
 
 **문서 참조**:
 - **버전 히스토리**: [docs/UPDATE.md](docs/UPDATE.md)
@@ -345,6 +345,11 @@ GACHA_RULES = {
 - Hover: 플랫폼별 5개(Simple: 3개) 셀 동시 강조
 - Selected: 외곽선으로 그룹화 (내부 border 유지)
 
+**5. 무돌(Rainbow Crystal) 가치 분석**
+- 동일 패키지의 플랫폼 간 가격 차이(ASOBI vs iOS)를 이용해 무돌 1개의 내재 가치 역산
+- 정규화된 유료돌 차이를 기반으로 순수 무돌 가격 추출
+- 권장 구매처(ASOBI/복합적) 자동 판별
+
 ### 아키텍처
 
 **Model** ([PaymentModel.js](scsfp/js/model/payment/PaymentModel.js)):
@@ -359,6 +364,7 @@ GACHA_RULES = {
 - 단일 통합 테이블 렌더링 (카테고리 구분 행)
 - 뷰 모드에 따른 colspan 동적 조정
 - 소수점 3자리 표시 (효율, 효율배수)
+- `renderRainbowCrystalAnalysis()`: 무돌 가치 역산 테이블 렌더링
 
 **ViewModel** ([PaymentViewModel.js](scsfp/js/viewmodel/payment/PaymentViewModel.js)):
 - 뷰 모드/통화/효율 토글 바인딩
@@ -565,7 +571,7 @@ calculate() {
 
 ## 버전 관리
 
-**현재 버전**: v1.9.5 (2026-02-17)
+**현재 버전**: v1.9.5 (2026-02-23)
 
 **버전 관리 위치**:
 1. `Constants.js` - `APP_VERSION` 상수 (런타임 버전 체크)
