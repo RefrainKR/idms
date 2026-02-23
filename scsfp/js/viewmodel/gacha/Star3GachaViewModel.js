@@ -1,12 +1,12 @@
-import { BaseGachaViewModel } from './BaseGachaViewModel.js';
+﻿import { BaseGachaViewModel } from './BaseGachaViewModel.js';
 import { Star3GachaModel } from '../../model/gacha/Star3GachaModel.js';
 import { ProbabilityEngine } from '../../core/ProbabilityEngine.js';
 import { EfficiencyCalculator } from '../../core/EfficiencyCalculator.js';
 import { GachaResultView } from '../../view/gacha/GachaResultView.js';
-import { ToggleButton } from '../../view/component/ToggleButton.js';
+import { ToggleButton } from '../../component/ToggleButton.js';
 import { CONFIG, TOGGLE_STATES, GACHA_RULES } from '../../config/GachaConfig.js';
 import { ProbabilityValidator } from '../../utils/ProbabilityValidator.js';
-import { getGachaConfig, applyTabVisibility } from '../../view/gacha/GachaTypeConfig.js';
+import { getGachaConfig, applyTabVisibility } from '../../view/gacha/GachaViewConfig.js';
 import { RainbowCrystalCalculator } from '../../core/RainbowCrystalCalculator.js';
 import { CHART_RANGE, CHART, FORMAT } from '../../config/UIConfig.js';
 
@@ -16,14 +16,14 @@ export class Star3GachaViewModel extends BaseGachaViewModel {
         this.model = new Star3GachaModel();
         
         this.inputsMap = {
-            'pickupCount': this.model.pickupCount,
-            'pickupRate': this.model.pickupRate,
-            'targetCount': this.model.targetCount,
-            'maxLoops': this.model.maxLoops,
-            'step4Rate': this.model.step4Rate,
-            'normalPulls': this.model.normalPulls,
-            'stepPulls': this.model.stepPulls,
-            'targetProbability3': this.model.targetProbability
+            'star3-pickupCount': this.model.pickupCount,
+            'star3-pickupRate': this.model.pickupRate,
+            'star3-targetCount': this.model.targetCount,
+            'star3-maxLoops': this.model.maxLoops,
+            'star3-step4Rate': this.model.step4Rate,
+            'star3-normalPulls': this.model.normalPulls,
+            'star3-stepPulls': this.model.stepPulls,
+            'star3-targetProbability': this.model.targetProbability
         };
         
         this.chartRefs = { collection: { current: null }, total: { current: null }, efficiency: { current: null }, cdf: { current: null }, rainbow: { current: null } };
@@ -82,11 +82,11 @@ export class Star3GachaViewModel extends BaseGachaViewModel {
     // setupDataDependencies 제거됨 - CONFIG.STAR3.DEPENDENCIES로 대체
 
     getCustomBinderOptions(id) {
-        if (id === 'targetCount') {
+        if (id === 'star3-targetCount') {
             return { maxObserver: this.model.pickupCount };
         }
-        if (id === 'stepPulls') {
-            return { maxObserver: this.model.stepMax }; 
+        if (id === 'star3-stepPulls') {
+            return { maxObserver: this.model.stepMax };
         }
         return null;
     }
@@ -225,7 +225,7 @@ export class Star3GachaViewModel extends BaseGachaViewModel {
             cdfData
         };
 
-        GachaResultView.render3Star({ N, M, dp, dpTotal }, context, this.model, this.chartRefs);
+        GachaResultView.render('star3', { N, M, dp, dpTotal }, context, this.model, this.chartRefs);
     }
 
     _calculateEfficiencyData(N, M, p_indiv, p_step4_total) {
@@ -265,13 +265,11 @@ export class Star3GachaViewModel extends BaseGachaViewModel {
         const canvas = document.getElementById('rainbowExpectationChart');
         if (!canvas) return;
 
+        // [개선] 기존 차트가 있으면 재사용 (데이터가 항상 동일)
+        if (this.chartRefs.rainbow.current) return;
+
         // 누적 무돌 기대값 계산
         const data = RainbowCrystalCalculator.star3Cumulative(CHART_RANGE.RAINBOW_MAX_PULLS);
-
-        // 기존 차트 파괴
-        if (this.chartRefs.rainbow.current) {
-            this.chartRefs.rainbow.current.destroy();
-        }
 
         // 차트 데이터 준비
         const labels = data.map(d => d.pulls);

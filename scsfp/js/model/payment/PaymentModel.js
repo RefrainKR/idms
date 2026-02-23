@@ -1,5 +1,5 @@
 import { Observable } from '../../utils/Observable.js';
-import { OBSERVABLE_DEFAULTS } from '../../config/UIConfig.js';
+import { PAYMENT_CONFIG } from '../../config/PaymentConfig.js';
 
 /**
  * PaymentModel.js
@@ -7,16 +7,16 @@ import { OBSERVABLE_DEFAULTS } from '../../config/UIConfig.js';
  */
 export class PaymentModel {
     constructor() {
-        const defaults = OBSERVABLE_DEFAULTS.PAYMENT;
+        const inputs = PAYMENT_CONFIG.INPUTS;
 
         // 환율 설정 (100엔당 원화)
-        this.exchangeRate = new Observable(defaults.EXCHANGE_RATE.value);
+        this.exchangeRate = new Observable(inputs.EXCHANGE_RATE.value);
 
         // 엔화 결제 할인 설정 (ASOBI/Android 전용)
-        this.jpyDiscountRate = new Observable(defaults.JPY_DISCOUNT_RATE.value);
+        this.jpyDiscountRate = new Observable(inputs.JPY_DISCOUNT_RATE.value);
 
         // 원화 결제 할인 설정 (iOS 전용)
-        this.krwDiscountRate = new Observable(defaults.KRW_DISCOUNT_RATE.value);
+        this.krwDiscountRate = new Observable(inputs.KRW_DISCOUNT_RATE.value);
 
         // 기준 패키지 설정 (효율 배수 계산용)
         // 형식: { platform: 'ASOBI', category: 'NORMAL', id: 'F' }

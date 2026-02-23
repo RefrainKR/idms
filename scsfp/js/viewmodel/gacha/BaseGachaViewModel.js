@@ -1,14 +1,17 @@
-import { StorageManager } from '../../utils/StorageManager.js';
-import { InputBinder } from '../../view/component/InputBinder.js';
+﻿import { StorageManager } from '../../utils/StorageManager.js';
+import { InputBinder } from '../../component/InputBinder.js';
+import { ProbabilityEngine } from '../../core/ProbabilityEngine.js';
+import { EfficiencyCalculator } from '../../core/EfficiencyCalculator.js';
+import { ProbabilityValidator } from '../../utils/ProbabilityValidator.js';
+import { GACHA_RULES } from '../../config/GachaConfig.js';
+import { BaseViewModel } from '../BaseViewModel.js';
 
-export class BaseGachaViewModel {
-    constructor(storageKey, config) { // config 인자 추가
+export class BaseGachaViewModel extends BaseViewModel {
+    constructor(storageKey, config) {
+        super();
         this.storageKey = storageKey;
         this.config = config;
         this.model = null;
-        this.isInitializing = true;
-        this._subscriptions = []; // 구독 해제 함수 저장
-        this._inputBinders = []; // InputBinder 인스턴스 저장
     }
 
     init() {
@@ -39,16 +42,6 @@ export class BaseGachaViewModel {
         this.bindInputs(); // InputBinder 연결
         this.isInitializing = false;
         this.calculate();
-    }
-
-    destroy() {
-        // 모든 구독 해제
-        this._subscriptions.forEach(unsubscribe => unsubscribe());
-        this._subscriptions = [];
-
-        // 모든 InputBinder 해제
-        this._inputBinders.forEach(binder => binder.destroy());
-        this._inputBinders = [];
     }
 
     /**
@@ -124,6 +117,117 @@ export class BaseGachaViewModel {
     save() {
         if (this.isInitializing || !this.model) return;
         StorageManager.save(this.storageKey, this.model.toJSON());
+    }
+
+    /**
+     * targetCount → M 변환 유틸
+     * @param {number} N - 전체 픽업 수
+     * @param {number} targetVal - 목표 수집 수 (0이면 전체)
+     * @returns {number} 유효한 M 값
+     */
+    resolveTargetCount(N, targetVal) {
+        let M = (targetVal === 0 || !targetVal) ? N : Number(targetVal);
+        if (M > N) M = N;
+        return M;
+    }
+
+    /**
+     * 단순 스탭업 가챠 공통 계산 (Birthday/Collab 타입)
+     * @param {Object} params
+     * @param {Object} params.rules - GACHA_RULES의 해당 타입 (BIRTHDAY 또는 COLLAB)
+     * @param {string} params.step3Mode - Step3 확정 모드 ('included'|'excluded')
+     * @param {number} params.stepupLimit - 스탭업 최대 횟수
+     * @param {number|null} params.stepupGuarantee - 확정 주기 (null이면 없음)
+     * @returns {Object} { N, M, dp, dpTotal, ceilingCount, stepGuaranteed }
+     */
+    _runSimpleStepupCalculation({ rules, step3Mode, stepupLimit, stepupGuarantee }) {
+        const N = this.model.pickupCount.value;
+        const targetVal = this.model.targetCount.value;
+        const M = this.resolveTargetCount(N, targetVal);
+
+        const normalRate = this.model.normalRate.value / 100;
+        const stepRate = this.model.stepRate.value / 100;
+        const normalPulls = this.model.normalPulls.value;
+        const stepPulls = this.model.stepPulls.value;
+        const totalPulls = normalPulls + stepPulls;
+
+        let dp = new Array(M + 1).fill(0);
+        dp[0] = 1.0;
+        let dpTotal = [1.0];
+
+        // 1. 일반 가챠
+        const p_normal_any = ProbabilityValidator.getTotalProb(normalRate, M);
+        for (let i = 0; i < normalPulls; i++) {
+            dp = ProbabilityEngine.runSinglePull(dp, normalRate);
+            dpTotal = ProbabilityEngine.accumulateCountProb(dpTotal, p_normal_any);
+        }
+
+        // 2. 스탭업 가챠
+        const p_step_any = ProbabilityValidator.getTotalProb(stepRate, M);
+        for (let i = 1; i <= stepPulls; i++) {
+            const isStep3 = stepupGuarantee && (i % stepupGuarantee === 0);
+
+            if (isStep3 && step3Mode === 'included') {
+                dp = ProbabilityEngine.runGuaranteedPull(dp);
+                dpTotal = ProbabilityEngine.accumulateCountGuaranteed(dpTotal);
+            } else {
+                dp = ProbabilityEngine.runSinglePull(dp, stepRate);
+                dpTotal = ProbabilityEngine.accumulateCountProb(dpTotal, p_step_any);
+            }
+        }
+
+        // 3. 천장 처리
+        let ceilingCount = 0;
+        if (this.model.ceilingMode.value === 'included') {
+            ceilingCount = Math.floor(totalPulls / rules.CEILING_INTERVAL);
+            for (let i = 0; i < ceilingCount; i++) {
+                dp = ProbabilityEngine.runGuaranteedPull(dp);
+                dpTotal = ProbabilityEngine.accumulateCountGuaranteed(dpTotal);
+            }
+        }
+
+        const stepGuaranteed = (stepupGuarantee && step3Mode === 'included')
+            ? Math.floor(stepPulls / stepupGuarantee)
+            : 0;
+
+        return { N, M, dp, dpTotal, normalPulls, stepPulls, totalPulls, ceilingCount, stepGuaranteed };
+    }
+
+    /**
+     * 단순 스탭업 효율 데이터 계산 공통 메서드
+     */
+    _getSimpleStepupEfficiency({ step3Mode, stepupLimit }) {
+        const N = this.model.pickupCount.value;
+        const M = this.resolveTargetCount(N, this.model.targetCount.value);
+
+        return EfficiencyCalculator.calculateSimpleStepup({
+            normalRate: this.model.normalRate.value / 100,
+            stepRate: this.model.stepRate.value / 100,
+            ceilingMode: this.model.ceilingMode.value,
+            step3Mode,
+            N,
+            M,
+            stepupLimit
+        });
+    }
+
+    /**
+     * 단순 스탭업 CDF 데이터 계산 공통 메서드
+     */
+    _getSimpleStepupCDF({ step3Mode, stepupLimit }) {
+        const N = this.model.pickupCount.value;
+        const M = this.resolveTargetCount(N, this.model.targetCount.value);
+        const targetProb = this.model.targetProbability.value / 100;
+
+        return EfficiencyCalculator.calculateSimpleStepupCDF({
+            normalRate: this.model.normalRate.value / 100,
+            stepRate: this.model.stepRate.value / 100,
+            ceilingMode: this.model.ceilingMode.value,
+            step3Mode,
+            M,
+            targetProb,
+            stepupLimit
+        });
     }
 
     calculate() { throw new Error("Implement calculate()"); }

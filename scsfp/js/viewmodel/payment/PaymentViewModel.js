@@ -1,21 +1,19 @@
-import { PaymentModel } from '../../model/payment/PaymentModel.js';
+﻿import { PaymentModel } from '../../model/payment/PaymentModel.js';
 import { PaymentView } from '../../view/payment/PaymentView.js';
 import { PAYMENT_CONFIG, PACKAGES } from '../../config/PaymentConfig.js';
 import { StorageManager } from '../../utils/StorageManager.js';
-import { InputBinder } from '../../view/component/InputBinder.js';
-import { OBSERVABLE_DEFAULTS } from '../../config/UIConfig.js';
+import { InputBinder } from '../../component/InputBinder.js';
+import { BaseViewModel } from '../BaseViewModel.js';
 
 /**
  * PaymentViewModel.js
  * 과금 효율 계산의 프레젠테이션 로직
  */
-export class PaymentViewModel {
+export class PaymentViewModel extends BaseViewModel {
     constructor() {
+        super();
         this.model = new PaymentModel();
         this.view = new PaymentView();
-        this.isInitializing = true;
-        this._inputBinders = []; // InputBinder 인스턴스 저장
-        this._subscriptions = []; // Observable 구독 저장
         this._clickHandlerBound = false; // 클릭 이벤트 바인딩 여부
     }
 
@@ -51,50 +49,33 @@ export class PaymentViewModel {
      * 입력 필드 바인딩
      */
     bindInputs() {
+        const inputs = PAYMENT_CONFIG.INPUTS;
+
         // 환율
         const exchangeRateInput = document.getElementById('payment-exchange-rate');
         if (exchangeRateInput) {
-            const config = OBSERVABLE_DEFAULTS.PAYMENT.EXCHANGE_RATE;
-            const binder = new InputBinder(exchangeRateInput, this.model.exchangeRate, {
-                min: config.min,
-                max: config.max,
-                type: 'int'
-            });
-            this._inputBinders.push(binder);
+            const cfg = inputs.EXCHANGE_RATE;
+            this._inputBinders.push(new InputBinder(exchangeRateInput, this.model.exchangeRate, {
+                min: cfg.min, max: cfg.max, type: 'int'
+            }));
         }
 
         // 엔화 할인율 (ASOBI/Android)
         const jpyDiscountRateInput = document.getElementById('payment-jpy-discount-rate');
         if (jpyDiscountRateInput) {
-            const config = OBSERVABLE_DEFAULTS.PAYMENT.JPY_DISCOUNT_RATE;
-            const binder = new InputBinder(jpyDiscountRateInput, this.model.jpyDiscountRate, {
-                min: config.min,
-                max: config.max,
-                type: 'float'
-            });
-            this._inputBinders.push(binder);
+            const cfg = inputs.JPY_DISCOUNT_RATE;
+            this._inputBinders.push(new InputBinder(jpyDiscountRateInput, this.model.jpyDiscountRate, {
+                min: cfg.min, max: cfg.max, type: 'float'
+            }));
         }
 
         // 원화 할인율 (iOS)
         const krwDiscountRateInput = document.getElementById('payment-krw-discount-rate');
         if (krwDiscountRateInput) {
-            const config = OBSERVABLE_DEFAULTS.PAYMENT.KRW_DISCOUNT_RATE;
-            const binder = new InputBinder(krwDiscountRateInput, this.model.krwDiscountRate, {
-                min: config.min,
-                max: config.max,
-                type: 'float'
-            });
-            this._inputBinders.push(binder);
-        }
-
-        // 원화 할인 상한 (숨김 처리됨)
-        const krwDiscountCapInput = document.getElementById('payment-krw-discount-cap');
-        if (krwDiscountCapInput) {
-            const binder = new InputBinder(krwDiscountCapInput, this.model.krwDiscountCap, {
-                min: 0,
-                type: 'int'
-            });
-            this._inputBinders.push(binder);
+            const cfg = inputs.KRW_DISCOUNT_RATE;
+            this._inputBinders.push(new InputBinder(krwDiscountRateInput, this.model.krwDiscountRate, {
+                min: cfg.min, max: cfg.max, type: 'float'
+            }));
         }
     }
 
@@ -152,9 +133,8 @@ export class PaymentViewModel {
     /**
      * 탭 전환 시 호출
      */
-    onTabChange(tabId) {
+    onTabChange(_tabId) {
         // 향후 탭별 특정 작업 추가 가능
-        console.log(`[PaymentViewModel] 탭 전환: ${tabId}`);
     }
 
     /**
@@ -381,16 +361,4 @@ export class PaymentViewModel {
         this.model.fromJSON(data);
     }
 
-    /**
-     * 리소스 정리
-     */
-    destroy() {
-        // 모든 InputBinder 해제
-        this._inputBinders.forEach(binder => binder.destroy());
-        this._inputBinders = [];
-
-        // 모든 Observable 구독 해제
-        this._subscriptions.forEach(unsubscribe => unsubscribe());
-        this._subscriptions = [];
-    }
 }

@@ -1,12 +1,12 @@
-import { Star3GachaViewModel } from './viewmodel/gacha/Star3GachaViewModel.js';
+﻿import { Star3GachaViewModel } from './viewmodel/gacha/Star3GachaViewModel.js';
 import { Star2GachaViewModel } from './viewmodel/gacha/Star2GachaViewModel.js';
 import { BirthdayGachaViewModel } from './viewmodel/gacha/BirthdayGachaViewModel.js';
 import { CollabGachaViewModel } from './viewmodel/gacha/CollabGachaViewModel.js';
 import { PaymentViewModel } from './viewmodel/payment/PaymentViewModel.js';
-import { TabManager } from './view/component/TabManager.js';
-import { CollapsibleSection } from './view/component/CollapsibleSection.js';
+import { TabManager } from './component/TabManager.js';
+import { CollapsibleSection } from './component/CollapsibleSection.js';
 import { StorageManager } from './utils/StorageManager.js';
-import { SectionManager } from './core/SectionManager.js';
+import { SectionManager } from './component/SectionManager.js';
 
 // Chart.js and ChartDataLabels are loaded as global variables via CDN (see index.html)
 // Chart.js: https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js

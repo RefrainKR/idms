@@ -1,12 +1,9 @@
-import { BaseGachaViewModel } from './BaseGachaViewModel.js';
+﻿import { BaseGachaViewModel } from './BaseGachaViewModel.js';
 import { CollabGachaModel } from '../../model/gacha/CollabGachaModel.js';
-import { ProbabilityEngine } from '../../core/ProbabilityEngine.js';
-import { EfficiencyCalculator } from '../../core/EfficiencyCalculator.js';
 import { GachaResultView } from '../../view/gacha/GachaResultView.js';
-import { ToggleButton } from '../../view/component/ToggleButton.js';
+import { ToggleButton } from '../../component/ToggleButton.js';
 import { CONFIG, TOGGLE_STATES, GACHA_RULES } from '../../config/GachaConfig.js';
-import { ProbabilityValidator } from '../../utils/ProbabilityValidator.js';
-import { getGachaConfig, applyTabVisibility } from '../../view/gacha/GachaTypeConfig.js';
+import { getGachaConfig, applyTabVisibility } from '../../view/gacha/GachaViewConfig.js';
 
 export class CollabGachaViewModel extends BaseGachaViewModel {
     constructor() {
@@ -14,13 +11,13 @@ export class CollabGachaViewModel extends BaseGachaViewModel {
         this.model = new CollabGachaModel();
 
         this.inputsMap = {
-            'collabPickupCount': this.model.pickupCount,
-            'collabNormalRate': this.model.normalRate,
-            'collabStepRate': this.model.stepRate,
-            'collabTargetCount': this.model.targetCount,
-            'collabNormalPulls': this.model.normalPulls,
-            'collabStepPulls': this.model.stepPulls,
-            'targetProbabilityCollab': this.model.targetProbability
+            'collab-pickupCount': this.model.pickupCount,
+            'collab-normalRate': this.model.normalRate,
+            'collab-stepRate': this.model.stepRate,
+            'collab-targetCount': this.model.targetCount,
+            'collab-normalPulls': this.model.normalPulls,
+            'collab-stepPulls': this.model.stepPulls,
+            'collab-targetProbability': this.model.targetProbability
         };
 
         this.chartRefs = {
@@ -36,7 +33,7 @@ export class CollabGachaViewModel extends BaseGachaViewModel {
     init() {
         super.init();
 
-        this.initPresets();
+        this.renderPresetButtons();
         this.bindToggles();
 
         const resetBtn = document.getElementById('collab-reset-btn');
@@ -46,30 +43,33 @@ export class CollabGachaViewModel extends BaseGachaViewModel {
     }
 
     getCustomBinderOptions(id) {
-        if (id === 'collabTargetCount') {
+        if (id === 'collab-targetCount') {
             return { maxObserver: this.model.pickupCount };
         }
         return null;
     }
 
-    initPresets() {
-        const presets = CONFIG.COLLAB.PRESETS;
-        if (!presets) return;
+    renderPresetButtons() {
+        const container = document.getElementById('collab-preset-container');
+        if (!container || !CONFIG.COLLAB.PRESETS) return;
 
-        for (const [key, preset] of Object.entries(presets)) {
-            const btn = document.getElementById(`collab-preset-${key}`);
-            if (btn) {
-                btn.addEventListener('click', () => this.applyPreset(preset));
-            }
-        }
+        container.innerHTML = '';
+        CONFIG.COLLAB.PRESETS.forEach(preset => {
+            const btn = document.createElement('button');
+            btn.className = 'preset-btn';
+            btn.textContent = preset.label;
+            btn.title = preset.title;
+            btn.onclick = () => this.applyPreset(preset.settings);
+            container.appendChild(btn);
+        });
     }
 
-    applyPreset(preset) {
+    applyPreset(settings) {
         this.isInitializing = true;
 
-        if (preset.pickupCount !== undefined) this.model.pickupCount.value = preset.pickupCount;
-        if (preset.normalRate !== undefined) this.model.normalRate.value = preset.normalRate;
-        if (preset.stepRate !== undefined) this.model.stepRate.value = preset.stepRate;
+        if (settings.pickupCount !== undefined) this.model.pickupCount.value = settings.pickupCount;
+        if (settings.normalRate !== undefined) this.model.normalRate.value = settings.normalRate;
+        if (settings.stepRate !== undefined) this.model.stepRate.value = settings.stepRate;
 
         this.isInitializing = false;
         this.calculate();
@@ -99,105 +99,31 @@ export class CollabGachaViewModel extends BaseGachaViewModel {
     calculate() {
         if (this.isInitializing) return;
 
-        const N = this.model.pickupCount.value;
-        const targetVal = this.model.targetCount.value;
+        const result = this._runSimpleStepupCalculation({
+            rules: GACHA_RULES.COLLAB,
+            step3Mode: 'excluded',
+            stepupLimit: GACHA_RULES.COLLAB.STEPUP_LIMIT,
+            stepupGuarantee: null // 콜라보는 스탭업 확정 없음
+        });
 
-        // targetCount가 0이면 전체(N) 수집, 아니면 해당 값 사용
-        let M = (targetVal === 0 || !targetVal) ? N : Number(targetVal);
-        if (M > N) M = N;
-
-        const normalRate = this.model.normalRate.value / 100;
-        const stepRate = this.model.stepRate.value / 100;
-        const normalPulls = this.model.normalPulls.value;
-        const stepPulls = this.model.stepPulls.value;
-        const totalPulls = normalPulls + stepPulls;
-
-        let dp = new Array(M + 1).fill(0);
-        dp[0] = 1.0;
-        let dpTotal = [1.0];
-
-        // 1. 일반 가챠
-        const p_normal_any = ProbabilityValidator.getTotalProb(normalRate, M);
-
-        for (let i = 0; i < normalPulls; i++) {
-            dp = ProbabilityEngine.runSinglePull(dp, normalRate);
-            dpTotal = ProbabilityEngine.accumulateCountProb(dpTotal, p_normal_any);
-        }
-
-        // 2. 스탭업 가챠 (확률만 변동, 확정 없음)
-        const p_step_any = ProbabilityValidator.getTotalProb(stepRate, M);
-
-        for (let i = 0; i < stepPulls; i++) {
-            dp = ProbabilityEngine.runSinglePull(dp, stepRate);
-            dpTotal = ProbabilityEngine.accumulateCountProb(dpTotal, p_step_any);
-        }
-
-        // 3. 천장 처리 (일반+스탭업 합산 200회당 1개)
-        let ceilingCount = 0;
-        if (this.model.ceilingMode.value === 'included') {
-            ceilingCount = Math.floor(totalPulls / GACHA_RULES.BIRTHDAY.CEILING_INTERVAL);
-            for (let i = 0; i < ceilingCount; i++) {
-                dp = ProbabilityEngine.runGuaranteedPull(dp);
-                dpTotal = ProbabilityEngine.accumulateCountGuaranteed(dpTotal);
-            }
-        }
-
-        // 효율 비교 데이터 생성
-        const efficiencyData = this._calculateEfficiencyData();
-
-        // CDF 역추적 데이터 생성
-        const cdfData = this._calculateCDFData();
+        const params = { step3Mode: 'excluded', stepupLimit: GACHA_RULES.COLLAB.STEPUP_LIMIT };
 
         const context = {
-            N, M,
+            N: result.N, M: result.M,
             normalRate: this.model.normalRate.value,
             stepRate: this.model.stepRate.value,
-            normalPulls,
-            stepPulls,
-            totalPulls,
-            ceilingCount,
-            stepGuaranteed: 0, // 콜라보는 스탭업 확정 없음
-            efficiencyData,
-            cdfData
+            normalPulls: result.normalPulls,
+            stepPulls: result.stepPulls,
+            totalPulls: result.totalPulls,
+            ceilingCount: result.ceilingCount,
+            stepGuaranteed: 0,
+            efficiencyData: this._getSimpleStepupEfficiency(params),
+            cdfData: this._getSimpleStepupCDF(params)
         };
 
-        // 결과 렌더링
-        GachaResultView.render('collab', { N, M, dp, dpTotal }, context, this.model, this.chartRefs);
-    }
-
-    _calculateEfficiencyData() {
-        const N = this.model.pickupCount.value;
-        const targetVal = this.model.targetCount.value;
-        let M = (targetVal === 0 || !targetVal) ? N : Number(targetVal);
-        if (M > N) M = N;
-
-        return EfficiencyCalculator.calculateSimpleStepup({
-            normalRate: this.model.normalRate.value / 100,
-            stepRate: this.model.stepRate.value / 100,
-            ceilingMode: this.model.ceilingMode.value,
-            step3Mode: 'excluded', // 콜라보는 항상 Step3 확정 없음
-            N: N,
-            M: M,
-            stepupLimit: 9999 // 콜라보는 스탭업 횟수 제한 없음
-        });
-    }
-
-    _calculateCDFData() {
-        const N = this.model.pickupCount.value;
-        const targetVal = this.model.targetCount.value;
-        let M = (targetVal === 0 || !targetVal) ? N : Number(targetVal);
-        if (M > N) M = N;
-
-        const targetProb = this.model.targetProbability.value / 100;
-
-        return EfficiencyCalculator.calculateSimpleStepupCDF({
-            normalRate: this.model.normalRate.value / 100,
-            stepRate: this.model.stepRate.value / 100,
-            ceilingMode: this.model.ceilingMode.value,
-            step3Mode: 'excluded', // 콜라보는 항상 Step3 확정 없음
-            M: M,
-            targetProb: targetProb,
-            stepupLimit: 9999 // 콜라보는 스탭업 횟수 제한 없음
-        });
+        GachaResultView.render('collab',
+            { N: result.N, M: result.M, dp: result.dp, dpTotal: result.dpTotal },
+            context, this.model, this.chartRefs
+        );
     }
 }

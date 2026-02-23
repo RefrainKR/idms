@@ -11,7 +11,7 @@ export class ToggleButton {
             const idx = this.states.findIndex(s => s.name === initialStateName);
             if (idx !== -1) this.currentIndex = idx;
         }
-        
+
         this.button.addEventListener('click', () => this.toggle());
         this.updateUI();
     }

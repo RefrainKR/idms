@@ -296,28 +296,9 @@ body {
     justify-content: flex-end; /* 햄버거 메뉴를 우측에 배치 */
 }
 
-/* Mobile Navigation Toggle (햄버거 메뉴) */
+/* Mobile Navigation Toggle (햄버거 메뉴) - 미사용 */
 .mobile-only {
     display: none;
-}
-
-#mobile-nav-toggle {
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 8px;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
-
-#mobile-nav-toggle span {
-    display: block;
-    width: 24px;
-    height: 3px;
-    background: white;
-    border-radius: 2px;
-    transition: all 0.3s ease;
 }
 
 /* Main Content Container */
@@ -352,7 +333,6 @@ body {
     border: none;
     font-weight: bold;
     cursor: pointer;
-    transition: all 0.2s ease;
     white-space: nowrap;
 }
 
@@ -423,7 +403,6 @@ footer {
     border: none;
     background: transparent;
     cursor: pointer;
-    transition: all 0.2s ease;
     font-size: 0.95rem;
     color: var(--text-primary);
     text-align: left;
@@ -460,7 +439,6 @@ footer {
 .view-toggle-btn {
     padding: 8px 10px;
     cursor: pointer;
-    transition: all 0.2s;
     font-weight: bold;
     white-space: nowrap;
 }
@@ -504,7 +482,6 @@ footer {
     font-size: 0.85rem;
     background-color: white;
     color: var(--text-primary);
-    transition: all 0.2s ease;
 }
 
 /* Toggle States */
@@ -562,14 +539,8 @@ footer {
 /* Tab Content */
 .tab-content {
     display: none;
-    animation: fadeIn 0.3s ease-in-out;
 }
 .tab-content.active { display: block; }
-
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(5px); }
-    to { opacity: 1; transform: translateY(0); }
-}
 
 
 /* ========================================
@@ -588,7 +559,6 @@ footer {
 
 .sub-tab-nav .tab-button {
     cursor: pointer;
-    transition: all 0.2s;
     font-weight: bold;
     white-space: nowrap;
     min-width: 100px;
@@ -699,7 +669,6 @@ input[type="number"], select {
     font-size: 0.9rem;
     text-align: right;
     background-color: var(--input-bg);
-    transition: all 0.3s;
     font-family: inherit;
 }
 
@@ -878,7 +847,6 @@ body {
 
 /* Table Body */
 .data-table tbody tr {
-    transition: background 0.2s;
 }
 
 .data-table tbody tr:nth-child(even) {

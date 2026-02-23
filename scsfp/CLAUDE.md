@@ -13,8 +13,10 @@
 **현재 버전**: v1.9.5 (2026-02-17)
 
 **문서 참조**:
-- **버전 히스토리**: [@docs/UPDATE.md](docs/UPDATE.md)
-- **게임 시스템 사양**: [@docs/GAME_RULES.md](docs/GAME_RULES.md)
+- **버전 히스토리**: [docs/UPDATE.md](docs/UPDATE.md)
+- **게임 시스템 사양**: [docs/GAME_RULES.md](docs/GAME_RULES.md)
+- **리팩토링 관리**: [REFACTORING.md](REFACTORING.md)
+- **프로젝트 현황**: 이 파일(CLAUDE.md) 자체에 아키텍처, 알고리즘, 설계 철학 등 모든 상세 내용 포함
 
 **언어**: Vanilla JavaScript (ES6 modules)
 **기술 스택**: HTML5, CSS3, Chart.js 4.4.1
@@ -240,6 +242,10 @@ GACHA_RULES = {
     STEPUP_MAX: 30,
     STEPUP_GUARANTEE: 30,       // 30회째 100% 확정
     CEILING_INTERVAL: 200
+  },
+  COLLAB: {
+    STEPUP_LIMIT: 9999,         // 사실상 무제한
+    CEILING_INTERVAL: 200
   }
 }
 ```
@@ -385,7 +391,7 @@ GACHA_RULES = {
 - `GACHA_RULES`: 게임 시스템 규칙 (Step 주기, 천장, 확정 시스템)
 - `PROBABILITY_MODE`: 확률 표시 모드 (개별/누적)
 - `MATH_CONSTANTS`: 수학 상수 (EPSILON, PERCENTAGE_MULTIPLIER)
-- `FORMATTING_RULES`: 소수점 자릿수 규칙
+- ~~`FORMATTING_RULES`~~: v1.9.5에서 제거됨 → `UIConfig.js`의 `FORMAT` 사용
 
 **사용 예시**:
 ```javascript
@@ -417,7 +423,7 @@ model.stepMax.value = value * GACHA_RULES.STAR3.STEPUP_CYCLE; // ✅
 
 ### js/config/UIConfig.js (UI 설정)
 UI 표시 및 차트 스타일:
-- `FORMAT`: 소수점 자릿수 (FORMATTING_RULES를 re-export)
+- `FORMAT`: 소수점 자릿수 규칙 (단일 정의, Constants.js에서 제거됨)
 - `CHART`: 차트 패딩, 폰트 크기, 투명도, 라인 스타일
 - `CHART_POINT`: 포인트 반지름, 강조 간격
 - `CHART_RANGE`: 차트 X축 제한, 최대 가챠 횟수
@@ -475,9 +481,9 @@ pointRadius: idx === 0 ? CHART_POINT.RADIUS.ORIGIN :
 - [PaymentViewModel.js](scsfp/js/viewmodel/payment/PaymentViewModel.js): 프레젠테이션 로직
 
 **문서**:
-- [PROJECT_STATUS.md](scsfp/PROJECT_STATUS.md): 코드베이스 구조, 알고리즘 상세 분석 (한글)
-- [UPDATE.md](UPDATE.md): 버전 히스토리
-- [REFACTORING.md](REFACTORING.md): 향후 리팩토링 기회
+- [docs/UPDATE.md](docs/UPDATE.md): 버전 히스토리
+- [docs/GAME_RULES.md](docs/GAME_RULES.md): 게임 기본 정보 및 시스템 사양
+- [REFACTORING.md](REFACTORING.md): 리팩토링 필요 항목 관리
 
 ## Chart.js 연동
 
@@ -564,13 +570,13 @@ calculate() {
 **버전 관리 위치**:
 1. `Constants.js` - `APP_VERSION` 상수 (런타임 버전 체크)
 2. `index.html` - CSS/JS 캐시 버스팅 (`?v=1.9.5`)
-3. `UPDATE.md` - 버전 히스토리 문서화
+3. `docs/UPDATE.md` - 버전 히스토리 문서화
 4. `CLAUDE.md` - 현재 버전 명시
 
 **버전 업데이트 체크리스트**:
 - [ ] `Constants.js`: `APP_VERSION` 수정
 - [ ] `index.html`: CSS/JS 버전 태그 수정 (총 4곳)
-- [ ] `UPDATE.md`: 새 버전 섹션 추가
+- [ ] `docs/UPDATE.md`: 새 버전 섹션 추가
 - [ ] `CLAUDE.md`: 현재 버전 업데이트
 
 **캐시 버스팅**:
@@ -626,10 +632,86 @@ calculate() {
    - 기본값: `OBSERVABLE_DEFAULTS`에서 설정
    - 범위 제한: `CONFIG.INPUTS`에서 설정
 
+## CSS 애니메이션 최소화 원칙
+
+**목표**: UI 반응 속도 최적화를 위해 **모든** CSS transition/animation 제거
+
+### 기본 원칙
+
+1. **transition 속성 완전 금지**
+   - 버튼, 입력 요소, 테이블 행 등 모든 인터랙티브 요소에서 transition 제거
+   - 사용자 입력에 대한 즉각적인 시각 피드백 제공
+   - **예외 없음**: 탭 전환 포함 모든 애니메이션 제거
+
+2. **animation 속성 완전 금지**
+   - `@keyframes` 선언 모두 제거
+   - `animation` 속성 사용 금지
+   - 탭 콘텐츠 전환도 애니메이션 없이 즉시 표시
+
+3. **금지되는 패턴**
+   ```css
+   /* ❌ 버튼 transition */
+   .btn {
+       transition: all 0.2s;
+   }
+
+   /* ❌ 입력 요소 transition */
+   input {
+       transition: border-color 0.3s;
+   }
+
+   /* ❌ Hover transition */
+   .sidebar-item {
+       transition: background 0.2s ease;
+   }
+
+   /* ❌ 테이블 행 transition */
+   .data-table tbody tr {
+       transition: background 0.2s;
+   }
+
+   /* ❌ 탭 콘텐츠 애니메이션 */
+   .tab-content {
+       animation: fadeIn 0.3s ease-in-out;
+   }
+   ```
+
+4. **Hover 효과 구현**
+   - transition 없이 즉시 변경되는 hover 스타일 사용
+   ```css
+   /* ✅ 올바른 hover 구현 */
+   .btn:hover {
+       background: var(--primary-dark);
+   }
+
+   /* ❌ 잘못된 hover 구현 */
+   .btn {
+       transition: background 0.2s;
+   }
+   .btn:hover {
+       background: var(--primary-dark);
+   }
+   ```
+
+### 설계 철학
+
+**빠른 피드백 = 최우선**
+- 사용자가 버튼을 클릭하면 즉시 반응해야 함
+- 0.2초의 transition도 체감 지연으로 느껴질 수 있음
+- 0.3초의 fadeIn 애니메이션은 탭 전환을 느리게 만드는 주 원인
+- **예외 없음**: 모든 transition/animation 제거
+
+**성능 고려**:
+- transition/animation은 브라우저의 reflow/repaint 트리거
+- 대량의 DOM 요소에 transition이 있으면 성능 저하
+- 테이블의 모든 행에 transition이 있으면 스크롤 성능 저하
+- 애니메이션 제거로 렌더링 성능 향상
+
 ## 관련 문서
 
-프로젝트의 업데이트 히스토리와 향후 리팩토링 기회는 별도 문서로 관리됩니다:
+프로젝트 관련 문서는 `docs/` 폴더와 루트에서 관리됩니다:
 
-- **[UPDATE.md](UPDATE.md)**: 모든 업데이트 내역 (기능 추가, 버그 수정, 개선 사항)
-- **[REFACTORING.md](REFACTORING.md)**: 향후 리팩토링 기회 및 기술 부채 관리
-- **[PROJECT_STATUS.md](scsfp/PROJECT_STATUS.md)**: 코드베이스 구조, 알고리즘 상세 분석 (한글)
+- **[docs/UPDATE.md](docs/UPDATE.md)**: 모든 버전 업데이트 내역 (기능 추가, 버그 수정, 개선 사항)
+- **[docs/GAME_RULES.md](docs/GAME_RULES.md)**: 게임 기본 정보 및 시스템 사양 (가챠 규칙, 확률 등)
+- **[REFACTORING.md](REFACTORING.md)**: 리팩토링 필요 항목 관리 (리팩토링 완료 후 유저가 직접 비움)
+- **CLAUDE.md (이 파일)**: 프로젝트 현황, 아키텍처, 알고리즘, 설계 철학 등 Claude가 항시 참조하는 모든 상세 내용

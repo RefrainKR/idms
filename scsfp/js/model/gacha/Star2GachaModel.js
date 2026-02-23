@@ -1,24 +1,24 @@
 import { Observable } from '../../utils/Observable.js';
-import { OBSERVABLE_DEFAULTS } from '../../config/UIConfig.js';
+import { CONFIG, getInputDefaults } from '../../config/GachaConfig.js';
 
 export class Star2GachaModel {
     constructor() {
-        const defaults = OBSERVABLE_DEFAULTS.STAR2;
+        const def = getInputDefaults(CONFIG.STAR2.INPUTS);
 
-        this.countNormal = new Observable(defaults.COUNT_NORMAL.value);
-        this.rateTotal = new Observable(defaults.RATE_TOTAL.value);
-        this.normalPulls = new Observable(defaults.NORMAL_PULLS.value);
+        this.pickupCount = new Observable(def['star2-pickupCount']);
+        this.pickupRate = new Observable(def['star2-pickupRate']);
+        this.normalPulls = new Observable(def['star2-normalPulls']);
 
         // 그룹별 데이터 (Observable 개별 생성)
-        this.countStepA = new Observable(defaults.GROUP_A_COUNT.value); this.pullsStepA = new Observable(defaults.GROUP_A_PULLS.value); this.targetCountA = new Observable(0);
-        this.countStepB = new Observable(defaults.GROUP_B_COUNT.value); this.pullsStepB = new Observable(defaults.GROUP_B_PULLS.value); this.targetCountB = new Observable(0);
-        this.countStepC = new Observable(defaults.GROUP_C_COUNT.value); this.pullsStepC = new Observable(defaults.GROUP_C_PULLS.value); this.targetCountC = new Observable(0);
-        this.countStepD = new Observable(defaults.GROUP_D_COUNT.value); this.pullsStepD = new Observable(defaults.GROUP_D_PULLS.value); this.targetCountD = new Observable(0);
+        this.countStepA = new Observable(def['star2-countStepA']); this.pullsStepA = new Observable(def['star2-pullsStepA']); this.targetCountA = new Observable(0);
+        this.countStepB = new Observable(def['star2-countStepB']); this.pullsStepB = new Observable(def['star2-pullsStepB']); this.targetCountB = new Observable(0);
+        this.countStepC = new Observable(def['star2-countStepC']); this.pullsStepC = new Observable(def['star2-pullsStepC']); this.targetCountC = new Observable(0);
+        this.countStepD = new Observable(def['star2-countStepD']); this.pullsStepD = new Observable(def['star2-pullsStepD']); this.targetCountD = new Observable(0);
 
         // 옵션 (상태)
         this.ceilingMode = new Observable('included');
         this.viewMode = new Observable('individual');
-        
+
         // 효율 탭 상태
         this.selectedGroup = new Observable('A');
         this.efficiencyMode = new Observable('best');
@@ -33,8 +33,8 @@ export class Star2GachaModel {
      */
     toJSON() {
         return {
-            countNormal: this.countNormal.value,
-            rateTotal: this.rateTotal.value,
+            pickupCount: this.pickupCount.value,
+            pickupRate: this.pickupRate.value,
 
             // 그룹 A
             countStepA: this.countStepA.value,
@@ -50,7 +50,15 @@ export class Star2GachaModel {
 
             // 그룹 D
             countStepD: this.countStepD.value,
-            targetCountD: this.targetCountD.value
+            targetCountD: this.targetCountD.value,
+
+            // 토글 상태
+            ceilingMode: this.ceilingMode.value,
+            viewMode: this.viewMode.value,
+            efficiencyMode: this.efficiencyMode.value,
+            selectedGroup: this.selectedGroup.value,
+            viewTargetGroup: this.viewTargetGroup.value,
+            efficiencyTargetGroup: this.efficiencyTargetGroup.value
         };
     }
 
@@ -59,13 +67,23 @@ export class Star2GachaModel {
      */
     fromJSON(data) {
         if (!data) return;
-        if (data.countNormal !== undefined) this.countNormal.value = data.countNormal;
-        if (data.rateTotal !== undefined) this.rateTotal.value = data.rateTotal;
+        if (data.pickupCount !== undefined) this.pickupCount.value = data.pickupCount;
+        if (data.pickupRate !== undefined) this.pickupRate.value = data.pickupRate;
+        // 하위 호환: 이전 저장 데이터 (countNormal/rateTotal 키)
+        if (data.countNormal !== undefined && data.pickupCount === undefined) this.pickupCount.value = data.countNormal;
+        if (data.rateTotal !== undefined && data.pickupRate === undefined) this.pickupRate.value = data.rateTotal;
 
         ['A', 'B', 'C', 'D'].forEach(g => {
             if (data[`countStep${g}`] !== undefined) this[`countStep${g}`].value = data[`countStep${g}`];
             if (data[`targetCount${g}`] !== undefined) this[`targetCount${g}`].value = data[`targetCount${g}`];
             // pullsStep은 저장하지 않으므로 복원하지 않음 (항상 0으로 시작)
         });
+
+        if (data.ceilingMode !== undefined) this.ceilingMode.value = data.ceilingMode;
+        if (data.viewMode !== undefined) this.viewMode.value = data.viewMode;
+        if (data.efficiencyMode !== undefined) this.efficiencyMode.value = data.efficiencyMode;
+        if (data.selectedGroup !== undefined) this.selectedGroup.value = data.selectedGroup;
+        if (data.viewTargetGroup !== undefined) this.viewTargetGroup.value = data.viewTargetGroup;
+        if (data.efficiencyTargetGroup !== undefined) this.efficiencyTargetGroup.value = data.efficiencyTargetGroup;
     }
 }

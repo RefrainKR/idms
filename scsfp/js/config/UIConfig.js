@@ -67,6 +67,17 @@ export const CHART = {
 };
 
 // ========================================
+// 차트 색상
+// ========================================
+
+export const CHART_COLORS = {
+    STEPUP: '#45a247',              // 스탭업 가챠 (초록)
+    NORMAL: '#283c86',              // 일반 가챠 (남색)
+    ERROR: '#dc3545',               // 에러/실패 (빨강)
+    NORMAL_RGBA: 'rgba(40, 60, 134, {opacity})'  // 일반 가챠 RGBA 템플릿
+};
+
+// ========================================
 // 차트 포인트 설정
 // ========================================
 
@@ -109,209 +120,9 @@ export const CHART_RANGE = {
         STAR2: 100            // 2성 기준
     },
 
+    // 효율/CDF 시뮬레이션 최대 가챠 횟수
+    EFFICIENCY_MAX_PULLS: 200,
+
     // 무돌 기대값 차트
     RAINBOW_MAX_PULLS: 200    // 200회까지 표시
-};
-export const OBSERVABLE_DEFAULTS = {
-    // 과금 효율 (Payment)
-    PAYMENT: {
-        EXCHANGE_RATE: {
-            value: 950,       // 환율 (KRW per 100 JPY)
-            min: 0,
-            max: 9999
-        },
-        JPY_DISCOUNT_RATE: {
-            value: 0,         // 엔화 할인율 (%)
-            min: 0,
-            max: 100
-        },
-        KRW_DISCOUNT_RATE: {
-            value: 0,         // 원화 할인율 (%)
-            min: 0,
-            max: 100
-        }
-    },
-
-    // 3성 가챠 (Star3)
-    STAR3: {
-        PICKUP_COUNT: {
-            value: 2,
-            min: 1,
-            max: 100
-        },
-        PICKUP_RATE: {
-            value: 1.0,
-            min: 0,
-            max: 100
-        },
-        TARGET_COUNT: {
-            value: 0,
-            min: 0,
-            max: 'dynamic'    // pickupCount에 의존
-        },
-        MAX_LOOPS: {
-            value: 2,
-            min: 0,
-            max: 10
-        },
-        STEP_MAX: {
-            value: 80,        // maxLoops * 40
-            min: 0,
-            max: 400
-        },
-        STEP4_RATE: {
-            value: 40.0,
-            min: 0,
-            max: 100
-        },
-        NORMAL_PULLS: {
-            value: 0,
-            min: 0,
-            max: 9999
-        },
-        STEP_PULLS: {
-            value: 0,
-            min: 0,
-            max: 'dynamic'    // stepMax에 의존
-        }
-    },
-
-    // 2성 가챠 (Star2)
-    STAR2: {
-        COUNT_NORMAL: {
-            value: 28,
-            min: 1,
-            max: 100
-        },
-        RATE_TOTAL: {
-            value: 28.0,
-            min: 0,
-            max: 100
-        },
-        NORMAL_PULLS: {
-            value: 0,
-            min: 0,
-            max: 9999
-        },
-        GROUP_A_COUNT: {
-            value: 8,
-            min: 1,
-            max: 100
-        },
-        GROUP_B_COUNT: {
-            value: 7,
-            min: 1,
-            max: 100
-        },
-        GROUP_C_COUNT: {
-            value: 7,
-            min: 1,
-            max: 100
-        },
-        GROUP_D_COUNT: {
-            value: 6,
-            min: 1,
-            max: 100
-        },
-        GROUP_A_PULLS: {
-            value: 0,
-            min: 0,
-            max: 9999
-        },
-        GROUP_B_PULLS: {
-            value: 0,
-            min: 0,
-            max: 9999
-        },
-        GROUP_C_PULLS: {
-            value: 0,
-            min: 0,
-            max: 9999
-        },
-        GROUP_D_PULLS: {
-            value: 0,
-            min: 0,
-            max: 9999
-        }
-    },
-
-    // 생일 가챠 (Birthday)
-    BIRTHDAY: {
-        PICKUP_COUNT: {
-            value: 1,
-            min: 1,
-            max: 10,
-            fixed: true       // 고정값
-        },
-        NORMAL_RATE: {
-            value: 1.5,
-            min: 0,
-            max: 100,
-            fixed: true
-        },
-        STEP_RATE: {
-            value: 2.0,
-            min: 0,
-            max: 100,
-            fixed: true
-        },
-        TARGET_COUNT: {
-            value: 0,
-            min: 0,
-            max: 10
-        },
-        NORMAL_PULLS: {
-            value: 0,
-            min: 0,
-            max: 9999
-        },
-        STEP_PULLS: {
-            value: 0,
-            min: 0,
-            max: 30
-        }
-    },
-
-    // 콜라보 가챠 (Collab)
-    COLLAB: {
-        PICKUP_COUNT: {
-            value: 5,
-            min: 1,
-            max: 10
-        },
-        NORMAL_RATE: {
-            value: 0.75,
-            min: 0,
-            max: 100
-        },
-        STEP_RATE: {
-            value: 1.0,
-            min: 0,
-            max: 100
-        },
-        TARGET_COUNT: {
-            value: 0,
-            min: 0,
-            max: 10
-        },
-        NORMAL_PULLS: {
-            value: 0,
-            min: 0,
-            max: 9999
-        },
-        STEP_PULLS: {
-            value: 0,
-            min: 0,
-            max: 9999
-        }
-    },
-
-    // 공통 설정 (SharedSettings)
-    SHARED: {
-        TARGET_PROBABILITY: {
-            value: 90,        // 목표 확률 (%)
-            min: 0,
-            max: 100
-        }
-    }
 };

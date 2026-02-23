@@ -71,24 +71,24 @@
                     <div class="subsection-group">
                         <h4 class="subsection-title">기본 정보</h4>
                         <div class="input-item">
-                            <label for="pickupCount">픽업 개수</label>
-                            <input type="number" id="pickupCount">
+                            <label for="star3-pickupCount">픽업 개수</label>
+                            <input type="number" id="star3-pickupCount">
                         </div>
                         <div class="input-item">
-                            <label for="pickupRate">픽업 확률: 개별 (%)</label>
-                            <input type="number" id="pickupRate">
+                            <label for="star3-pickupRate">픽업 확률: 개별 (%)</label>
+                            <input type="number" id="star3-pickupRate">
                         </div>
                     </div>
 
                     <div class="subsection-group">
                         <h4 class="subsection-title">스탭업 정보</h4>
                         <div class="input-item">
-                            <label for="maxLoops">주회(周回): 최대 수</label>
-                            <input type="number" id="maxLoops">
+                            <label for="star3-maxLoops">주회(周回): 최대 수</label>
+                            <input type="number" id="star3-maxLoops">
                         </div>
                         <div class="input-item">
-                            <label for="step4Rate">픽업 확률: Step4 (%)</label>
-                            <input type="number" id="step4Rate">
+                            <label for="star3-step4Rate">픽업 확률: Step4 (%)</label>
+                            <input type="number" id="star3-step4Rate">
                         </div>
                         <div class="loop-rewards-container" id="loopRewardsArea"></div>
                     </div>
@@ -104,17 +104,17 @@
                 <div class="section-content">
                     <div class="subsection-group">
                         <div class="input-item">
-                            <label for="normalPulls">횟수: 일반</label>
-                            <input type="number" id="normalPulls">
+                            <label for="star3-normalPulls">횟수: 일반</label>
+                            <input type="number" id="star3-normalPulls">
                         </div>
                         <div class="input-item">
-                            <label for="stepPulls">횟수: 스탭업</label>
-                            <input type="number" id="stepPulls">
+                            <label for="star3-stepPulls">횟수: 스탭업</label>
+                            <input type="number" id="star3-stepPulls">
                         </div>
                         <div class="input-item">
-                            <label for="targetCount">저격 픽업 수</label>
+                            <label for="star3-targetCount">저격 픽업 수</label>
                             <span class="input-hint">0 = 전체 </span>
-                            <input type="number" id="targetCount">
+                            <input type="number" id="star3-targetCount">
                         </div>
                     </div>
                 </div>
@@ -164,8 +164,8 @@
                         <div class="chart-scroll-inner"><canvas id="cdfChart"></canvas></div>
                         <div class="cdf-input-area">
                             <div class="input-item">
-                                <label for="targetProbability3">목표 확률 (%)</label>
-                                <input type="number" id="targetProbability3">
+                                <label for="star3-targetProbability">목표 확률 (%)</label>
+                                <input type="number" id="star3-targetProbability">
                             </div>
                         </div>
                     </div>
@@ -197,7 +197,7 @@
                         <h4 class="subsection-title">기본 정보</h4>
                         <div class="input-item">
                             <label>픽업 개수</label>
-                            <input type="number" id="birthdayPickupCount" value="1" min="1" max="10">
+                            <input type="number" id="birthday-pickupCount" value="1" min="1" max="10">
                         </div>
                     </div>
 
@@ -205,11 +205,11 @@
                         <h4 class="subsection-title">가챠별 확률</h4>
                         <div class="input-item">
                             <label>픽업 확률: 일반 (%)</label>
-                            <input type="number" id="birthdayNormalRate" value="1.5" min="0.001" max="100" step="0.001">
+                            <input type="number" id="birthday-normalRate" value="1.5" min="0.001" max="100" step="0.001">
                         </div>
                         <div class="input-item">
                             <label>픽업 확률: 스탭업 (%)</label>
-                            <input type="number" id="birthdayStepRate" value="2.0" min="0.001" max="100" step="0.001">
+                            <input type="number" id="birthday-stepRate" value="2.0" min="0.001" max="100" step="0.001">
                         </div>
                     </div>
                 </div>
@@ -224,17 +224,17 @@
                 <div class="section-content">
                     <div class="subsection-group">
                         <div class="input-item">
-                            <label for="birthdayNormalPulls">횟수: 일반</label>
-                            <input type="number" id="birthdayNormalPulls">
+                            <label for="birthday-normalPulls">횟수: 일반</label>
+                            <input type="number" id="birthday-normalPulls">
                         </div>
                         <div class="input-item">
-                            <label for="birthdayStepPulls">횟수: 스탭업</label>
-                            <input type="number" id="birthdayStepPulls">
+                            <label for="birthday-stepPulls">횟수: 스탭업</label>
+                            <input type="number" id="birthday-stepPulls">
                         </div>
                         <div class="input-item" style="display: none;">
-                            <label for="birthdayTargetCount">저격 픽업 수</label>
+                            <label for="birthday-targetCount">저격 픽업 수</label>
                             <span class="input-hint">0 = 전체</span>
-                            <input type="number" id="birthdayTargetCount">
+                            <input type="number" id="birthday-targetCount">
                         </div>
                     </div>
                 </div>
@@ -282,8 +282,8 @@
                         <div class="chart-scroll-inner"><canvas id="cdfChartBirthday"></canvas></div>
                         <div class="cdf-input-area">
                             <div class="input-item">
-                                <label for="targetProbabilityBirthday">목표 확률 (%)</label>
-                                <input type="number" id="targetProbabilityBirthday">
+                                <label for="birthday-targetProbability">목표 확률 (%)</label>
+                                <input type="number" id="birthday-targetProbability">
                             </div>
                         </div>
                     </div>
@@ -295,9 +295,7 @@
         <section id="tab-collab" class="tab-content">
 
             <div class="reset-area">
-                <div class="preset-group" id="collab-preset-container">
-                    <button id="collab-preset-honka2nd" class="preset-btn">본가(2탄)</button>
-                </div>
+                <div class="preset-group" id="collab-preset-container"></div>
                 <button id="collab-reset-btn" class="reset-btn" title="설정 초기화">↻</button>
             </div>
 
@@ -312,7 +310,7 @@
                         <h4 class="subsection-title">기본 정보</h4>
                         <div class="input-item">
                             <label>픽업 개수</label>
-                            <input type="number" id="collabPickupCount" value="5" min="1" max="10">
+                            <input type="number" id="collab-pickupCount" value="5" min="1" max="10">
                         </div>
                     </div>
 
@@ -320,11 +318,11 @@
                         <h4 class="subsection-title">가챠별 확률</h4>
                         <div class="input-item">
                             <label>픽업 확률: 일반 (%)</label>
-                            <input type="number" id="collabNormalRate" value="0.75" min="0.001" max="100" step="0.001">
+                            <input type="number" id="collab-normalRate" value="0.75" min="0.001" max="100" step="0.001">
                         </div>
                         <div class="input-item">
                             <label>픽업 확률: 스탭업 (%)</label>
-                            <input type="number" id="collabStepRate" value="1.0" min="0.001" max="100" step="0.001">
+                            <input type="number" id="collab-stepRate" value="1.0" min="0.001" max="100" step="0.001">
                         </div>
                     </div>
                 </div>
@@ -339,17 +337,17 @@
                 <div class="section-content">
                     <div class="subsection-group">
                         <div class="input-item">
-                            <label for="collabNormalPulls">횟수: 일반</label>
-                            <input type="number" id="collabNormalPulls">
+                            <label for="collab-normalPulls">횟수: 일반</label>
+                            <input type="number" id="collab-normalPulls">
                         </div>
                         <div class="input-item">
-                            <label for="collabStepPulls">횟수: 스탭업</label>
-                            <input type="number" id="collabStepPulls">
+                            <label for="collab-stepPulls">횟수: 스탭업</label>
+                            <input type="number" id="collab-stepPulls">
                         </div>
-                        <div class="input-item">    
-                            <label for="collabTargetCount">저격 픽업 수</label>
+                        <div class="input-item">
+                            <label for="collab-targetCount">저격 픽업 수</label>
                             <span class="input-hint">0 = 전체</span>
-                            <input type="number" id="collabTargetCount">
+                            <input type="number" id="collab-targetCount">
                         </div>
                     </div>
                 </div>
@@ -396,8 +394,8 @@
                         <div class="chart-scroll-inner"><canvas id="cdfChartCollab"></canvas></div>
                         <div class="cdf-input-area">
                             <div class="input-item">
-                                <label for="targetProbabilityCollab">목표 확률 (%)</label>
-                                <input type="number" id="targetProbabilityCollab">
+                                <label for="collab-targetProbability">목표 확률 (%)</label>
+                                <input type="number" id="collab-targetProbability">
                             </div>
                         </div>
                     </div>
@@ -424,12 +422,12 @@
                     <div class="subsection-group">
                         <h4 class="subsection-title">기본 정보</h4>
                         <div class="input-item">
-                            <label for="countNormal2">픽업 개수</label>
-                            <input type="number" id="countNormal2">
+                            <label for="star2-pickupCount">픽업 개수</label>
+                            <input type="number" id="star2-pickupCount">
                         </div>
                         <div class="input-item">
-                            <label for="rate2Star">픽업 확률: 전체 (%)</label>
-                            <input type="number" id="rate2Star">
+                            <label for="star2-pickupRate">픽업 확률: 전체 (%)</label>
+                            <input type="number" id="star2-pickupRate">
                         </div>
                     </div>
 
@@ -438,10 +436,10 @@
                         <div class="group-row">
                             <div class="group-label">픽업 개수</div>
                             <div class="group-inputs-container">
-                                <div class="group-input-block"><span class="group-name">A</span><input type="number" id="countStepA"></div>
-                                <div class="group-input-block"><span class="group-name">B</span><input type="number" id="countStepB"></div>
-                                <div class="group-input-block"><span class="group-name">C</span><input type="number" id="countStepC"></div>
-                                <div class="group-input-block"><span class="group-name">D</span><input type="number" id="countStepD"></div>
+                                <div class="group-input-block"><span class="group-name">A</span><input type="number" id="star2-countStepA"></div>
+                                <div class="group-input-block"><span class="group-name">B</span><input type="number" id="star2-countStepB"></div>
+                                <div class="group-input-block"><span class="group-name">C</span><input type="number" id="star2-countStepC"></div>
+                                <div class="group-input-block"><span class="group-name">D</span><input type="number" id="star2-countStepD"></div>
                             </div>
                         </div>
                     </div>
@@ -458,26 +456,26 @@
                     <div class="subsection-group subsection-group-block">
                         <div class="input-row-half">
                             <div class="input-item">
-                                <label for="pullsNormal2">일반 횟수</label>
-                                <input type="number" id="pullsNormal2">
+                                <label for="star2-normalPulls">일반 횟수</label>
+                                <input type="number" id="star2-normalPulls">
                             </div>
                         </div>
                         <div class="group-row">
                             <div class="group-label">스탭업 횟수</div>
                             <div class="group-inputs-container">
-                                <div class="group-input-block"><span class="group-name">A</span><input type="number" id="pullsStepA"></div>
-                                <div class="group-input-block"><span class="group-name">B</span><input type="number" id="pullsStepB"></div>
-                                <div class="group-input-block"><span class="group-name">C</span><input type="number" id="pullsStepC"></div>
-                                <div class="group-input-block"><span class="group-name">D</span><input type="number" id="pullsStepD"></div>
+                                <div class="group-input-block"><span class="group-name">A</span><input type="number" id="star2-pullsStepA"></div>
+                                <div class="group-input-block"><span class="group-name">B</span><input type="number" id="star2-pullsStepB"></div>
+                                <div class="group-input-block"><span class="group-name">C</span><input type="number" id="star2-pullsStepC"></div>
+                                <div class="group-input-block"><span class="group-name">D</span><input type="number" id="star2-pullsStepD"></div>
                             </div>
                         </div>
                         <div class="group-row">
                             <div class="group-label">저격 픽업 수</div>
                             <div class="group-inputs-container">
-                                <div class="group-input-block"><span class="group-name">A</span><input type="number" id="targetCountA"></div>
-                                <div class="group-input-block"><span class="group-name">B</span><input type="number" id="targetCountB"></div>
-                                <div class="group-input-block"><span class="group-name">C</span><input type="number" id="targetCountC"></div>
-                                <div class="group-input-block"><span class="group-name">D</span><input type="number" id="targetCountD"></div>
+                                <div class="group-input-block"><span class="group-name">A</span><input type="number" id="star2-targetCountA"></div>
+                                <div class="group-input-block"><span class="group-name">B</span><input type="number" id="star2-targetCountB"></div>
+                                <div class="group-input-block"><span class="group-name">C</span><input type="number" id="star2-targetCountC"></div>
+                                <div class="group-input-block"><span class="group-name">D</span><input type="number" id="star2-targetCountD"></div>
                             </div>
                         </div>
                     </div>
@@ -569,10 +567,6 @@
                             <span class="input-hint">통신사/페이</span>
                             <input type="number" id="payment-krw-discount-rate">
                         </div>
-                        <div class="input-item" style="display: none;">
-                            <label for="payment-krw-discount-cap">할인 상한 (원)</label>
-                            <input type="number" id="payment-krw-discount-cap">
-                        </div>
                     </div>
                 </div>
             </div>
@@ -589,7 +583,7 @@
                 <div id="payment-tab-packages" class="tab-content active">
                     <div class="collapsible-container" data-collapsible="true">
                         <div class="section-header">
-                            <h3 class="section-title">플랫폼별 패키지 비교표</h3>
+                            <h3 class="section-title">플랫폼별 패키지 비교</h3>
                             <button class="toggle-btn" data-toggle-section>▼</button>
                         </div>
                         <div class="section-content force-block">

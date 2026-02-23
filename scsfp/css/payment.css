@@ -51,7 +51,6 @@
     font-size: 1rem;
     font-weight: 600;
     cursor: pointer;
-    transition: background 0.2s;
 }
 
 .calculate-btn:hover {
@@ -169,7 +168,6 @@
 /* 플랫폼 셀 hover 효과 */
 .platform-cell {
     cursor: pointer;
-    transition: background 0.2s, box-shadow 0.2s;
     position: relative;
 }
 

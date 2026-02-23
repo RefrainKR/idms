@@ -1,11 +1,11 @@
 /**
- * js/utils/ChartAdapter.js
+ * js/view/ChartAdapter.js
  * Chart.js 라이브러리 래퍼 클래스
  *
  * [개선] destroy/recreate 대신 update() 사용으로 성능 최적화
  */
-import { Formatter } from './Formatter.js';
-import { CHART, FORMAT } from '../config/UIConfig.js';
+import { Formatter } from '../utils/Formatter.js';
+import { CHART, FORMAT, CHART_COLORS } from '../config/UIConfig.js';
 
 export class ChartAdapter {
 
@@ -191,7 +191,7 @@ export class ChartAdapter {
                             }
                         },
                         footerFont: { weight: 'bold', size: 12 },
-                        footerColor: '#45a247'
+                        footerColor: CHART_COLORS.STEPUP
                     }
                 },
                 scales: {

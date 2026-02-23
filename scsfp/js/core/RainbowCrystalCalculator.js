@@ -2,52 +2,14 @@
  * RainbowCrystalCalculator.js
  * 무돌(虹の結晶) 획득 기대값 계산
  */
+import { RAINBOW_CRYSTAL_RULES } from './Constants.js';
+
+const { REWARDS, STAR3_RATES, HIGH_RATE_INTERVAL } = RAINBOW_CRYSTAL_RULES;
 
 /**
  * 무돌 획득 기대값 계산기
  */
 export class RainbowCrystalCalculator {
-    /**
-     * 카드 등급별 무돌 획득량
-     */
-    static REWARDS = {
-        // P카드
-        PCARD_1STAR: 1,   // 1성: 1개
-        PCARD_2STAR: 5,   // 2성: 5개
-        PCARD_3STAR: 25,  // 3성: 25개
-
-        // S카드
-        SCARD_R: 1,       // R: 1개
-        SCARD_SR: 5,      // SR: 5개
-        SCARD_SSR: 25     // SSR: 25개
-    };
-
-    /**
-     * 일반 3성 가챠 확률 (리뉴얼 후: P카드 + S카드 동시 배출)
-     */
-    static STAR3_RATES = {
-        // P카드 확률
-        PCARD_3STAR: 0.05,   // 3성: 5%
-        PCARD_2STAR: 0.15,   // 2성: 15%
-        PCARD_1STAR: 0.33,   // 1성: 33%
-
-        // S카드 확률
-        SCARD_SSR: 0.03,     // SSR: 3%
-        SCARD_SR: 0.05,      // SR: 5%
-        SCARD_R: 0.39,       // R: 39%
-
-        // 10회째 보정 (2성 or SR 이상 확정)
-        PCARD_10TH: {
-            PCARD_3STAR: 0.05,      // 3성: 5%
-            PCARD_2STAR: 0.61333,   // 2성: 61.333% (15% + 46.333%)
-            PCARD_1STAR: 0          // 1성: 0%
-        },
-        SCARD_10TH: {
-            SCARD_SSR: 0.03,        // SSR: 3%
-            SCARD_SR: 0.30667,      // SR: 30.667% (5% + 25.667%)
-            SCARD_R: 0              // R: 0%
-        }
-    };
 
     /**
      * 일반 3성 가챠 - 1회 뽑기 무돌 기대값
@@ -60,25 +22,25 @@ export class RainbowCrystalCalculator {
         if (is10th) {
             // 10회째: 2성 or SR 이상 확정
             // P카드 기대값
-            expected += this.STAR3_RATES.PCARD_10TH.PCARD_3STAR * this.REWARDS.PCARD_3STAR;
-            expected += this.STAR3_RATES.PCARD_10TH.PCARD_2STAR * this.REWARDS.PCARD_2STAR;
-            expected += this.STAR3_RATES.PCARD_10TH.PCARD_1STAR * this.REWARDS.PCARD_1STAR;
+            expected += STAR3_RATES.PCARD_10TH.PCARD_3STAR * REWARDS.PCARD_3STAR;
+            expected += STAR3_RATES.PCARD_10TH.PCARD_2STAR * REWARDS.PCARD_2STAR;
+            expected += STAR3_RATES.PCARD_10TH.PCARD_1STAR * REWARDS.PCARD_1STAR;
 
             // S카드 기대값
-            expected += this.STAR3_RATES.SCARD_10TH.SCARD_SSR * this.REWARDS.SCARD_SSR;
-            expected += this.STAR3_RATES.SCARD_10TH.SCARD_SR * this.REWARDS.SCARD_SR;
-            expected += this.STAR3_RATES.SCARD_10TH.SCARD_R * this.REWARDS.SCARD_R;
+            expected += STAR3_RATES.SCARD_10TH.SCARD_SSR * REWARDS.SCARD_SSR;
+            expected += STAR3_RATES.SCARD_10TH.SCARD_SR * REWARDS.SCARD_SR;
+            expected += STAR3_RATES.SCARD_10TH.SCARD_R * REWARDS.SCARD_R;
         } else {
             // 일반 회차
             // P카드 기대값
-            expected += this.STAR3_RATES.PCARD_3STAR * this.REWARDS.PCARD_3STAR;
-            expected += this.STAR3_RATES.PCARD_2STAR * this.REWARDS.PCARD_2STAR;
-            expected += this.STAR3_RATES.PCARD_1STAR * this.REWARDS.PCARD_1STAR;
+            expected += STAR3_RATES.PCARD_3STAR * REWARDS.PCARD_3STAR;
+            expected += STAR3_RATES.PCARD_2STAR * REWARDS.PCARD_2STAR;
+            expected += STAR3_RATES.PCARD_1STAR * REWARDS.PCARD_1STAR;
 
             // S카드 기대값
-            expected += this.STAR3_RATES.SCARD_SSR * this.REWARDS.SCARD_SSR;
-            expected += this.STAR3_RATES.SCARD_SR * this.REWARDS.SCARD_SR;
-            expected += this.STAR3_RATES.SCARD_R * this.REWARDS.SCARD_R;
+            expected += STAR3_RATES.SCARD_SSR * REWARDS.SCARD_SSR;
+            expected += STAR3_RATES.SCARD_SR * REWARDS.SCARD_SR;
+            expected += STAR3_RATES.SCARD_R * REWARDS.SCARD_R;
         }
 
         return expected;
@@ -94,7 +56,7 @@ export class RainbowCrystalCalculator {
         let cumulative = 0;
 
         for (let i = 1; i <= maxPulls; i++) {
-            const is10th = (i % 10 === 0); // 10의 배수일 때 10회째 보정
+            const is10th = (i % HIGH_RATE_INTERVAL === 0); // 10의 배수일 때 10회째 보정
             const singleExpected = this.star3Single(is10th);
             cumulative += singleExpected;
 

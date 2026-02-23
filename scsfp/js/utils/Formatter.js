@@ -2,7 +2,7 @@ import { FORMAT } from '../config/UIConfig.js';
 import { MATH_CONSTANTS } from '../core/Constants.js';
 
 /**
- * js/lib/Formatter.js
+ * js/utils/Formatter.js
  * 숫자 및 확률 포맷팅 유틸리티
  */
 export class Formatter {
@@ -91,11 +91,4 @@ export class Formatter {
         return `${percent.toFixed(decimals)}%`;
     }
 
-    /**
-     * 기존 메서드 (호환성 유지)
-     * @deprecated 대신 probabilityFraction 사용 권장
-     */
-    static formatProbability(probability) {
-        return this.probabilityFraction(probability, FORMAT.DECIMAL_PLACES.PROBABILITY);
-    }
 }

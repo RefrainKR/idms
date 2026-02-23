@@ -15,14 +15,14 @@ export const CONFIG = {
     STAR3: {
         KEY: 'shani_gacha_3star',
         INPUTS: [
-            { id: 'pickupCount', min: 1, max: 100, def: 2, type: 'int' },
-            { id: 'pickupRate', min: 0, max: 100, def: 1, type: 'float' },
-            { id: 'maxLoops', min: 0, max: 10, def: 2, type: 'int' },
-            { id: 'step4Rate', min: 0, max: 100, def: 40, type: 'float' },
-            { id: 'normalPulls', min: 0, max: 9999, def: 0, type: 'int' },
-            { id: 'stepPulls', min: 0, def: 0, type: 'int' },
-            { id: 'targetCount', min: 0, def: 0, type: 'int' },
-            { id: 'targetProbability3', min: 0, max: 100, def: 90, type: 'float' }
+            { id: 'star3-pickupCount', min: 1, max: 100, def: 2, type: 'int' },
+            { id: 'star3-pickupRate', min: 0, max: 100, def: 1, type: 'float' },
+            { id: 'star3-maxLoops', min: 0, max: 10, def: 2, type: 'int' },
+            { id: 'star3-step4Rate', min: 0, max: 100, def: 40, type: 'float' },
+            { id: 'star3-normalPulls', min: 0, max: 9999, def: 0, type: 'int' },
+            { id: 'star3-stepPulls', min: 0, def: 0, type: 'int' },
+            { id: 'star3-targetCount', min: 0, def: 0, type: 'int' },
+            { id: 'star3-targetProbability', min: 0, max: 100, def: 90, type: 'float' }
         ], 
         PRESETS: [
             {
@@ -64,9 +64,9 @@ export const CONFIG = {
     STAR2: {
         KEY: 'shani_gacha_2star',
         INPUTS: [
-            { id: 'countNormal2', min: 1, max: 100, def: 28, type: 'int' },
-            { id: 'rate2Star', min: 0, max: 100, def: 28, type: 'float' },
-            { id: 'pullsNormal2', min: 0, max: 9999, def: 0, type: 'int' }
+            { id: 'star2-pickupCount', min: 1, max: 100, def: 28, type: 'int' },
+            { id: 'star2-pickupRate', min: 0, max: 100, def: 28, type: 'float' },
+            { id: 'star2-normalPulls', min: 0, max: 9999, def: 0, type: 'int' }
         ],
         // Observable 의존성 정의
         DEPENDENCIES: [] // 그룹별 의존성은 동적으로 추가됨 (아래 참조)
@@ -83,12 +83,12 @@ export const CONFIG = {
         },
 
         INPUTS: [
-            { id: 'birthdayPickupCount', min: 1, max: 10, def: 1, type: 'int', fixed: true },
-            { id: 'birthdayNormalRate', min: 0, max: 100, def: 1.5, type: 'float', fixed: true },
-            { id: 'birthdayStepRate', min: 0, max: 100, def: 2.0, type: 'float', fixed: true },
-            { id: 'birthdayTargetCount', min: 0, max: 10, def: 0, type: 'int' },
-            { id: 'birthdayNormalPulls', min: 0, max: 9999, def: 0, type: 'int' },
-            { id: 'birthdayStepPulls', min: 0, max: 30, def: 0, type: 'int' }
+            { id: 'birthday-pickupCount', min: 1, max: 10, def: 1, type: 'int', fixed: true },
+            { id: 'birthday-normalRate', min: 0, max: 100, def: 1.5, type: 'float', fixed: true },
+            { id: 'birthday-stepRate', min: 0, max: 100, def: 2.0, type: 'float', fixed: true },
+            { id: 'birthday-targetCount', min: 0, max: 10, def: 0, type: 'int' },
+            { id: 'birthday-normalPulls', min: 0, max: 9999, def: 0, type: 'int' },
+            { id: 'birthday-stepPulls', min: 0, max: 30, def: 0, type: 'int' }
         ],
 
         // Observable 의존성: pickupCount가 변경되면 targetCount를 클램프
@@ -109,22 +109,22 @@ export const CONFIG = {
         VERSION: '1.9.0',
 
         INPUTS: [
-            { id: 'collabPickupCount', min: 1, max: 10, def: 5, type: 'int' },
-            { id: 'collabNormalRate', min: 0, max: 100, def: 0.75, type: 'float' },
-            { id: 'collabStepRate', min: 0, max: 100, def: 1.0, type: 'float' },
-            { id: 'collabTargetCount', min: 0, max: 10, def: 0, type: 'int' },
-            { id: 'collabNormalPulls', min: 0, max: 9999, def: 0, type: 'int' },
-            { id: 'collabStepPulls', min: 0, max: 9999, def: 0, type: 'int' }
+            { id: 'collab-pickupCount', min: 1, max: 10, def: 5, type: 'int' },
+            { id: 'collab-normalRate', min: 0, max: 100, def: 0.75, type: 'float' },
+            { id: 'collab-stepRate', min: 0, max: 100, def: 1.0, type: 'float' },
+            { id: 'collab-targetCount', min: 0, max: 10, def: 0, type: 'int' },
+            { id: 'collab-normalPulls', min: 0, max: 9999, def: 0, type: 'int' },
+            { id: 'collab-stepPulls', min: 0, max: 9999, def: 0, type: 'int' }
         ],
 
-        PRESETS: {
-            honka2nd: {
+        PRESETS: [
+            {
+                id: 'honka2nd',
                 label: '본가(2탄)',
-                pickupCount: 5,
-                normalRate: 0.75,
-                stepRate: 1.0
+                title: '본가 콜라보 2탄 (5픽업 기준)',
+                settings: { pickupCount: 5, normalRate: 0.75, stepRate: 1.0 }
             }
-        },
+        ],
 
         DEPENDENCIES: [
             {
@@ -143,9 +143,9 @@ export const CONFIG = {
 const groupDefaults = [8, 7, 7, 6];
 ['A', 'B', 'C', 'D'].forEach((grp, idx) => {
     CONFIG.STAR2.INPUTS.push(
-        { id: `countStep${grp}`, min: 1, max: 100, def: groupDefaults[idx], type: 'int' },
-        { id: `pullsStep${grp}`, min: 0, max: 9999, def: 0, type: 'int' },
-        { id: `targetCount${grp}`, min: 0, def: 0, type: 'int' }
+        { id: `star2-countStep${grp}`, min: 1, max: 100, def: groupDefaults[idx], type: 'int' },
+        { id: `star2-pullsStep${grp}`, min: 0, max: 9999, def: 0, type: 'int' },
+        { id: `star2-targetCount${grp}`, min: 0, def: 0, type: 'int' }
     );
 
     // 그룹별 의존성 추가: countStepX가 변경되면 targetCountX를 클램프
@@ -162,6 +162,20 @@ const groupDefaults = [8, 7, 7, 6];
 // GACHA_RULES, PROBABILITY_MODE는 Constants.js에서 관리됩니다.
 // 하위 호환성을 위해 re-export합니다.
 export { GACHA_RULES, PROBABILITY_MODE } from '../core/Constants.js';
+
+/**
+ * CONFIG.INPUTS 배열에서 { id: def값 } 맵을 반환하는 유틸
+ * @param {Array} inputs - CONFIG.XXXX.INPUTS 배열
+ * @returns {Object} { id: def } 형태의 기본값 맵
+ */
+export function getInputDefaults(inputs) {
+    const map = {};
+    if (!inputs) return map;
+    inputs.forEach(input => {
+        map[input.id] = input.def;
+    });
+    return map;
+}
 
 export const TOGGLE_STATES = {
     VIEW: [

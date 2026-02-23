@@ -1,7 +1,7 @@
 import { CHART_POINT } from '../config/UIConfig.js';
 
 /**
- * js/utils/ChartUtils.js
+ * js/view/ChartUtils.js
  * 차트 관련 공통 유틸리티 함수
  */
 export class ChartUtils {

@@ -1,12 +1,12 @@
-import { BaseGachaViewModel } from './BaseGachaViewModel.js';
+﻿import { BaseGachaViewModel } from './BaseGachaViewModel.js';
 import { Star2GachaModel } from '../../model/gacha/Star2GachaModel.js';
 import { ProbabilityEngine } from '../../core/ProbabilityEngine.js';
 import { EfficiencyCalculator } from '../../core/EfficiencyCalculator.js';
 import { GachaResultView } from '../../view/gacha/GachaResultView.js';
-import { ToggleButton } from '../../view/component/ToggleButton.js';
+import { ToggleButton } from '../../component/ToggleButton.js';
 import { CONFIG, TOGGLE_STATES, GACHA_RULES } from '../../config/GachaConfig.js';
 import { ProbabilityValidator } from '../../utils/ProbabilityValidator.js';
-import { getGachaConfig, applyTabVisibility } from '../../view/gacha/GachaTypeConfig.js';
+import { getGachaConfig, applyTabVisibility } from '../../view/gacha/GachaViewConfig.js';
 
 export class Star2GachaViewModel extends BaseGachaViewModel {
     constructor() {
@@ -14,14 +14,14 @@ export class Star2GachaViewModel extends BaseGachaViewModel {
         this.model = new Star2GachaModel();
         
         this.inputsMap = {
-            'countNormal2': this.model.countNormal,
-            'rate2Star': this.model.rateTotal,
-            'pullsNormal2': this.model.normalPulls,
+            'star2-pickupCount': this.model.pickupCount,
+            'star2-pickupRate': this.model.pickupRate,
+            'star2-normalPulls': this.model.normalPulls,
         };
         ['A', 'B', 'C', 'D'].forEach(g => {
-            this.inputsMap[`countStep${g}`] = this.model[`countStep${g}`];
-            this.inputsMap[`pullsStep${g}`] = this.model[`pullsStep${g}`];
-            this.inputsMap[`targetCount${g}`] = this.model[`targetCount${g}`];
+            this.inputsMap[`star2-countStep${g}`] = this.model[`countStep${g}`];
+            this.inputsMap[`star2-pullsStep${g}`] = this.model[`pullsStep${g}`];
+            this.inputsMap[`star2-targetCount${g}`] = this.model[`targetCount${g}`];
         });
 
         this.chartRefs = { collection: { current: null }, total: { current: null }, efficiency: { current: null }, specific: { current: null } };
@@ -73,8 +73,8 @@ export class Star2GachaViewModel extends BaseGachaViewModel {
     // setupDataDependencies 제거됨 - CONFIG.STAR2.DEPENDENCIES로 대체
 
     getCustomBinderOptions(id) {
-        // id가 targetCountA 형식이면 countStepA를 감시
-        if (id.startsWith('targetCount')) {
+        // id가 star2-targetCountA 형식이면 countStepA를 감시
+        if (id.startsWith('star2-targetCount')) {
             const group = id.slice(-1); // 'A'
             return { maxObserver: this.model[`countStep${group}`] };
         }
@@ -84,8 +84,8 @@ export class Star2GachaViewModel extends BaseGachaViewModel {
     calculate() {
         if (this.isInitializing) return;
 
-        const rateTotal = this.model.rateTotal.value / 100;
-        const N_total = this.model.countNormal.value;
+        const rateTotal = this.model.pickupRate.value / 100;
+        const N_total = this.model.pickupCount.value;
         const normalPulls = this.model.normalPulls.value;
 
         const targetInputs = ['A', 'B', 'C', 'D'].map(id => this.model[`targetCount${id}`].value);
@@ -114,7 +114,9 @@ export class Star2GachaViewModel extends BaseGachaViewModel {
 
         const sumN = groups.reduce((s, g) => s + g.N, 0);
         if (N_total !== sumN) {
-            document.getElementById('globalSummary').innerHTML = `<b style="color:red">오류: 픽업 합계 불일치 (${N_total} vs ${sumN})</b>`;
+            const star2Config = getGachaConfig('star2');
+            const summaryId = star2Config ? star2Config.summary.element : 'globalSummary';
+            document.getElementById(summaryId).innerHTML = `<b style="color:red">오류: 픽업 합계 불일치 (${N_total} vs ${sumN})</b>`;
             return;
         }
 
@@ -132,7 +134,7 @@ export class Star2GachaViewModel extends BaseGachaViewModel {
         });
 
         const p_norm_one = rateTotal / N_total;
-        const p_high_one = 0.95 / N_total;
+        const p_high_one = GACHA_RULES.STAR2.HIGH_RATE_PROBABILITY / N_total;
         
         // [개선] 중앙화된 확률 검증 사용
         const p_norm_any = ProbabilityValidator.getTotalProb(p_norm_one, totalTargets);
@@ -170,7 +172,7 @@ export class Star2GachaViewModel extends BaseGachaViewModel {
             ceilingMode: this.model.ceilingMode.value
         };
 
-        GachaResultView.render2Star({ N: N_total, M: totalTargets, dp, dpTotal }, context, this.model, this.chartRefs);
+        GachaResultView.render('star2', { N: N_total, M: totalTargets, dp, dpTotal }, context, this.model, this.chartRefs);
     }
 
     _calculateEfficiencyData(isAllZero) {
@@ -180,8 +182,8 @@ export class Star2GachaViewModel extends BaseGachaViewModel {
         let M_group = isAllZero ? N_group : this.model[`targetCount${gid}`].value;
         if (M_group > N_group) M_group = N_group;
 
-        const N_total = this.model.countNormal.value;
-        const rateTotal = this.model.rateTotal.value / 100;
+        const N_total = this.model.pickupCount.value;
+        const rateTotal = this.model.pickupRate.value / 100;
 
         return EfficiencyCalculator.calculate2Star({
             N_group,

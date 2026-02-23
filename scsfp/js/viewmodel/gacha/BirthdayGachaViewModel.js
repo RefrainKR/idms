@@ -1,29 +1,26 @@
-import { BaseGachaViewModel } from './BaseGachaViewModel.js';
+﻿import { BaseGachaViewModel } from './BaseGachaViewModel.js';
 import { BirthdayGachaModel } from '../../model/gacha/BirthdayGachaModel.js';
-import { ProbabilityEngine } from '../../core/ProbabilityEngine.js';
-import { EfficiencyCalculator } from '../../core/EfficiencyCalculator.js';
 import { GachaResultView } from '../../view/gacha/GachaResultView.js';
-import { ToggleButton } from '../../view/component/ToggleButton.js';
+import { ToggleButton } from '../../component/ToggleButton.js';
 import { CONFIG, TOGGLE_STATES, GACHA_RULES } from '../../config/GachaConfig.js';
-import { ProbabilityValidator } from '../../utils/ProbabilityValidator.js';
-import { getGachaConfig, applyTabVisibility } from '../../view/gacha/GachaTypeConfig.js';
+import { getGachaConfig, applyTabVisibility } from '../../view/gacha/GachaViewConfig.js';
 
 export class BirthdayGachaViewModel extends BaseGachaViewModel {
     constructor() {
         super(CONFIG.BIRTHDAY.KEY, CONFIG.BIRTHDAY);
         this.model = new BirthdayGachaModel();
 
-        // GachaConstants에서 고정값 로드
+        // GachaConfig에서 고정값 로드
         this.fixedValues = CONFIG.BIRTHDAY.FIXED_VALUES || {};
 
         this.inputsMap = {
-            'birthdayPickupCount': this.model.pickupCount,
-            'birthdayNormalRate': this.model.normalRate,
-            'birthdayStepRate': this.model.stepRate,
-            'birthdayTargetCount': this.model.targetCount,
-            'birthdayNormalPulls': this.model.normalPulls,
-            'birthdayStepPulls': this.model.stepPulls,
-            'targetProbabilityBirthday': this.model.targetProbability
+            'birthday-pickupCount': this.model.pickupCount,
+            'birthday-normalRate': this.model.normalRate,
+            'birthday-stepRate': this.model.stepRate,
+            'birthday-targetCount': this.model.targetCount,
+            'birthday-normalPulls': this.model.normalPulls,
+            'birthday-stepPulls': this.model.stepPulls,
+            'birthday-targetProbability': this.model.targetProbability
         };
 
         this.chartRefs = {
@@ -54,7 +51,7 @@ export class BirthdayGachaViewModel extends BaseGachaViewModel {
     }
 
     /**
-     * GachaConstants의 FIXED_VALUES를 모델에 적용
+     * GachaConfig의 FIXED_VALUES를 모델에 적용
      */
     applyFixedValues() {
         if (this.fixedValues.pickupCount !== undefined) {
@@ -85,7 +82,7 @@ export class BirthdayGachaViewModel extends BaseGachaViewModel {
     }
 
     getCustomBinderOptions(id) {
-        if (id === 'birthdayTargetCount') {
+        if (id === 'birthday-targetCount') {
             return { maxObserver: this.model.pickupCount };
         }
         return null;
@@ -119,117 +116,32 @@ export class BirthdayGachaViewModel extends BaseGachaViewModel {
     calculate() {
         if (this.isInitializing) return;
 
-        const N = this.model.pickupCount.value;
-        const targetVal = this.model.targetCount.value;
-
-        // targetCount가 0이면 전체(N) 수집, 아니면 해당 값 사용
-        let M = (targetVal === 0 || !targetVal) ? N : Number(targetVal);
-        if (M > N) M = N;
-
-        const normalRate = this.model.normalRate.value / 100;
-        const stepRate = this.model.stepRate.value / 100;
-        const normalPulls = this.model.normalPulls.value;
-        const stepPulls = this.model.stepPulls.value;
-        const totalPulls = normalPulls + stepPulls;
-
-        let dp = new Array(M + 1).fill(0);
-        dp[0] = 1.0;
-        let dpTotal = [1.0];
-
-        // 1. 일반 가챠 (1.5% 확률)
-        const p_normal_any = ProbabilityValidator.getTotalProb(normalRate, M);
-
-        for (let i = 0; i < normalPulls; i++) {
-            dp = ProbabilityEngine.runSinglePull(dp, normalRate);
-            dpTotal = ProbabilityEngine.accumulateCountProb(dpTotal, p_normal_any);
-        }
-
-        // 2. 스탭업 가챠 (스탭업 확률, Step3 확정 옵션)
         const step3Mode = this.model.step3Mode.value;
-        const p_step_any = ProbabilityValidator.getTotalProb(stepRate, M);
+        const result = this._runSimpleStepupCalculation({
+            rules: GACHA_RULES.BIRTHDAY,
+            step3Mode,
+            stepupLimit: GACHA_RULES.BIRTHDAY.STEPUP_MAX,
+            stepupGuarantee: GACHA_RULES.BIRTHDAY.STEPUP_GUARANTEE
+        });
 
-        for (let i = 1; i <= stepPulls; i++) {
-            const isStep3 = (i % GACHA_RULES.BIRTHDAY.STEPUP_GUARANTEE === 0);
-
-            if (isStep3 && step3Mode === 'included') {
-                // 30회, 60회, 90회... Step3 확정
-                dp = ProbabilityEngine.runGuaranteedPull(dp);
-                dpTotal = ProbabilityEngine.accumulateCountGuaranteed(dpTotal);
-            } else {
-                // 일반 스탭업 확률
-                dp = ProbabilityEngine.runSinglePull(dp, stepRate);
-                dpTotal = ProbabilityEngine.accumulateCountProb(dpTotal, p_step_any);
-            }
-        }
-
-        // 3. 천장 처리 (일반+스탭업 합산 200회당 1개)
-        let ceilingCount = 0;
-        if (this.model.ceilingMode.value === 'included') {
-            ceilingCount = Math.floor(totalPulls / GACHA_RULES.BIRTHDAY.CEILING_INTERVAL);
-            for (let i = 0; i < ceilingCount; i++) {
-                dp = ProbabilityEngine.runGuaranteedPull(dp);
-                dpTotal = ProbabilityEngine.accumulateCountGuaranteed(dpTotal);
-            }
-        }
-
-        // 효율 비교 데이터 생성
-        const efficiencyData = this._calculateEfficiencyData();
-
-        // CDF 역추적 데이터 생성
-        const cdfData = this._calculateCDFData();
+        const params = { step3Mode, stepupLimit: GACHA_RULES.BIRTHDAY.STEPUP_MAX };
 
         const context = {
-            N, M,
+            N: result.N, M: result.M,
             normalRate: this.model.normalRate.value,
             stepRate: this.model.stepRate.value,
-            normalPulls,
-            stepPulls,
-            totalPulls,
-            ceilingCount,
-            stepGuaranteed: this.model.step3Mode.value === 'included'
-                ? Math.floor(stepPulls / GACHA_RULES.BIRTHDAY.STEPUP_GUARANTEE)
-                : 0,
-            efficiencyData,
-            cdfData
+            normalPulls: result.normalPulls,
+            stepPulls: result.stepPulls,
+            totalPulls: result.totalPulls,
+            ceilingCount: result.ceilingCount,
+            stepGuaranteed: result.stepGuaranteed,
+            efficiencyData: this._getSimpleStepupEfficiency(params),
+            cdfData: this._getSimpleStepupCDF(params)
         };
 
-        // 결과 렌더링 (GachaResultView 활용)
-        GachaResultView.renderBirthday({ N, M, dp, dpTotal }, context, this.model, this.chartRefs);
-    }
-
-    _calculateEfficiencyData() {
-        const N = this.model.pickupCount.value;
-        const targetVal = this.model.targetCount.value;
-        let M = (targetVal === 0 || !targetVal) ? N : Number(targetVal);
-        if (M > N) M = N;
-
-        return EfficiencyCalculator.calculateSimpleStepup({
-            normalRate: this.model.normalRate.value / 100,
-            stepRate: this.model.stepRate.value / 100,
-            ceilingMode: this.model.ceilingMode.value,
-            step3Mode: this.model.step3Mode.value,
-            N: N,
-            M: M,
-            stepupLimit: GACHA_RULES.BIRTHDAY.STEPUP_MAX
-        });
-    }
-
-    _calculateCDFData() {
-        const N = this.model.pickupCount.value;
-        const targetVal = this.model.targetCount.value;
-        let M = (targetVal === 0 || !targetVal) ? N : Number(targetVal);
-        if (M > N) M = N;
-
-        const targetProb = this.model.targetProbability.value / 100;
-
-        return EfficiencyCalculator.calculateSimpleStepupCDF({
-            normalRate: this.model.normalRate.value / 100,
-            stepRate: this.model.stepRate.value / 100,
-            ceilingMode: this.model.ceilingMode.value,
-            step3Mode: this.model.step3Mode.value,
-            M: M,
-            targetProb: targetProb,
-            stepupLimit: GACHA_RULES.BIRTHDAY.STEPUP_MAX
-        });
+        GachaResultView.render('birthday',
+            { N: result.N, M: result.M, dp: result.dp, dpTotal: result.dpTotal },
+            context, this.model, this.chartRefs
+        );
     }
 }

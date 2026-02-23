@@ -1,11 +1,12 @@
-/**
+﻿/**
  * js/view/ResultView.js
  * 가챠 결과 화면 렌더링을 위한 공통 부모 클래스
  */
 import { ProbabilityEngine } from '../core/ProbabilityEngine.js';
-import { ChartAdapter } from '../utils/ChartAdapter.js';
+import { ChartAdapter } from './ChartAdapter.js';
 import { Formatter } from '../utils/Formatter.js';
 import { PROBABILITY_MODE } from '../config/GachaConfig.js';
+import { CHART_COLORS } from '../config/UIConfig.js';
 
 export class ResultView {
     
@@ -96,11 +97,11 @@ export class ResultView {
 
             // 범례 및 툴팁용 레이블과 데이터 (모드 적용: 이하/이상)
             listLabels.push(`${k}픽업${suffix}`);
-            listData.push(Formatter.formatProbability(listDP[k]));
-            tooltipVals.push(Formatter.formatProbability(listDP[k]));
+            listData.push(Formatter.probabilityFraction(listDP[k]));
+            tooltipVals.push(Formatter.probabilityFraction(listDP[k]));
             
             // 색상 강조
-            colors.push(k === M ? '#45a247' : `rgba(40, 60, 134, ${0.3 + 0.7 * (k / M)})`);
+            colors.push(k === M ? CHART_COLORS.STEPUP : `rgba(40, 60, 134, ${0.3 + 0.7 * (k / M)})`);
         }
 
         this._updateText(elementIds, htmlGenerator);
@@ -170,10 +171,10 @@ export class ResultView {
             const val = transformedDP[k] || 0;
             labels.push(`${k}${suffix}`);
             data.push(val * 100);  // Keep as number for chart rendering
-            tooltipVals.push(Formatter.formatProbability(val));
+            tooltipVals.push(Formatter.probabilityFraction(val));
 
             // Peak 지점 강조 (모드 상관없이 항상 표시)
-            colors.push(k === maxIndex ? '#45a247' : '#e3f2fd');
+            colors.push(k === maxIndex ? CHART_COLORS.STEPUP : '#e3f2fd');
         }
 
         this._updateText(elementIds, htmlGenerator);

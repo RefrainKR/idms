@@ -10,7 +10,14 @@
  */
 
 export const PAYMENT_CONFIG = {
-    KEY: 'shani_payment_settings'
+    KEY: 'shani_payment_settings',
+
+    // Observable 기본값 (InputBinder min/max 포함)
+    INPUTS: {
+        EXCHANGE_RATE:    { value: 950, min: 0, max: 9999 },
+        JPY_DISCOUNT_RATE: { value: 0,   min: 0, max: 100 },
+        KRW_DISCOUNT_RATE: { value: 0,   min: 0, max: 100 }
+    }
 };
 
 /**

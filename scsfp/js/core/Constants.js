@@ -49,6 +49,7 @@ export const GACHA_RULES = {
     },
     STAR2: {
         HIGH_RATE_INTERVAL: 10,        // 95% 보정 주기 (일반 가챠)
+        HIGH_RATE_PROBABILITY: 0.95,   // 보정 시 적용 확률 (95%)
         STEPUP_GUARANTEE_FIRST: 5,     // 첫 확정 (5회)
         STEPUP_GUARANTEE_INTERVAL: 10, // 확정 간격 (이후 10회마다)
         NORMAL_CEILING_INTERVAL: 100,  // 일반 천장 (100회당)
@@ -58,7 +59,55 @@ export const GACHA_RULES = {
         STEPUP_MAX: 30,                // 스탭업 최대 횟수
         STEPUP_GUARANTEE: 30,          // 30회째 확정 획득
         CEILING_INTERVAL: 200          // 천장 (일반+스탭업 합산)
+    },
+    COLLAB: {
+        STEPUP_LIMIT: 9999,            // 스탭업 횟수 제한 없음 (사실상 무제한)
+        CEILING_INTERVAL: 200          // 천장 (일반+스탭업 합산)
     }
+};
+
+// ========================================
+// 무돌(虹の結晶) 규칙
+// ========================================
+
+/**
+ * 무돌 획득 관련 게임 규칙
+ * 카드 등급별 무돌 획득량 및 가챠 확률
+ */
+export const RAINBOW_CRYSTAL_RULES = {
+    // 카드 등급별 무돌 획득량
+    REWARDS: {
+        PCARD_1STAR: 1,   // P카드 1성: 1개
+        PCARD_2STAR: 5,   // P카드 2성: 5개
+        PCARD_3STAR: 25,  // P카드 3성: 25개
+        SCARD_R: 1,       // S카드 R: 1개
+        SCARD_SR: 5,      // S카드 SR: 5개
+        SCARD_SSR: 25     // S카드 SSR: 25개
+    },
+
+    // 일반 3성 가챠 확률 (리뉴얼 후: P카드 + S카드 동시 배출)
+    STAR3_RATES: {
+        PCARD_3STAR: 0.05,   // P카드 3성: 5%
+        PCARD_2STAR: 0.15,   // P카드 2성: 15%
+        PCARD_1STAR: 0.33,   // P카드 1성: 33%
+        SCARD_SSR: 0.03,     // S카드 SSR: 3%
+        SCARD_SR: 0.05,      // S카드 SR: 5%
+        SCARD_R: 0.39,       // S카드 R: 39%
+        // 10회째 보정 (2성 or SR 이상 확정)
+        PCARD_10TH: {
+            PCARD_3STAR: 0.05,      // 3성: 5%
+            PCARD_2STAR: 0.61333,   // 2성: 61.333% (15% + 46.333%)
+            PCARD_1STAR: 0          // 1성: 0%
+        },
+        SCARD_10TH: {
+            SCARD_SSR: 0.03,        // SSR: 3%
+            SCARD_SR: 0.30667,      // SR: 30.667% (5% + 25.667%)
+            SCARD_R: 0              // R: 0%
+        }
+    },
+
+    // 10회째 보정 주기
+    HIGH_RATE_INTERVAL: 10  // 10회마다 2성/SR 이상 확정
 };
 
 // ========================================
@@ -86,18 +135,4 @@ export const PROBABILITY_MODE = {
 export const MATH_CONSTANTS = {
     EPSILON: 1e-9,                  // 부동소수점 오차 허용 범위
     PERCENTAGE_MULTIPLIER: 100      // 백분율 변환 (0.5 → 50%)
-};
-
-/**
- * 포맷팅 규칙 - 소수점 자릿수
- * UI 표시를 위한 포맷팅 기준
- */
-export const FORMATTING_RULES = {
-    DECIMAL_PLACES: {
-        PROBABILITY: 3,        // 확률 표시 (0.123%)
-        EFFICIENCY: 3,         // 효율 표시 (1.234)
-        RAINBOW_PRICE: 3,      // 무돌 가격 (123.456₩)
-        RAINBOW_EXPECTED: 2,   // 무돌 기대값 (12.34개)
-        PERCENTAGE: 0          // 백분율 정수 표시 (90%)
-    }
 };

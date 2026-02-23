@@ -1,5 +1,5 @@
 /**
- * js/core/Observable.js
+ * js/utils/Observable.js
  * 데이터의 변화를 감지하고 알리는 반응형 객체
  */
 export class Observable {

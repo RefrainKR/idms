@@ -1,22 +1,23 @@
-import { Observable } from '../../utils/Observable.js';
-import { SharedSettings } from '../../core/SharedSettings.js';
-import { OBSERVABLE_DEFAULTS } from '../../config/UIConfig.js';
+﻿import { Observable } from '../../utils/Observable.js';
+import { SharedSettings } from '../SharedSettings.js';
+import { CONFIG, getInputDefaults } from '../../config/GachaConfig.js';
+import { GACHA_RULES } from '../../core/Constants.js';
 
 export class Star3GachaModel {
     constructor() {
-        const defaults = OBSERVABLE_DEFAULTS.STAR3;
+        const def = getInputDefaults(CONFIG.STAR3.INPUTS);
 
-        this.pickupCount = new Observable(defaults.PICKUP_COUNT.value);
-        this.pickupRate = new Observable(defaults.PICKUP_RATE.value);
-        this.targetCount = new Observable(defaults.TARGET_COUNT.value);
+        this.pickupCount = new Observable(def['star3-pickupCount']);
+        this.pickupRate = new Observable(def['star3-pickupRate']);
+        this.targetCount = new Observable(def['star3-targetCount']);
 
-        this.maxLoops = new Observable(defaults.MAX_LOOPS.value);
-        this.stepMax = new Observable(defaults.STEP_MAX.value);
-        this.step4Rate = new Observable(defaults.STEP4_RATE.value);
+        this.maxLoops = new Observable(def['star3-maxLoops']);
+        this.stepMax = new Observable(def['star3-maxLoops'] * GACHA_RULES.STAR3.STEPUP_CYCLE);
+        this.step4Rate = new Observable(def['star3-step4Rate']);
         this.loopRewards = new Observable({});
 
-        this.normalPulls = new Observable(defaults.NORMAL_PULLS.value);
-        this.stepPulls = new Observable(defaults.STEP_PULLS.value);
+        this.normalPulls = new Observable(def['star3-normalPulls']);
+        this.stepPulls = new Observable(def['star3-stepPulls']);
 
         this.ceilingMode = new Observable('included');
         this.randomMode = new Observable('included');
@@ -35,7 +36,12 @@ export class Star3GachaModel {
             targetCount: this.targetCount.value,
             maxLoops: this.maxLoops.value,
             step4Rate: this.step4Rate.value,
-            loopRewards: this.loopRewards.value
+            loopRewards: this.loopRewards.value,
+            ceilingMode: this.ceilingMode.value,
+            randomMode: this.randomMode.value,
+            step4Mode: this.step4Mode.value,
+            viewMode: this.viewMode.value,
+            efficiencyMode: this.efficiencyMode.value
         };
     }
 
@@ -47,5 +53,10 @@ export class Star3GachaModel {
         if (data.maxLoops !== undefined) this.maxLoops.value = data.maxLoops;
         if (data.step4Rate !== undefined) this.step4Rate.value = data.step4Rate;
         if (data.loopRewards !== undefined) this.loopRewards.value = data.loopRewards;
+        if (data.ceilingMode !== undefined) this.ceilingMode.value = data.ceilingMode;
+        if (data.randomMode !== undefined) this.randomMode.value = data.randomMode;
+        if (data.step4Mode !== undefined) this.step4Mode.value = data.step4Mode;
+        if (data.viewMode !== undefined) this.viewMode.value = data.viewMode;
+        if (data.efficiencyMode !== undefined) this.efficiencyMode.value = data.efficiencyMode;
     }
 }
