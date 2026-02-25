@@ -22,8 +22,14 @@ export const CONFIG = {
             { id: 'star3-normalPulls', min: 0, max: 9999, def: 0, type: 'int' },
             { id: 'star3-stepPulls', min: 0, def: 0, type: 'int' },
             { id: 'star3-targetCount', min: 0, def: 0, type: 'int' },
-            { id: 'star3-targetProbability', min: 0, max: 100, def: 90, type: 'float' }
-        ], 
+            { id: 'star3-targetProbability', min: 0, max: 100, def: 90, type: 'float' },
+            { id: 'rainbow-p3star', min: 0, max: 100, def: 5, type: 'float' },
+            { id: 'rainbow-p2star', min: 0, max: 100, def: 15, type: 'float' },
+            { id: 'rainbow-p1star', min: 0, max: 100, def: 33, type: 'float' },
+            { id: 'rainbow-pSSR',   min: 0, max: 100, def: 3, type: 'float' },
+            { id: 'rainbow-pSR',    min: 0, max: 100, def: 5, type: 'float' },
+            { id: 'rainbow-pR',     min: 0, max: 100, def: 39, type: 'float' }
+        ],
         PRESETS: [
             {
                 id: 'presetGeneral',
@@ -198,6 +204,10 @@ export const TOGGLE_STATES = {
     STEP3: [
         { name: 'included', text: 'Step3', isActive: true },
         { name: 'excluded', text: 'Step3', isActive: false }
+    ],
+    RAINBOW_10TH: [
+        { name: 'included', text: '2/SR확정', isActive: true },
+        { name: 'excluded', text: '2/SR확정', isActive: false }
     ],
     EFFICIENCY: [
         { name: 'best', text: 'Best', isActive: true },

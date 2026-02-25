@@ -18,6 +18,7 @@ export class ResultView {
     static _updateText(elementIds, generators) {
         const summaryEl = document.getElementById(elementIds.summary || 'globalSummary');
         if (summaryEl && generators.summary) {
+            summaryEl.style.display = '';
             summaryEl.innerHTML = generators.summary();
         }
 
@@ -27,14 +28,20 @@ export class ResultView {
                 logicContainer.innerHTML = generators.logic();
                 logicContainer.style.display = 'block';
 
-                // 동적으로 생성된 collapsible 섹션 초기화
+                // 동적으로 생성된 collapsible 섹션 초기화 (기존 열림/닫힘 상태 보존)
                 const btn = logicContainer.querySelector('[data-toggle-section]');
                 const content = logicContainer.querySelector('.section-content');
                 if (btn && content) {
-                    // 초기 상태 설정 (기본: 접힌 상태)
-                    logicContainer.dataset.collapsed = 'true';
-                    content.style.display = 'none';
-                    btn.textContent = '▲';
+                    const wasCollapsed = logicContainer.dataset.collapsed !== 'false';
+                    if (wasCollapsed) {
+                        logicContainer.dataset.collapsed = 'true';
+                        content.style.display = 'none';
+                        btn.textContent = '▲';
+                    } else {
+                        logicContainer.dataset.collapsed = 'false';
+                        content.style.display = '';
+                        btn.textContent = '▼';
+                    }
                 }
             } else {
                 logicContainer.style.display = 'none';

@@ -31,13 +31,9 @@ export class GachaResultView extends ResultView {
         else if (activeSubTab === config.subTabs.total) {
             this._renderTotalTab(gachaType, config, M, dpTotal, viewMode, context, charts);
         }
-        // 효율 비교 (Line Chart)
+        // 효율 비교 (Line Chart) + CDF 역추적 통합
         else if (activeSubTab === config.subTabs.efficiency) {
             this._renderEfficiencyTab(gachaType, config, M, context, model, charts);
-        }
-        // CDF 역추적
-        else if (config.hasCdfTab && activeSubTab === config.subTabs.cdf) {
-            this._renderCdfTab(gachaType, config, M, context, model, charts);
         }
     }
 
@@ -119,29 +115,11 @@ export class GachaResultView extends ResultView {
             targetLabel,
             showMultipleLines,
             config.summary.element,
-            config.summary.logic
+            config.summary.logic,
+            context.cdfData || null,
+            model.targetProbability ? model.targetProbability.value : null,
+            M
         );
-
-        // 효율 비교 탭 summary 업데이트
-        this._updateEfficiencySummary(gachaType, config, M, context);
-    }
-
-    // CDF 역추적 탭 렌더링
-    static _renderCdfTab(gachaType, config, M, context, model, charts) {
-        if (!context.cdfData) return;
-
-        this.renderCDFChart(
-            context.cdfData,
-            config.charts.cdf.canvas,
-            charts.cdf,
-            model.targetProbability.value,
-            M,
-            config.summary.element,
-            config.summary.logic
-        );
-
-        // CDF 역추적 탭 summary 업데이트
-        this._updateCdfSummary(gachaType, config, M, context);
     }
 
     // 가챠 타입별 수집 요약 생성
@@ -191,67 +169,6 @@ export class GachaResultView extends ResultView {
         } else if (gachaType === 'star2') {
             return () => this._generate2StarLogic(context);
         }
-    }
-
-    // 효율 비교 탭 summary 업데이트
-    static _updateEfficiencySummary(gachaType, config, M, context) {
-        const summaryEl = document.getElementById(config.summary.element);
-        if (!summaryEl) return;
-
-        let summaryHTML = `<strong>효율 비교</strong><br>`;
-
-        if (gachaType === 'birthday') {
-            summaryHTML += `- 목표: 픽업 획득 (${M}종)<br>`;
-            summaryHTML += `<span style="color:#666; font-size:0.9em;">※ 스탭업은 최대 30회까지 가능하며, 초과분은 일반 가챠 확률(${context.normalRate}%)로 계산됩니다.</span>`;
-        } else if (gachaType === 'collab') {
-            summaryHTML += `- 목표: ${M}종 올컴플릿<br>`;
-            summaryHTML += `<span style="color:#666; font-size:0.9em;">※ 스탭업 횟수 제한 없음 (계속 ${context.stepRate}% 확률 적용)</span>`;
-        } else if (gachaType === 'star3') {
-            summaryHTML += `- 목표: ${M}종 올컴플릿`;
-        } else if (gachaType === 'star2') {
-            summaryHTML += `- 목표: ${M}종 올컴플릿`;
-        }
-
-        summaryEl.innerHTML = summaryHTML;
-        summaryEl.style.display = 'block';
-
-        // 로직 영역 숨김
-        const logicEl = document.getElementById(config.summary.logic);
-        if (logicEl) logicEl.style.display = 'none';
-    }
-
-    // CDF 역추적 탭 summary 업데이트
-    static _updateCdfSummary(gachaType, config, M, context) {
-        const summaryEl = document.getElementById(config.summary.element);
-        if (!summaryEl) return;
-
-        let summaryHTML = `<strong>역추적 결과</strong><br>`;
-
-        if (gachaType === 'birthday') {
-            const { stepupRequired, normalRequired } = context.cdfData || {};
-            summaryHTML += `- 목표: 픽업 획득 (${M}종)<br>`;
-            summaryHTML += `- 스탭업 필요 횟수: ${stepupRequired}회<br>`;
-            summaryHTML += `- 일반 필요 횟수: ${normalRequired}회<br>`;
-            summaryHTML += `<span style="color:#666; font-size:0.9em;">※ 스탭업은 최대 30회까지 가능하며, 초과분은 일반 가챠 확률(${context.normalRate}%)로 계산됩니다.</span>`;
-        } else if (gachaType === 'collab') {
-            const { stepupRequired, normalRequired } = context.cdfData || {};
-            summaryHTML += `- 목표: ${M}종 올컴플릿<br>`;
-            summaryHTML += `- 스탭업 필요 횟수: ${stepupRequired}회<br>`;
-            summaryHTML += `- 일반 필요 횟수: ${normalRequired}회<br>`;
-            summaryHTML += `<span style="color:#666; font-size:0.9em;">※ 스탭업 횟수 제한 없음 (계속 ${context.stepRate}% 확률 적용)</span>`;
-        } else if (gachaType === 'star3') {
-            const { stepupRequired, normalRequired } = context.cdfData || {};
-            summaryHTML += `- 목표: ${M}종 올컴플릿<br>`;
-            summaryHTML += `- 스탭업 필요 횟수: ${stepupRequired}회<br>`;
-            summaryHTML += `- 일반 필요 횟수: ${normalRequired}회`;
-        }
-
-        summaryEl.innerHTML = summaryHTML;
-        summaryEl.style.display = 'block';
-
-        // 로직 영역 숨김
-        const logicEl = document.getElementById(config.summary.logic);
-        if (logicEl) logicEl.style.display = 'none';
     }
 
     // 3성 (주회 보상형) 상세 로직 HTML 생성
@@ -350,18 +267,17 @@ export class GachaResultView extends ResultView {
     }
 
     // ==========================================
-    // 공통: 효율 그래프 렌더링 (개선 버전)
+    // 공통: 효율 그래프 렌더링 (CDF 통합 버전)
     // ==========================================
-    static renderEfficiencyChart(data, canvasId, isWorst, chartRef, limit, M, groupName = '', isStar2 = false, summaryId = 'globalSummary', logicId = 'globalLogic') {
+    static renderEfficiencyChart(data, canvasId, isWorst, chartRef, limit, M, groupName = '', isStar2 = false, summaryId = 'globalSummary', logicId = 'globalLogic', cdfData = null, targetProb = 0, totalM = M) {
         const { labels, normalData, stepupData } = data;
-        
+
         const modeKey = isWorst ? 'worst' : 'best';
         const finalStep = stepupData.map(v => parseFloat(v[modeKey]));
         const finalNorm = normalData.map(v => parseFloat(v[modeKey]));
 
-        // [개선] ChartUtils 사용으로 중복 제거
         const getPointRadius = (ctx) => {
-            return isStar2 
+            return isStar2
                 ? ChartUtils.getPointRadius2Star(ctx.dataIndex)
                 : ChartUtils.getPointRadius3Star(ctx.dataIndex);
         };
@@ -402,247 +318,197 @@ export class GachaResultView extends ResultView {
             }
         ];
 
-        ChartAdapter.renderLineChart(canvasId, labels, datasets, chartRef);
+        // CDF 목표 지점 마커 추가
+        let targetPullsStepup = null;
+        let targetPullsNormal = null;
+        if (cdfData && targetProb > 0 && targetProb <= 100) {
+            const { labels: cdfLabels, cdfDataStepup, cdfDataNormal } = cdfData;
 
-        // 요약 텍스트
-        const summaryEl = document.getElementById(summaryId);
-        if (summaryEl) {
-            const limitIdx = limit;
-            const sVal = finalStep[limitIdx];
-            const nVal = finalNorm[limitIdx];
-            const sValText = Formatter.probabilityBounded(sVal / 100, 3);
-            const nValText = Formatter.probabilityBounded(nVal / 100, 3);
-            const modeText = isWorst ? '실패(폭사) 확률' : '성공(졸업) 확률';
-            const compText = isWorst ? '낮아' : '높아';
-
-            summaryEl.innerHTML = `
-                <strong>💡 ${groupName ? `Group ${groupName}` : ''} ${modeText} 분석 (목표 ${M}명)</strong><br>
-                ${limit}회 기준 스탭업이 일반보다 ${modeText}이
-                <span style="color:${mainColor}; font-weight:bold;">${compText} 유리합니다.</span><br>
-                <span style="font-size:0.85rem; color:#666;">(스탭업 ${sValText} vs 일반 ${nValText})</span>
-            `;
-        }
-
-        const logicEl = document.getElementById(logicId);
-        if (logicEl) { logicEl.style.display = 'none'; logicEl.innerHTML = ''; }
-    }
-    
-    // ==========================================
-    // CDF 누적 확률 차트 렌더링
-    // ==========================================
-    static renderCDFChart(data, canvasId, chartRef, targetProb, M, summaryId = 'globalSummary', logicId = 'globalLogic') {
-        const { labels, cdfDataStepup, cdfDataNormal } = data;
-
-        // 목표 확률에 도달하는 지점 찾기 (스탭업 기준)
-        let targetPullsStepup = labels.length - 1;
-        for (let i = 0; i < cdfDataStepup.length; i++) {
-            if (cdfDataStepup[i] >= targetProb) {
-                targetPullsStepup = labels[i];
-                break;
+            // 목표 확률 도달 지점 탐색
+            for (let i = 0; i < cdfDataStepup.length; i++) {
+                if (cdfDataStepup[i] >= targetProb) { targetPullsStepup = cdfLabels[i]; break; }
             }
-        }
+            if (targetPullsStepup === null) targetPullsStepup = cdfLabels[cdfLabels.length - 1];
 
-        // 목표 확률에 도달하는 지점 찾기 (일반 기준)
-        let targetPullsNormal = labels.length - 1;
-        for (let i = 0; i < cdfDataNormal.length; i++) {
-            if (cdfDataNormal[i] >= targetProb) {
-                targetPullsNormal = labels[i];
-                break;
+            for (let i = 0; i < cdfDataNormal.length; i++) {
+                if (cdfDataNormal[i] >= targetProb) { targetPullsNormal = cdfLabels[i]; break; }
             }
-        }
+            if (targetPullsNormal === null) targetPullsNormal = cdfLabels[cdfLabels.length - 1];
 
-        const datasets = [
-            {
-                label: `스탭업 가챠 (목표 ${M}명)`,
-                data: cdfDataStepup,
-                borderColor: CHART_COLORS.STEPUP,
-                backgroundColor: `rgba(69, 162, 71, ${CHART.OPACITY.MIN})`,
-                fill: true,
-                tension: 0.3,
-                pointRadius: 0,
-                pointHoverRadius: 5,
-                pointHitRadius: 10,
-                borderWidth: 2
-            },
-            {
-                label: `일반 가챠 (목표 ${M}명)`,
-                data: cdfDataNormal,
-                borderColor: CHART_COLORS.NORMAL,
-                backgroundColor: `rgba(40, 60, 134, ${CHART.OPACITY.MIN})`,
-                fill: true,
-                tension: 0.3,
-                pointRadius: 0,
-                pointHoverRadius: 5,
-                pointHitRadius: 10,
-                borderWidth: 2,
-                borderDash: CHART.LINE_DASH
-            }
-        ];
+            // efficiency labels 기준으로 마커 데이터 생성
+            const stepupMarkerData = labels.map(x => x === targetPullsStepup ? (finalStep[labels.indexOf(x)] ?? null) : null);
+            const normalMarkerData = labels.map(x => x === targetPullsNormal ? (finalNorm[labels.indexOf(x)] ?? null) : null);
 
-        // 목표 지점 마커 추가 (스탭업)
-        if (targetProb > 0 && targetProb <= 100) {
             datasets.push({
-                label: `스탭업 목표 지점 (${targetProb}%)`,
-                data: labels.map((x, i) => x === targetPullsStepup ? cdfDataStepup[i] : null),
-                borderColor: CHART_COLORS.STEPUP,
-                backgroundColor: CHART_COLORS.STEPUP,
+                label: `스탭업 목표지점 (${targetProb}%)`,
+                data: stepupMarkerData,
+                borderColor: mainColor,
+                backgroundColor: mainColor,
                 pointRadius: 8,
                 pointHoverRadius: 10,
                 showLine: false,
-                pointStyle: 'circle'
+                pointStyle: 'circle',
+                datalabels: { display: false }
             });
 
             datasets.push({
-                label: `일반 목표 지점 (${targetProb}%)`,
-                data: labels.map((x, i) => x === targetPullsNormal ? cdfDataNormal[i] : null),
+                label: `일반 목표지점 (${targetProb}%)`,
+                data: normalMarkerData,
                 borderColor: CHART_COLORS.NORMAL,
                 backgroundColor: CHART_COLORS.NORMAL,
                 pointRadius: 8,
                 pointHoverRadius: 10,
                 showLine: false,
-                pointStyle: 'circle'
+                pointStyle: 'circle',
+                datalabels: { display: false }
             });
         }
-        
+
+        // 차트 플러그인: 목표 확률 가로선 + 세로 점선
+        const cdfLinePlugin = {
+            id: 'cdfTargetLine',
+            afterDatasetsDraw: (chart) => {
+                const state = chart._cdfState;
+                if (!state || state.targetProb <= 0 || state.targetProb > 100) return;
+                if (state.targetPullsStepup === null && state.targetPullsNormal === null) return;
+
+                const ctx2 = chart.ctx;
+                const xAxis = chart.scales.x;
+                const yAxis = chart.scales.y;
+
+                ctx2.save();
+                ctx2.setLineDash(CHART.LINE_DASH);
+                ctx2.lineWidth = 1.5;
+
+                // 가로 점선 (목표 확률 기준선)
+                const yPos = yAxis.getPixelForValue(state.targetProb);
+                ctx2.strokeStyle = '#999';
+                ctx2.beginPath();
+                ctx2.moveTo(xAxis.left, yPos);
+                ctx2.lineTo(xAxis.right, yPos);
+                ctx2.stroke();
+
+                // 세로 점선 (스탭업)
+                if (state.targetPullsStepup !== null) {
+                    const xPosS = xAxis.getPixelForValue(state.targetPullsStepup);
+                    ctx2.strokeStyle = state.mainColor;
+                    ctx2.beginPath();
+                    ctx2.moveTo(xPosS, yAxis.top);
+                    ctx2.lineTo(xPosS, yAxis.bottom);
+                    ctx2.stroke();
+                }
+
+                // 세로 점선 (일반)
+                if (state.targetPullsNormal !== null) {
+                    const xPosN = xAxis.getPixelForValue(state.targetPullsNormal);
+                    ctx2.strokeStyle = CHART_COLORS.NORMAL;
+                    ctx2.beginPath();
+                    ctx2.moveTo(xPosN, yAxis.top);
+                    ctx2.lineTo(xPosN, yAxis.bottom);
+                    ctx2.stroke();
+                }
+
+                ctx2.restore();
+            }
+        };
+
         const canvas = document.getElementById(canvasId);
         if (!canvas) return;
 
-        // [개선] 기존 차트가 있으면 데이터만 업데이트
+        // 기존 차트 업데이트 or 신규 생성
         if (chartRef && chartRef.current) {
             const chart = chartRef.current;
             chart.data.labels = labels;
             chart.data.datasets = datasets;
-            chart._cdf = { targetProb, targetPullsStepup, targetPullsNormal };
+            chart._cdfState = { targetProb, targetPullsStepup, targetPullsNormal, mainColor };
             chart.update('none');
-
-            const summaryEl = document.getElementById(summaryId);
-            if (summaryEl) {
-                const actualProbStepup = cdfDataStepup[targetPullsStepup] || 0;
-                const actualProbNormal = cdfDataNormal[targetPullsNormal] || 0;
-                const stepupProbText = Formatter.probabilityBounded(actualProbStepup / 100, FORMAT.DECIMAL_PLACES.EFFICIENCY);
-                const normalProbText = Formatter.probabilityBounded(actualProbNormal / 100, FORMAT.DECIMAL_PLACES.EFFICIENCY);
-                summaryEl.innerHTML = `
-                    <strong>🎯 목표 확률 역추적 분석 (목표 ${M}명)</strong><br>
-                    목표 달성 확률: <strong>${targetProb}%</strong><br><br>
-                    <span style="color:${CHART_COLORS.STEPUP}; font-weight:bold;">스탭업 가챠:</span> 약 <strong>${targetPullsStepup}회</strong> 필요 (실제 ${stepupProbText})<br>
-                    <span style="color:${CHART_COLORS.NORMAL}; font-weight:bold;">일반 가챠:</span> 약 <strong>${targetPullsNormal}회</strong> 필요 (실제 ${normalProbText})
-                `;
-            }
-            const logicEl = document.getElementById(logicId);
-            if (logicEl) { logicEl.style.display = 'none'; logicEl.innerHTML = ''; }
-            return;
-        }
-
-        const ctx = canvas.getContext('2d');
-        chartRef.current = new Chart(ctx, {
-            type: 'line',
-            data: { labels, datasets },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                animation: false,
-                interaction: {
-                    mode: 'index',
-                    intersect: false
-                },
-                plugins: {
-                    legend: { 
-                        position: 'top',
-                        labels: { boxWidth: 12 }
+        } else {
+            const ctx2 = canvas.getContext('2d');
+            chartRef.current = new Chart(ctx2, {
+                type: 'line',
+                data: { labels, datasets },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: false,
+                    interaction: { mode: 'index', intersect: true },
+                    plugins: {
+                        legend: { position: 'top', labels: { boxWidth: 12 } },
+                        datalabels: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: (context) => {
+                                    if (context.datasetIndex <= 1) {
+                                        let label = context.dataset.label.split(' ')[0] || '';
+                                        const probText = Formatter.probabilityBounded(context.raw / 100, FORMAT.DECIMAL_PLACES.PROBABILITY);
+                                        return ` ${label}: ${probText}`;
+                                    }
+                                    return null;
+                                },
+                                footer: (items) => {
+                                    const visible = items.filter(i => i.datasetIndex <= 1);
+                                    if (visible.length < 2) return '';
+                                    const v1 = parseFloat(visible[0].raw);
+                                    const v2 = parseFloat(visible[1].raw);
+                                    const diff = Math.abs(v1 - v2) / 100;
+                                    const diffText = Formatter.probabilityBounded(diff, FORMAT.DECIMAL_PLACES.PROBABILITY).replace('%', '');
+                                    return ` 차이: ${diffText}%p`;
+                                }
+                            },
+                            footerFont: { weight: 'bold', size: 12 },
+                            footerColor: mainColor,
+                            filter: (item) => item.datasetIndex <= 1
+                        }
                     },
-                    datalabels: { display: false },
-                    tooltip: {
-                        callbacks: {
-                            label: (context) => {
-                                if (context.datasetIndex === 0 || context.datasetIndex === 1) {
-                                    const probText = Formatter.probabilityBounded(context.raw / 100, 3);
-                                    return ` ${context.dataset.label}: ${probText}`;
-                                } else {
-                                    return ` ${context.dataset.label}`;
+                    scales: {
+                        y: { beginAtZero: true, max: 100, ticks: { callback: (v) => v + '%' } },
+                        x: {
+                            grid: { display: false },
+                            ticks: {
+                                maxTicksLimit: CHART.MAX_TICKS.CDF_AXIS,
+                                callback: function(val) {
+                                    const label = this.getLabelForValue(val);
+                                    return Number(label) % 20 === 0 ? label : '';
                                 }
                             }
                         }
                     }
                 },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        max: 100,
-                        title: { display: true, text: '목표 달성 확률 (%)' },
-                        ticks: { callback: (v) => v + '%' }
-                    },
-                    x: {
-                        title: { display: true, text: '가챠 횟수' },
-                        ticks: {
-                            maxTicksLimit: CHART.MAX_TICKS.CDF_AXIS,
-                            callback: function(val) {
-                                const label = this.getLabelForValue(val);
-                                return Number(label) % CHART.CDF_INTERVAL === 0 ? label : '';
-                            }
-                        }
-                    }
-                }
-            },
-            plugins: [{
-                id: 'targetLine',
-                afterDatasetsDraw: (chart) => {
-                    const cdf = chart._cdf || { targetProb, targetPullsStepup, targetPullsNormal };
-                    if (cdf.targetProb <= 0 || cdf.targetProb > 100) return;
+                plugins: [cdfLinePlugin]
+            });
+            chartRef.current._cdfState = { targetProb, targetPullsStepup, targetPullsNormal, mainColor };
+        }
 
-                    const ctx = chart.ctx;
-                    const xAxis = chart.scales.x;
-                    const yAxis = chart.scales.y;
-
-                    // 가로선 (목표 확률)
-                    const yPos = yAxis.getPixelForValue(cdf.targetProb);
-
-                    ctx.save();
-                    ctx.setLineDash(CHART.LINE_DASH);
-                    ctx.strokeStyle = '#999';
-                    ctx.lineWidth = 1.5;
-
-                    ctx.beginPath();
-                    ctx.moveTo(xAxis.left, yPos);
-                    ctx.lineTo(xAxis.right, yPos);
-                    ctx.stroke();
-
-                    // 세로선 (스탭업 목표 지점)
-                    const xPosStepup = xAxis.getPixelForValue(cdf.targetPullsStepup);
-                    ctx.strokeStyle = CHART_COLORS.STEPUP;
-                    ctx.beginPath();
-                    ctx.moveTo(xPosStepup, yAxis.top);
-                    ctx.lineTo(xPosStepup, yAxis.bottom);
-                    ctx.stroke();
-
-                    // 세로선 (일반 목표 지점)
-                    const xPosNormal = xAxis.getPixelForValue(cdf.targetPullsNormal);
-                    ctx.strokeStyle = CHART_COLORS.NORMAL;
-                    ctx.beginPath();
-                    ctx.moveTo(xPosNormal, yAxis.top);
-                    ctx.lineTo(xPosNormal, yAxis.bottom);
-                    ctx.stroke();
-
-                    ctx.restore();
-                }
-            }]
-        });
-        chartRef.current._cdf = { targetProb, targetPullsStepup, targetPullsNormal };
-
-        // 요약 정보 업데이트
+        // 요약: CDF 결과 우선, 없으면 효율 비교
         const summaryEl = document.getElementById(summaryId);
         if (summaryEl) {
-            const actualProbStepup = cdfDataStepup[targetPullsStepup] || 0;
-            const actualProbNormal = cdfDataNormal[targetPullsNormal] || 0;
-
-            const stepupProbText = Formatter.probabilityBounded(actualProbStepup / 100, FORMAT.DECIMAL_PLACES.EFFICIENCY);
-            const normalProbText = Formatter.probabilityBounded(actualProbNormal / 100, FORMAT.DECIMAL_PLACES.EFFICIENCY);
-
-            summaryEl.innerHTML = `
-                <strong>🎯 목표 확률 역추적 분석 (목표 ${M}명)</strong><br>
-                목표 달성 확률: <strong>${targetProb}%</strong><br><br>
-                <span style="color:${CHART_COLORS.STEPUP}; font-weight:bold;">스탭업 가챠:</span> 약 <strong>${targetPullsStepup}회</strong> 필요 (실제 ${stepupProbText})<br>
-                <span style="color:${CHART_COLORS.NORMAL}; font-weight:bold;">일반 가챠:</span> 약 <strong>${targetPullsNormal}회</strong> 필요 (실제 ${normalProbText})
-            `;
+            if (cdfData && targetProb > 0 && targetProb <= 100 && targetPullsStepup !== null) {
+                const { cdfDataStepup, cdfDataNormal } = cdfData;
+                const idxS = cdfData.labels.indexOf(targetPullsStepup);
+                const idxN = cdfData.labels.indexOf(targetPullsNormal);
+                const actualS = idxS >= 0 ? cdfDataStepup[idxS] : 0;
+                const actualN = idxN >= 0 ? cdfDataNormal[idxN] : 0;
+                const stepupProbText = Formatter.probabilityBounded(actualS / 100, FORMAT.DECIMAL_PLACES.EFFICIENCY);
+                const normalProbText = Formatter.probabilityBounded(actualN / 100, FORMAT.DECIMAL_PLACES.EFFICIENCY);
+                summaryEl.innerHTML = `
+                    <strong>목표 달성 확률 ${targetProb}% (목표 ${totalM}명)</strong><br>
+                    <span style="color:${mainColor}; font-weight:bold;">스탭업 가챠:</span> 약 <strong>${targetPullsStepup}회</strong> 필요 (실제 ${stepupProbText})<br>
+                    <span style="color:${CHART_COLORS.NORMAL}; font-weight:bold;">일반 가챠:</span> 약 <strong>${targetPullsNormal}회</strong> 필요 (실제 ${normalProbText})
+                `;
+            } else {
+                const sVal = finalStep[limit];
+                const nVal = finalNorm[limit];
+                const sValText = Formatter.probabilityBounded(sVal / 100, 3);
+                const nValText = Formatter.probabilityBounded(nVal / 100, 3);
+                const modeText = isWorst ? '실패(폭사) 확률' : '성공(졸업) 확률';
+                const compText = isWorst ? '낮아' : '높아';
+                summaryEl.innerHTML = `
+                    <strong>${groupName ? `Group ${groupName} ` : ''}${modeText} 분석 (목표 ${totalM}명)</strong><br>
+                    ${limit}회 기준 스탭업이 일반보다 ${modeText}이
+                    <span style="color:${mainColor}; font-weight:bold;">${compText} 유리합니다.</span><br>
+                    <span style="font-size:0.85rem; color:#666;">(스탭업 ${sValText} vs 일반 ${nValText})</span>
+                `;
+            }
         }
 
         const logicEl = document.getElementById(logicId);

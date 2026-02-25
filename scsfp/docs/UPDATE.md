@@ -631,7 +631,6 @@ if (efficiencyMode === 'price-per-gem') {
 
 **개선**:
 - GachaResultView.js의 모든 동적 HTML에 `data-toggle-section` 추가
-- `.logic-view` → `.section-content logic-view`로 변경
 - ResultView.js에서 HTML 삽입 후 초기 상태 설정
 - 인라인 스타일 제거, CSS 클래스 기반 관리
 
@@ -666,7 +665,6 @@ if (efficiencyMode === 'price-per-gem') {
   - 동적 HTML 삽입 후 collapsible 초기화
 - `js/view/gacha/GachaResultView.js`:
   - 3개 로직 생성 메서드에 `data-toggle-section` 추가
-  - `.logic-view` → `.section-content logic-view`
 - `js/main.js`:
   - SectionManager 초기화 추가
 - `js/core/GachaConstants.js`:

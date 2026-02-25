@@ -174,7 +174,6 @@ export class ChartAdapter {
                     legend: { position: 'top', labels: { boxWidth: 12 } },
                     datalabels: { display: false },
                     tooltip: {
-                        filter: (item) => Number(item.label) % 5 === 0,
                         callbacks: {
                             label: (context) => {
                                 let label = context.dataset.label.split(' ')[0] || '';
@@ -197,7 +196,6 @@ export class ChartAdapter {
                 scales: {
                     y: { beginAtZero: true, max: 100, ticks: { callback: (v) => v + '%' } },
                     x: {
-                        title: { display: true, text: '가챠 횟수' },
                         grid: { display: false },
                         ticks: {
                             maxTicksLimit: CHART.MAX_TICKS.CDF_AXIS,

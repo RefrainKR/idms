@@ -5,10 +5,10 @@ import { EfficiencyCalculator } from '../../core/EfficiencyCalculator.js';
 import { GachaResultView } from '../../view/gacha/GachaResultView.js';
 import { ToggleButton } from '../../component/ToggleButton.js';
 import { CONFIG, TOGGLE_STATES, GACHA_RULES } from '../../config/GachaConfig.js';
+import { RAINBOW_CRYSTAL_RULES } from '../../core/Constants.js';
 import { ProbabilityValidator } from '../../utils/ProbabilityValidator.js';
 import { getGachaConfig, applyTabVisibility } from '../../view/gacha/GachaViewConfig.js';
 import { RainbowCrystalCalculator } from '../../core/RainbowCrystalCalculator.js';
-import { CHART_RANGE, CHART, FORMAT } from '../../config/UIConfig.js';
 
 export class Star3GachaViewModel extends BaseGachaViewModel {
     constructor() {
@@ -23,10 +23,16 @@ export class Star3GachaViewModel extends BaseGachaViewModel {
             'star3-step4Rate': this.model.step4Rate,
             'star3-normalPulls': this.model.normalPulls,
             'star3-stepPulls': this.model.stepPulls,
-            'star3-targetProbability': this.model.targetProbability
+            'star3-targetProbability': this.model.targetProbability,
+            'rainbow-p3star': this.model.rainbow_p3star,
+            'rainbow-p2star': this.model.rainbow_p2star,
+            'rainbow-p1star': this.model.rainbow_p1star,
+            'rainbow-pSSR':   this.model.rainbow_pSSR,
+            'rainbow-pSR':    this.model.rainbow_pSR,
+            'rainbow-pR':     this.model.rainbow_pR
         };
         
-        this.chartRefs = { collection: { current: null }, total: { current: null }, efficiency: { current: null }, cdf: { current: null }, rainbow: { current: null } };
+        this.chartRefs = { collection: { current: null }, total: { current: null }, efficiency: { current: null } };
     }
 
     init() {
@@ -50,17 +56,20 @@ export class Star3GachaViewModel extends BaseGachaViewModel {
         new ToggleButton('star3-efficiency-toggle', TOGGLE_STATES.EFFICIENCY, (s) => {
             this.model.efficiencyMode.value = s.name;
         }, this.model.efficiencyMode.value);
+        new ToggleButton('star3-rainbow-10th', TOGGLE_STATES.RAINBOW_10TH, (s) => {
+            this.model.rainbow10thMode.value = s.name;
+            this.renderRainbowTab();
+        }, this.model.rainbow10thMode.value);
     }
 
     onTabChange(tabId) {
-        this.calculate();
-
         const config = getGachaConfig('star3');
         applyTabVisibility(config, tabId);
 
-        // 무돌 탭으로 전환 시 차트 렌더링
         if (tabId === 'res-3s-rainbow') {
-            this.renderRainbowExpectationChart();
+            this.renderRainbowTab();
+        } else {
+            this.calculate();
         }
     }
         
@@ -144,6 +153,13 @@ export class Star3GachaViewModel extends BaseGachaViewModel {
 
     calculate() {
         if (this.isInitializing) return;
+
+        // 무돌 탭이 활성화된 경우 rainbow 렌더링으로 분기
+        const rainbowTab = document.getElementById('res-3s-rainbow');
+        if (rainbowTab && rainbowTab.classList.contains('active')) {
+            this.renderRainbowTab();
+            return;
+        }
 
         const N = Number(this.model.pickupCount.value);
         let targetVal = this.model.targetCount.value;
@@ -259,94 +275,117 @@ export class Star3GachaViewModel extends BaseGachaViewModel {
     }
 
     /**
-     * 무돌 기대값 차트 렌더링
+     * 무돌 탭 렌더링 (카드 형태)
      */
-    renderRainbowExpectationChart() {
-        const canvas = document.getElementById('rainbowExpectationChart');
-        if (!canvas) return;
+    renderRainbowTab() {
+        const resultArea = document.getElementById('rainbow-result-area');
+        if (!resultArea) return;
 
-        // [개선] 기존 차트가 있으면 재사용 (데이터가 항상 동일)
-        if (this.chartRefs.rainbow.current) return;
+        const normalPulls = Number(this.model.normalPulls.value);
+        const include10th = this.model.rainbow10thMode.value === 'included';
 
-        // 누적 무돌 기대값 계산
-        const data = RainbowCrystalCalculator.star3Cumulative(CHART_RANGE.RAINBOW_MAX_PULLS);
+        const rates = {
+            p3star: this.model.rainbow_p3star.value / 100,
+            p2star: this.model.rainbow_p2star.value / 100,
+            p1star: this.model.rainbow_p1star.value / 100,
+            pSSR:   this.model.rainbow_pSSR.value / 100,
+            pSR:    this.model.rainbow_pSR.value / 100,
+            pR:     this.model.rainbow_pR.value / 100
+        };
 
-        // 차트 데이터 준비
-        const labels = data.map(d => d.pulls);
-        const values = data.map(d => d.expected);
+        const { perPull, per10, total } = RainbowCrystalCalculator.calcFromInput(rates, normalPulls, include10th);
+        const { REWARDS } = RAINBOW_CRYSTAL_RULES;
 
-        // 차트 생성
-        const ctx = canvas.getContext('2d');
-        this.chartRefs.rainbow.current = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: '누적 무돌 기대값',
-                    data: values,
-                    borderColor: 'rgb(75, 192, 192)',
-                    backgroundColor: 'rgba(75, 192, 192, 0.1)',
-                    borderWidth: 2,
-                    fill: true,
-                    tension: 0.1,
-                    pointRadius: 0,
-                    pointHoverRadius: 4
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    title: {
-                        display: true,
-                        text: '일반 3성 가챠 - 무돌 획득 기대값',
-                        font: { size: CHART.FONT_SIZE.CHART_TITLE, weight: 'bold' }
-                    },
-                    legend: {
-                        display: true,
-                        position: 'top'
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                return `${context.parsed.y.toFixed(FORMAT.DECIMAL_PLACES.RAINBOW_EXPECTED)}개`;
-                            }
-                        }
-                    },
-                    datalabels: {
-                        display: false
-                    }
-                },
-                scales: {
-                    x: {
-                        title: {
-                            display: true,
-                            text: '뽑기 횟수',
-                            font: { size: CHART.FONT_SIZE.AXIS_TITLE, weight: 'bold' }
-                        },
-                        ticks: {
-                            maxTicksLimit: CHART.MAX_TICKS.X_AXIS
-                        }
-                    },
-                    y: {
-                        title: {
-                            display: true,
-                            text: '누적 무돌 개수',
-                            font: { size: CHART.FONT_SIZE.AXIS_TITLE, weight: 'bold' }
-                        },
-                        beginAtZero: true,
-                        ticks: {
-                            callback: function(value) {
-                                return value.toFixed(FORMAT.DECIMAL_PLACES.PERCENTAGE) + '개';
-                            }
-                        }
-                    }
-                },
-                interaction: {
-                    intersect: false,
-                    mode: 'index'
+        const breakdown_p3  = rates.p3star * REWARDS.PCARD_3STAR;
+        const breakdown_p2  = rates.p2star * REWARDS.PCARD_2STAR;
+        const breakdown_p1  = rates.p1star * REWARDS.PCARD_1STAR;
+        const breakdown_SSR = rates.pSSR   * REWARDS.SCARD_SSR;
+        const breakdown_SR  = rates.pSR    * REWARDS.SCARD_SR;
+        const breakdown_R   = rates.pR     * REWARDS.SCARD_R;
+
+        const pTotal = rates.p3star + rates.p2star + rates.p1star;
+        const sTotal = rates.pSSR + rates.pSR + rates.pR;
+        const sumWarning = Math.abs(pTotal + sTotal - 1.0) > 0.001
+            ? `<br><span style="color:#e57373; font-size:0.85rem;">※ 확률 합계 ${((pTotal + sTotal) * 100).toFixed(3)}% (100%와 다름)</span>` : '';
+
+        // summary 숨김
+        const summaryEl = document.getElementById('globalSummary');
+        if (summaryEl) {
+            summaryEl.style.display = 'none';
+            summaryEl.innerHTML = '';
+        }
+
+        // result-area: 기대값 카드
+        resultArea.innerHTML = `
+            <div class="rainbow-card">
+                <div class="rainbow-card-title">1회 기대값</div>
+                <div class="rainbow-card-value">${perPull.toFixed(3)}<span class="rainbow-unit">개</span></div>
+                <div class="rainbow-card-sub">
+                    P카드: 3성 ${breakdown_p3.toFixed(3)} + 2성 ${breakdown_p2.toFixed(3)} + 1성 ${breakdown_p1.toFixed(3)}<br>
+                    S카드: SSR ${breakdown_SSR.toFixed(3)} + SR ${breakdown_SR.toFixed(3)} + R ${breakdown_R.toFixed(3)}
+                </div>
+            </div>
+            <div class="rainbow-card">
+                <div class="rainbow-card-title">10연 기대값${include10th ? ' <span style="font-size:0.75rem; color:#888;">(2/SR확정 포함)</span>' : ''}</div>
+                <div class="rainbow-card-value">${per10.toFixed(3)}<span class="rainbow-unit">개</span></div>
+                <div class="rainbow-card-sub">10회 합산 (단차 기준: ${(perPull * 10).toFixed(3)}개)</div>
+            </div>
+            ${normalPulls > 0 ? `
+            <div class="rainbow-card">
+                <div class="rainbow-card-title">총 기대값 (${normalPulls}회)</div>
+                <div class="rainbow-card-value">${total.toFixed(2)}<span class="rainbow-unit">개</span></div>
+                <div class="rainbow-card-sub">일반 가챠 ${normalPulls}회 기준</div>
+            </div>` : ''}
+            ${sumWarning}
+        `;
+
+        // logic 영역: breakdown + 확률 상세
+        const logicEl = document.getElementById('globalLogic');
+        if (logicEl) {
+            // 재렌더링 전 현재 열림/닫힘 상태 보존
+            const wasCollapsed = logicEl.dataset.collapsed !== 'false';
+
+            logicEl.innerHTML = this._buildRainbowLogicDetail(rates, include10th, REWARDS, { breakdown_p3, breakdown_p2, breakdown_p1, breakdown_SSR, breakdown_SR, breakdown_R }, normalPulls);
+            logicEl.style.display = 'block';
+            const btn = logicEl.querySelector('[data-toggle-section]');
+            const content = logicEl.querySelector('.section-content');
+            if (btn && content) {
+                if (wasCollapsed) {
+                    logicEl.dataset.collapsed = 'true';
+                    content.style.display = 'none';
+                    btn.textContent = '▲';
+                } else {
+                    logicEl.dataset.collapsed = 'false';
+                    content.style.display = '';
+                    btn.textContent = '▼';
                 }
             }
-        });
+        }
+    }
+
+    _buildRainbowLogicDetail(rates, include10th, REWARDS, bd, normalPulls) {
+        const fmt = (v) => (v * 100).toFixed(3);
+        const pTotalPct = ((rates.p3star + rates.p2star + rates.p1star) * 100).toFixed(3);
+        const sTotalPct = ((rates.pSSR + rates.pSR + rates.pR) * 100).toFixed(3);
+        const p10_2star = rates.p3star + rates.p2star + rates.p1star - rates.p3star;
+        const p10_SR    = rates.pSSR + rates.pSR + rates.pR - rates.pSSR;
+
+        return `
+            <div class="section-header">
+                <span class="logic-title">상세 계산 근거</span>
+                <button class="toggle-btn" data-toggle-section>▼</button>
+            </div>
+            <div class="section-content logic-view">
+                <ul class="logic-list">
+                    <li>가챠 횟수: 일반 가챠 ${normalPulls}회 기준</li>
+                    <li>2/SR확정 보정: ${include10th ? '포함 (10연 단위)' : '미포함 (단차 기준)'}</li>
+                    <li>P카드: 3성 ${fmt(rates.p3star)}% (×${REWARDS.PCARD_3STAR} = ${bd.breakdown_p3.toFixed(3)}) / 2성 ${fmt(rates.p2star)}% (×${REWARDS.PCARD_2STAR} = ${bd.breakdown_p2.toFixed(3)}) / 1성 ${fmt(rates.p1star)}% (×${REWARDS.PCARD_1STAR} = ${bd.breakdown_p1.toFixed(3)}) — 합계 ${pTotalPct}%</li>
+                    <li>S카드: SSR ${fmt(rates.pSSR)}% (×${REWARDS.SCARD_SSR} = ${bd.breakdown_SSR.toFixed(3)}) / SR ${fmt(rates.pSR)}% (×${REWARDS.SCARD_SR} = ${bd.breakdown_SR.toFixed(3)}) / R ${fmt(rates.pR)}% (×${REWARDS.SCARD_R} = ${bd.breakdown_R.toFixed(3)}) — 합계 ${sTotalPct}%</li>
+                    ${include10th
+                        ? `<li>10회째 보정: P카드 1성→2성 (${fmt(rates.p1star)}% 이동 → 2성 ${fmt(p10_2star)}%), S카드 R→SR (${fmt(rates.pR)}% 이동 → SR ${fmt(p10_SR)}%)</li>`
+                        : ''}
+                    <li>알고리즘: 기대값 선형 합산</li>
+                </ul>
+            </div>`;
     }
 }

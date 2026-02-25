@@ -25,7 +25,7 @@ export class ChartUtils {
      */
     static getPointRadius3Star(idx) {
         if (idx === 0) return CHART_POINT.RADIUS.ORIGIN;
-        if (idx % CHART_POINT.EMPHASIS_INTERVAL.STAR3_CYCLE === 0) return CHART_POINT.RADIUS.CEILING_EMPHASIS;
+        if (idx % CHART_POINT.EMPHASIS_INTERVAL.STAR3_CYCLE === 0) return CHART_POINT.RADIUS.GUARANTEED;
         if (idx % CHART_POINT.EMPHASIS_INTERVAL.STAR3_GUARANTEED === 0) return CHART_POINT.RADIUS.GUARANTEED;
         return CHART_POINT.RADIUS.HIDDEN;
     }

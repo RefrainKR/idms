@@ -23,8 +23,7 @@ export class CollabGachaViewModel extends BaseGachaViewModel {
         this.chartRefs = {
             collection: { current: null },
             total: { current: null },
-            efficiency: { current: null },
-            cdf: { current: null }
+            efficiency: { current: null }
         };
 
         this.toggleButtons = {};

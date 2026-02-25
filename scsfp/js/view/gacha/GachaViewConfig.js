@@ -10,14 +10,13 @@ export const GACHA_TYPE_CONFIG = {
         charts: {
             collection: { canvas: 'resultChart', legend: 'legendList' },
             total: { canvas: 'resultChartTotal3' },
-            efficiency: { canvas: 'efficiencyChart' },
-            cdf: { canvas: 'cdfChart' }
+            efficiency: { canvas: 'efficiencyChart' }
         },
         subTabs: {
             collection: 'res-3s-collection',
             total: 'res-3s-total',
             efficiency: 'res-3s-efficiency',
-            cdf: 'res-3s-cdf'
+            rainbow: 'res-3s-rainbow'
         },
         summary: {
             element: 'globalSummary',
@@ -25,13 +24,12 @@ export const GACHA_TYPE_CONFIG = {
         },
         hasRandomMode: true,
         hasStep4Mode: true,
-        hasCdfTab: true,
         // 탭별 버튼 visibility 규칙
         buttonVisibility: {
             efficiency: ['star3-efficiency-toggle'],
             collection: ['star3-toggle-view'],
             total: ['star3-toggle-view'],
-            cdf: [] // CDF 탭에서는 토글 버튼 숨김
+            rainbow: ['star3-rainbow-10th']
         }
     },
 
@@ -41,14 +39,12 @@ export const GACHA_TYPE_CONFIG = {
         charts: {
             collection: { canvas: 'resultChartBirthday', legend: 'legendListBirthday' },
             total: { canvas: 'resultChartTotalBirthday' },
-            efficiency: { canvas: 'efficiencyChartBirthday' },
-            cdf: { canvas: 'cdfChartBirthday' }
+            efficiency: { canvas: 'efficiencyChartBirthday' }
         },
         subTabs: {
             collection: 'res-bd-collection',
             total: 'res-bd-total',
-            efficiency: 'res-bd-efficiency',
-            cdf: 'res-bd-cdf'
+            efficiency: 'res-bd-efficiency'
         },
         summary: {
             element: 'globalSummary',
@@ -56,13 +52,11 @@ export const GACHA_TYPE_CONFIG = {
         },
         hasRandomMode: false,
         hasStep4Mode: false,
-        hasCdfTab: true,
         // 탭별 버튼 visibility 규칙
         buttonVisibility: {
             efficiency: ['birthday-efficiency-toggle'],
             collection: ['birthday-toggle-view'],
-            total: ['birthday-toggle-view'],
-            cdf: []
+            total: ['birthday-toggle-view']
         }
     },
 
@@ -72,14 +66,12 @@ export const GACHA_TYPE_CONFIG = {
         charts: {
             collection: { canvas: 'resultChartCollab', legend: 'legendListCollab' },
             total: { canvas: 'resultChartTotalCollab' },
-            efficiency: { canvas: 'efficiencyChartCollab' },
-            cdf: { canvas: 'cdfChartCollab' }
+            efficiency: { canvas: 'efficiencyChartCollab' }
         },
         subTabs: {
             collection: 'res-cb-collection',
             total: 'res-cb-total',
-            efficiency: 'res-cb-efficiency',
-            cdf: 'res-cb-cdf'
+            efficiency: 'res-cb-efficiency'
         },
         summary: {
             element: 'globalSummary',
@@ -87,13 +79,11 @@ export const GACHA_TYPE_CONFIG = {
         },
         hasRandomMode: false,
         hasStep4Mode: false,
-        hasCdfTab: true,
         // 탭별 버튼 visibility 규칙
         buttonVisibility: {
             efficiency: ['collab-efficiency-toggle'],
             collection: ['collab-toggle-view'],
-            total: ['collab-toggle-view'],
-            cdf: []
+            total: ['collab-toggle-view']
         }
     },
 
@@ -116,7 +106,6 @@ export const GACHA_TYPE_CONFIG = {
         },
         hasRandomMode: false,
         hasStep4Mode: false,
-        hasCdfTab: false,
         hasGroupMode: true,
         // 탭별 버튼 visibility 규칙
         buttonVisibility: {

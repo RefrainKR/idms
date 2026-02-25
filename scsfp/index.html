@@ -126,7 +126,6 @@
                     <button class="tab-button sub-tab-btn active" data-tab="res-3s-collection">픽업 획득(중복X)</button>
                     <button class="tab-button sub-tab-btn" data-tab="res-3s-total">총 획득(중복O)</button>
                     <button class="tab-button sub-tab-btn" data-tab="res-3s-efficiency">일반vs스탭업</button>
-                    <button class="tab-button sub-tab-btn" data-tab="res-3s-cdf">역추적</button>
                     <button class="tab-button sub-tab-btn" data-tab="res-3s-rainbow">무돌</button>
                 </div>
 
@@ -139,6 +138,7 @@
                     </div>
                     <div class="btn-group right-group">
                         <button id="star3-efficiency-toggle" class="view-toggle-btn" data-role="eff-mode" style="display:none;">Best</button>
+                        <button id="star3-rainbow-10th" class="view-toggle-btn" style="display:none;">2/SR확정</button>
                     </div>
                 </div>
 
@@ -157,11 +157,6 @@
                 <div id="res-3s-efficiency" class="tab-content">
                     <div class="chart-scroll-wrapper">
                         <div class="chart-scroll-inner"><canvas id="efficiencyChart"></canvas></div>
-                    </div>
-                </div>
-                <div id="res-3s-cdf" class="tab-content">
-                    <div class="chart-scroll-wrapper">
-                        <div class="chart-scroll-inner"><canvas id="cdfChart"></canvas></div>
                         <div class="cdf-input-area">
                             <div class="input-item">
                                 <label for="star3-targetProbability">목표 확률 (%)</label>
@@ -171,8 +166,42 @@
                     </div>
                 </div>
                 <div id="res-3s-rainbow" class="tab-content">
-                    <div class="chart-scroll-wrapper">
-                        <div class="chart-scroll-inner"><canvas id="rainbowExpectationChart"></canvas></div>
+                    <div class="rainbow-tab-layout">
+                        <!-- 입력 영역 -->
+                        <div class="rainbow-input-panel">
+                            <div class="rainbow-rate-group">
+                                <div class="rainbow-rate-label">P카드</div>
+                                <div class="input-item">
+                                    <label for="rainbow-p3star">3성 (%)</label>
+                                    <input type="number" id="rainbow-p3star" min="0" max="100" step="0.001">
+                                </div>
+                                <div class="input-item">
+                                    <label for="rainbow-p2star">2성 (%)</label>
+                                    <input type="number" id="rainbow-p2star" min="0" max="100" step="0.001">
+                                </div>
+                                <div class="input-item">
+                                    <label for="rainbow-p1star">1성 (%)</label>
+                                    <input type="number" id="rainbow-p1star" min="0" max="100" step="0.001">
+                                </div>
+                            </div>
+                            <div class="rainbow-rate-group">
+                                <div class="rainbow-rate-label">S카드</div>
+                                <div class="input-item">
+                                    <label for="rainbow-pSSR">SSR (%)</label>
+                                    <input type="number" id="rainbow-pSSR" min="0" max="100" step="0.001">
+                                </div>
+                                <div class="input-item">
+                                    <label for="rainbow-pSR">SR (%)</label>
+                                    <input type="number" id="rainbow-pSR" min="0" max="100" step="0.001">
+                                </div>
+                                <div class="input-item">
+                                    <label for="rainbow-pR">R (%)</label>
+                                    <input type="number" id="rainbow-pR" min="0" max="100" step="0.001">
+                                </div>
+                            </div>
+                        </div>
+                        <!-- 결과 표시 영역 -->
+                        <div id="rainbow-result-area"></div>
                     </div>
                 </div>
             </div>
@@ -246,7 +275,6 @@
                     <button class="tab-button sub-tab-btn active" data-tab="res-bd-collection">픽업 획득(중복X)</button>
                     <button class="tab-button sub-tab-btn" data-tab="res-bd-total">총 획득(중복O)</button>
                     <button class="tab-button sub-tab-btn" data-tab="res-bd-efficiency">일반vs스탭업</button>
-                    <button class="tab-button sub-tab-btn" data-tab="res-bd-cdf">역추적</button>
                 </div>
 
                 <div class="result-options-header">
@@ -275,11 +303,6 @@
                 <div id="res-bd-efficiency" class="tab-content">
                     <div class="chart-scroll-wrapper">
                         <div class="chart-scroll-inner"><canvas id="efficiencyChartBirthday"></canvas></div>
-                    </div>
-                </div>
-                <div id="res-bd-cdf" class="tab-content">
-                    <div class="chart-scroll-wrapper">
-                        <div class="chart-scroll-inner"><canvas id="cdfChartBirthday"></canvas></div>
                         <div class="cdf-input-area">
                             <div class="input-item">
                                 <label for="birthday-targetProbability">목표 확률 (%)</label>
@@ -359,7 +382,6 @@
                     <button class="tab-button sub-tab-btn active" data-tab="res-cb-collection">픽업 획득(중복X)</button>
                     <button class="tab-button sub-tab-btn" data-tab="res-cb-total">총 획득(중복O)</button>
                     <button class="tab-button sub-tab-btn" data-tab="res-cb-efficiency">일반vs스탭업</button>
-                    <button class="tab-button sub-tab-btn" data-tab="res-cb-cdf">역추적</button>
                 </div>
 
                 <div class="result-options-header">
@@ -387,11 +409,6 @@
                 <div id="res-cb-efficiency" class="tab-content">
                     <div class="chart-scroll-wrapper">
                         <div class="chart-scroll-inner"><canvas id="efficiencyChartCollab"></canvas></div>
-                    </div>
-                </div>
-                <div id="res-cb-cdf" class="tab-content">
-                    <div class="chart-scroll-wrapper">
-                        <div class="chart-scroll-inner"><canvas id="cdfChartCollab"></canvas></div>
                         <div class="cdf-input-area">
                             <div class="input-item">
                                 <label for="collab-targetProbability">목표 확률 (%)</label>
