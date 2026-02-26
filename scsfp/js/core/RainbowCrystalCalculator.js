@@ -49,11 +49,11 @@ export class RainbowCrystalCalculator {
     }
 
     /**
-     * 입력 확률 기반 - 누적 무돌 기대값 계산
+     * 입력 확률 기반 - 누적 무돌 기대값 계산 (일반 가챠)
      * @param {Object} rates - { p3star, p2star, p1star, pSSR, pSR, pR } (소수점, 0~1)
      * @param {number} pulls - 계산할 총 뽑기 횟수
      * @param {boolean} include10th - 10회째 2/SR확정 포함 여부
-     * @returns {{ perPull: number, per10: number, total: number, breakdown: Object }}
+     * @returns {{ perPull: number, per10: number, total: number }}
      */
     static calcFromInput(rates, pulls, include10th = true) {
         let total = 0;
@@ -72,20 +72,134 @@ export class RainbowCrystalCalculator {
         // 1회 기대값 (보정 없는 단순 1회)
         const perPull = this.singleExpected(rates, false);
 
-        // 등급별 breakdown (일반 1회 기준)
-        const breakdown = {
-            pcard: {
-                star3: rates.p3star * REWARDS.PCARD_3STAR,
-                star2: rates.p2star * REWARDS.PCARD_2STAR,
-                star1: rates.p1star * REWARDS.PCARD_1STAR
-            },
-            scard: {
-                SSR: rates.pSSR * REWARDS.SCARD_SSR,
-                SR: rates.pSR * REWARDS.SCARD_SR,
-                R: rates.pR * REWARDS.SCARD_R
-            }
-        };
-
         return { perPull, per10, total };
+    }
+
+    /**
+     * Step3 1~9회째 확률 계산 (3성/SSR 각 2배, 증가분은 1성/R에서 차감)
+     * @param {Object} rates
+     * @returns {Object} 보정된 rates
+     */
+    static step3Rates(rates) {
+        const { p3star, p2star, p1star, pSSR, pSR, pR } = rates;
+        const deltaP = p3star; // 3성이 2배가 되면 증가분 = p3star
+        const deltaS = pSSR;   // SSR이 2배가 되면 증가분 = pSSR
+
+        // P카드: 1성에서 우선 차감, 부족하면 2성에서 차감
+        let new_p1star = p1star - deltaP;
+        let new_p2star = p2star;
+        if (new_p1star < 0) {
+            new_p2star += new_p1star; // 2성에서 부족분 차감
+            new_p1star = 0;
+        }
+
+        // S카드: R에서 우선 차감, 부족하면 SR에서 차감
+        let new_pR = pR - deltaS;
+        let new_pSR = pSR;
+        if (new_pR < 0) {
+            new_pSR += new_pR; // SR에서 부족분 차감
+            new_pR = 0;
+        }
+
+        return {
+            p3star: p3star * 2,
+            p2star: Math.max(0, new_p2star),
+            p1star: new_p1star,
+            pSSR: pSSR * 2,
+            pSR: Math.max(0, new_pSR),
+            pR: new_pR
+        };
+    }
+
+    /**
+     * Step2/Step3 10회째 확률 계산 (P카드 전체→3성, S카드 전체→SSR)
+     * @param {Object} rates
+     * @returns {Object} 보정된 rates
+     */
+    static step2_10thRates(rates) {
+        const pTotal = rates.p3star + rates.p2star + rates.p1star;
+        const sTotal = rates.pSSR + rates.pSR + rates.pR;
+        return { p3star: pTotal, p2star: 0, p1star: 0, pSSR: sTotal, pSR: 0, pR: 0 };
+    }
+
+    /**
+     * 스탭업 가챠 1주 (Step1~4, 40회) 무돌 기대값 계산
+     * @param {Object} rates
+     * @returns {number} 40회 기대값
+     */
+    static calcStepup1Week(rates) {
+        const step3Rates = this.step3Rates(rates);
+        const top10thRates = this.step2_10thRates(rates);
+        // Step4 40회째: 25무돌 고정 (항상 중복 가정)
+        const STEP4_40TH_FIXED = 25;
+
+        let total = 0;
+        // Step1 (1~10회): 일반 10연과 동일 (1~9회 기본, 10회째 1성→2성, R→SR)
+        for (let i = 1; i <= 10; i++) {
+            total += this.singleExpected(rates, i === 10);
+        }
+        // Step2 (11~20회): 1~9회 기본, 20회째 전체→3성/SSR
+        for (let i = 1; i <= 9; i++) {
+            total += this.singleExpected(rates, false);
+        }
+        total += this.singleExpected(top10thRates, false); // 20회째
+        // Step3 (21~30회): 1~9회 3성/SSR 2배 보정, 30회째 전체→3성/SSR
+        for (let i = 1; i <= 9; i++) {
+            total += this.singleExpected(step3Rates, false);
+        }
+        total += this.singleExpected(top10thRates, false); // 30회째
+        // Step4 (31~40회): 1~9회 기본, 40회째 25무돌 고정
+        for (let i = 1; i <= 9; i++) {
+            total += this.singleExpected(rates, false);
+        }
+        total += STEP4_40TH_FIXED; // 40회째
+
+        return total;
+    }
+
+    /**
+     * 스탭업 가챠 총 무돌 기대값 계산
+     * @param {Object} rates
+     * @param {number} stepPulls - 스탭업 총 횟수
+     * @returns {number} 총 기대값
+     */
+    static calcStepupTotal(rates, stepPulls) {
+        if (stepPulls <= 0) return 0;
+
+        const step3Rates = this.step3Rates(rates);
+        const top10thRates = this.step2_10thRates(rates);
+        const STEP4_40TH_FIXED = 25;
+
+        // Step 내 회차 순서: 각 40회 반복 주기 내 위치 판별
+        let total = 0;
+        for (let i = 1; i <= stepPulls; i++) {
+            const posInWeek = ((i - 1) % 40) + 1; // 1~40
+            if (posInWeek <= 10) {
+                // Step1: 10회째 1성→2성, R→SR
+                total += this.singleExpected(rates, posInWeek === 10);
+            } else if (posInWeek <= 20) {
+                // Step2: 20회째 전체→3성/SSR
+                if (posInWeek === 20) {
+                    total += this.singleExpected(top10thRates, false);
+                } else {
+                    total += this.singleExpected(rates, false);
+                }
+            } else if (posInWeek <= 30) {
+                // Step3: 1~9회 2배 보정, 30회째 전체→3성/SSR
+                if (posInWeek === 30) {
+                    total += this.singleExpected(top10thRates, false);
+                } else {
+                    total += this.singleExpected(step3Rates, false);
+                }
+            } else {
+                // Step4: 40회째 25무돌 고정, 나머지 기본
+                if (posInWeek === 40) {
+                    total += STEP4_40TH_FIXED;
+                } else {
+                    total += this.singleExpected(rates, false);
+                }
+            }
+        }
+        return total;
     }
 }

@@ -115,7 +115,7 @@ export class Star2GachaViewModel extends BaseGachaViewModel {
         const sumN = groups.reduce((s, g) => s + g.N, 0);
         if (N_total !== sumN) {
             const star2Config = getGachaConfig('star2');
-            const summaryId = star2Config ? star2Config.summary.element : 'globalSummary';
+            const summaryId = star2Config ? star2Config.summary.element : 'gachaSummary';
             document.getElementById(summaryId).innerHTML = `<b style="color:red">오류: 픽업 합계 불일치 (${N_total} vs ${sumN})</b>`;
             return;
         }

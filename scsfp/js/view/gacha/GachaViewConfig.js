@@ -19,8 +19,8 @@ export const GACHA_TYPE_CONFIG = {
             rainbow: 'res-3s-rainbow'
         },
         summary: {
-            element: 'globalSummary',
-            logic: 'globalLogic'
+            element: 'gachaSummary',
+            logic: 'gachaLogic'
         },
         hasRandomMode: true,
         hasStep4Mode: true,
@@ -47,8 +47,8 @@ export const GACHA_TYPE_CONFIG = {
             efficiency: 'res-bd-efficiency'
         },
         summary: {
-            element: 'globalSummary',
-            logic: 'globalLogic'
+            element: 'gachaSummary',
+            logic: 'gachaLogic'
         },
         hasRandomMode: false,
         hasStep4Mode: false,
@@ -74,8 +74,8 @@ export const GACHA_TYPE_CONFIG = {
             efficiency: 'res-cb-efficiency'
         },
         summary: {
-            element: 'globalSummary',
-            logic: 'globalLogic'
+            element: 'gachaSummary',
+            logic: 'gachaLogic'
         },
         hasRandomMode: false,
         hasStep4Mode: false,
@@ -101,8 +101,8 @@ export const GACHA_TYPE_CONFIG = {
             efficiency: 'res-2s-efficiency'
         },
         summary: {
-            element: 'globalSummary',
-            logic: 'globalLogic'
+            element: 'gachaSummary',
+            logic: 'gachaLogic'
         },
         hasRandomMode: false,
         hasStep4Mode: false,

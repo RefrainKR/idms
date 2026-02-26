@@ -1,28 +1,28 @@
-﻿/**
- * js/view/ResultView.js
+/**
+ * js/view/gacha/GachaBaseView.js
  * 가챠 결과 화면 렌더링을 위한 공통 부모 클래스
  */
-import { ProbabilityEngine } from '../core/ProbabilityEngine.js';
-import { ChartAdapter } from './ChartAdapter.js';
-import { Formatter } from '../utils/Formatter.js';
-import { PROBABILITY_MODE } from '../config/GachaConfig.js';
-import { CHART_COLORS } from '../config/UIConfig.js';
+import { ProbabilityEngine } from '../../core/ProbabilityEngine.js';
+import { ChartAdapter } from '../ChartAdapter.js';
+import { Formatter } from '../../utils/Formatter.js';
+import { PROBABILITY_MODE } from '../../config/GachaConfig.js';
+import { CHART_COLORS } from '../../config/UIConfig.js';
 
-export class ResultView {
-    
+export class GachaBaseView {
+
     /**
      * 요약(Summary) 및 상세 로직(Logic) 텍스트 업데이트
      * @param {Object} elementIds - { summary: 'id', logic: 'id' }
      * @param {Object} generators - { summary: () => html, logic: () => html }
      */
     static _updateText(elementIds, generators) {
-        const summaryEl = document.getElementById(elementIds.summary || 'globalSummary');
+        const summaryEl = document.getElementById(elementIds.summary || 'gachaSummary');
         if (summaryEl && generators.summary) {
             summaryEl.style.display = '';
             summaryEl.innerHTML = generators.summary();
         }
 
-        const logicContainer = document.getElementById(elementIds.logic || 'globalLogic');
+        const logicContainer = document.getElementById(elementIds.logic || 'gachaLogic');
         if (logicContainer) {
             if (generators.logic) {
                 logicContainer.innerHTML = generators.logic();
@@ -56,7 +56,7 @@ export class ResultView {
     static _updateLegend(elementId, labels, data, colors) {
         const container = document.getElementById(elementId);
         if (!container) return;
-        
+
         container.innerHTML = '';
         labels.forEach((label, i) => {
             const item = document.createElement('div');
@@ -85,14 +85,14 @@ export class ResultView {
      */
     static renderCollection(M, dp, mode, elementIds, htmlGenerator, chartRef) {
         // [핵심 1] 차트 조각(Slices) 데이터는 항상 '개별 확률' (합계 100%)
-        const chartDP = dp; 
-        
+        const chartDP = dp;
+
         // [핵심 2] 범례(Legend) 및 툴팁용 데이터만 사용자가 선택한 모드로 변환
         const listDP = ProbabilityEngine.transformData(dp, mode);
-        
+
         let chartLabels = [], chartData = [], colors = [];
         let listLabels = [], listData = [], tooltipVals = [];
-        
+
         let suffix = "";
         if (mode === PROBABILITY_MODE.CUMULATIVE_LESS) suffix = " 이하";
         else if (mode === PROBABILITY_MODE.CUMULATIVE_MORE) suffix = " 이상";
@@ -106,14 +106,14 @@ export class ResultView {
             listLabels.push(`${k}픽업${suffix}`);
             listData.push(Formatter.probabilityFraction(listDP[k]));
             tooltipVals.push(Formatter.probabilityFraction(listDP[k]));
-            
+
             // 색상 강조
             colors.push(k === M ? CHART_COLORS.STEPUP : `rgba(40, 60, 134, ${0.3 + 0.7 * (k / M)})`);
         }
 
         this._updateText(elementIds, htmlGenerator);
         this._updateLegend(elementIds.legend, listLabels, listData, colors);
-        
+
         ChartAdapter.renderPieChart(elementIds.chart, chartLabels, chartData, colors, tooltipVals, chartRef);
     }
 
@@ -124,11 +124,11 @@ export class ResultView {
     static renderTotalCount(dp, mode, elementIds, htmlGenerator, chartRef) {
         // [중요] 표시 범위 산정은 항상 '개별 확률(Individual)' 기준
         const individualDP = ProbabilityEngine.transformData(dp, PROBABILITY_MODE.INDIVIDUAL);
-        
+
         // Peak(최빈값) 찾기
         let maxVal = -1, maxIndex = -1;
-        for(let i=0; i<individualDP.length; i++) { 
-            if (individualDP[i] > maxVal) { maxVal = individualDP[i]; maxIndex = i; } 
+        for(let i=0; i<individualDP.length; i++) {
+            if (individualDP[i] > maxVal) { maxVal = individualDP[i]; maxIndex = i; }
         }
 
         // 유의미한 구간 탐색 (0.001% 이상)
@@ -167,10 +167,10 @@ export class ResultView {
 
         // 실제 출력 데이터 변환 (사용자 선택 모드 적용)
         const transformedDP = ProbabilityEngine.transformData(dp, mode);
-        
+
         const labels = [], data = [], colors = [], tooltipVals = [];
         let suffix = "";
-        
+
         if (mode === PROBABILITY_MODE.CUMULATIVE_LESS) suffix = " 이하";
         else if (mode === PROBABILITY_MODE.CUMULATIVE_MORE) suffix = " 이상";
 
@@ -185,9 +185,9 @@ export class ResultView {
         }
 
         this._updateText(elementIds, htmlGenerator);
-        
+
         // 상세 로직 숨김 처리 (Bar Chart는 보통 Summary만 보여줌)
-        const logicContainer = document.getElementById(elementIds.logic || 'globalLogic');
+        const logicContainer = document.getElementById(elementIds.logic || 'gachaLogic');
         if (logicContainer) logicContainer.style.display = 'none';
 
         ChartAdapter.renderBarChart(elementIds.chart, labels, data, colors, tooltipVals, chartRef);

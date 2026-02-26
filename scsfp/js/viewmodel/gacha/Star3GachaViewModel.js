@@ -293,7 +293,10 @@ export class Star3GachaViewModel extends BaseGachaViewModel {
             pR:     this.model.rainbow_pR.value / 100
         };
 
+        const stepPulls = Number(this.model.stepPulls.value);
         const { perPull, per10, total } = RainbowCrystalCalculator.calcFromInput(rates, normalPulls, include10th);
+        const stepTotal = RainbowCrystalCalculator.calcStepupTotal(rates, stepPulls);
+        const grandTotal = total + stepTotal;
         const { REWARDS } = RAINBOW_CRYSTAL_RULES;
 
         const breakdown_p3  = rates.p3star * REWARDS.PCARD_3STAR;
@@ -306,14 +309,16 @@ export class Star3GachaViewModel extends BaseGachaViewModel {
         const pTotal = rates.p3star + rates.p2star + rates.p1star;
         const sTotal = rates.pSSR + rates.pSR + rates.pR;
         const sumWarning = Math.abs(pTotal + sTotal - 1.0) > 0.001
-            ? `<br><span style="color:#e57373; font-size:0.85rem;">※ 확률 합계 ${((pTotal + sTotal) * 100).toFixed(3)}% (100%와 다름)</span>` : '';
+            ? `<p class="reference-caution">※ 확률 합계 ${((pTotal + sTotal) * 100).toFixed(3)}% (100%와 다름)</p>` : '';
 
         // summary 숨김
-        const summaryEl = document.getElementById('globalSummary');
+        const summaryEl = document.getElementById('gachaSummary');
         if (summaryEl) {
             summaryEl.style.display = 'none';
             summaryEl.innerHTML = '';
         }
+
+        const hasAnyPulls = normalPulls > 0 || stepPulls > 0;
 
         // result-area: 기대값 카드
         resultArea.innerHTML = `
@@ -326,26 +331,38 @@ export class Star3GachaViewModel extends BaseGachaViewModel {
                 </div>
             </div>
             <div class="rainbow-card">
-                <div class="rainbow-card-title">10연 기대값${include10th ? ' <span style="font-size:0.75rem; color:#888;">(2/SR확정 포함)</span>' : ''}</div>
+                <div class="rainbow-card-title">10연 기대값${include10th ? ' <span class="rainbow-card-note">(2/SR확정 포함)</span>' : ''}</div>
                 <div class="rainbow-card-value">${per10.toFixed(3)}<span class="rainbow-unit">개</span></div>
                 <div class="rainbow-card-sub">10회 합산 (단차 기준: ${(perPull * 10).toFixed(3)}개)</div>
             </div>
             ${normalPulls > 0 ? `
             <div class="rainbow-card">
-                <div class="rainbow-card-title">총 기대값 (${normalPulls}회)</div>
+                <div class="rainbow-card-title">일반 기대값 (${normalPulls}회)</div>
                 <div class="rainbow-card-value">${total.toFixed(2)}<span class="rainbow-unit">개</span></div>
                 <div class="rainbow-card-sub">일반 가챠 ${normalPulls}회 기준</div>
+            </div>` : ''}
+            ${stepPulls > 0 ? `
+            <div class="rainbow-card">
+                <div class="rainbow-card-title">스탭업 기대값 (${stepPulls}회)</div>
+                <div class="rainbow-card-value">${stepTotal.toFixed(2)}<span class="rainbow-unit">개</span></div>
+                <div class="rainbow-card-sub">스탭업 가챠 ${stepPulls}회 기준</div>
+            </div>` : ''}
+            ${hasAnyPulls ? `
+            <div class="rainbow-card rainbow-card-total">
+                <div class="rainbow-card-title">합계 (${normalPulls + stepPulls}회)</div>
+                <div class="rainbow-card-value">${grandTotal.toFixed(2)}<span class="rainbow-unit">개</span></div>
+                <div class="rainbow-card-sub">일반 ${normalPulls}회 + 스탭업 ${stepPulls}회</div>
             </div>` : ''}
             ${sumWarning}
         `;
 
         // logic 영역: breakdown + 확률 상세
-        const logicEl = document.getElementById('globalLogic');
+        const logicEl = document.getElementById('gachaLogic');
         if (logicEl) {
             // 재렌더링 전 현재 열림/닫힘 상태 보존
             const wasCollapsed = logicEl.dataset.collapsed !== 'false';
 
-            logicEl.innerHTML = this._buildRainbowLogicDetail(rates, include10th, REWARDS, { breakdown_p3, breakdown_p2, breakdown_p1, breakdown_SSR, breakdown_SR, breakdown_R }, normalPulls);
+            logicEl.innerHTML = this._buildRainbowLogicDetail(rates, include10th, REWARDS, { breakdown_p3, breakdown_p2, breakdown_p1, breakdown_SSR, breakdown_SR, breakdown_R }, normalPulls, stepPulls);
             logicEl.style.display = 'block';
             const btn = logicEl.querySelector('[data-toggle-section]');
             const content = logicEl.querySelector('.section-content');
@@ -363,12 +380,20 @@ export class Star3GachaViewModel extends BaseGachaViewModel {
         }
     }
 
-    _buildRainbowLogicDetail(rates, include10th, REWARDS, bd, normalPulls) {
+    _buildRainbowLogicDetail(rates, include10th, REWARDS, bd, normalPulls, stepPulls) {
         const fmt = (v) => (v * 100).toFixed(3);
         const pTotalPct = ((rates.p3star + rates.p2star + rates.p1star) * 100).toFixed(3);
         const sTotalPct = ((rates.pSSR + rates.pSR + rates.pR) * 100).toFixed(3);
         const p10_2star = rates.p3star + rates.p2star + rates.p1star - rates.p3star;
         const p10_SR    = rates.pSSR + rates.pSR + rates.pR - rates.pSSR;
+
+        // Step3 보정 확률 계산 (표시용)
+        const s3 = RainbowCrystalCalculator.step3Rates(rates);
+
+        const stepupLogic = stepPulls > 0 ? `
+                    <li>스탭업 가챠: ${stepPulls}회 기준 (Step1~4 반복)</li>
+                    <li>Step3 1~9회 보정: 3성 ${fmt(s3.p3star)}% / 2성 ${fmt(s3.p2star)}% / 1성 ${fmt(s3.p1star)}% / SSR ${fmt(s3.pSSR)}% / SR ${fmt(s3.pSR)}% / R ${fmt(s3.pR)}%</li>
+                    <li>Step4 40회째: 25무돌 고정 (항상 중복 가정, PJ 가챠 S카드 미제공 포함)</li>` : '';
 
         return `
             <div class="section-header">
@@ -377,13 +402,14 @@ export class Star3GachaViewModel extends BaseGachaViewModel {
             </div>
             <div class="section-content logic-view">
                 <ul class="logic-list">
-                    <li>가챠 횟수: 일반 가챠 ${normalPulls}회 기준</li>
-                    <li>2/SR확정 보정: ${include10th ? '포함 (10연 단위)' : '미포함 (단차 기준)'}</li>
+                    <li>일반 가챠: ${normalPulls}회 / 스탭업 가챠: ${stepPulls}회</li>
+                    <li>2/SR확정 보정 (일반): ${include10th ? '포함 (10연 단위)' : '미포함 (단차 기준)'}</li>
                     <li>P카드: 3성 ${fmt(rates.p3star)}% (×${REWARDS.PCARD_3STAR} = ${bd.breakdown_p3.toFixed(3)}) / 2성 ${fmt(rates.p2star)}% (×${REWARDS.PCARD_2STAR} = ${bd.breakdown_p2.toFixed(3)}) / 1성 ${fmt(rates.p1star)}% (×${REWARDS.PCARD_1STAR} = ${bd.breakdown_p1.toFixed(3)}) — 합계 ${pTotalPct}%</li>
                     <li>S카드: SSR ${fmt(rates.pSSR)}% (×${REWARDS.SCARD_SSR} = ${bd.breakdown_SSR.toFixed(3)}) / SR ${fmt(rates.pSR)}% (×${REWARDS.SCARD_SR} = ${bd.breakdown_SR.toFixed(3)}) / R ${fmt(rates.pR)}% (×${REWARDS.SCARD_R} = ${bd.breakdown_R.toFixed(3)}) — 합계 ${sTotalPct}%</li>
                     ${include10th
-                        ? `<li>10회째 보정: P카드 1성→2성 (${fmt(rates.p1star)}% 이동 → 2성 ${fmt(p10_2star)}%), S카드 R→SR (${fmt(rates.pR)}% 이동 → SR ${fmt(p10_SR)}%)</li>`
+                        ? `<li>일반 10회째 보정: P카드 1성→2성 (${fmt(p10_2star)}%), S카드 R→SR (${fmt(p10_SR)}%)</li>`
                         : ''}
+                    ${stepupLogic}
                     <li>알고리즘: 기대값 선형 합산</li>
                 </ul>
             </div>`;

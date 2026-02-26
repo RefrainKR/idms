@@ -400,10 +400,10 @@ export class PaymentView {
 
         // 참고 정보 추가
         html += `
-            <p class="table-reference-info">
-                ※ 동일 패키지의 ASOBI와 iOS 가격 차이를 통해 무돌의 가치를 역산합니다.<br>
-                ※ 정규화(유료돌 차이에 의한 계산)를 통해 순수한 무돌의 가치만 추출합니다.
-            </p>
+            <div class="result-box">
+                <p class="reference-info">※ 동일 패키지의 ASOBI와 iOS 가격 차이를 통해 무돌의 가치를 역산합니다.</p>
+                <p class="reference-info">※ 정규화(유료돌 차이에 의한 계산)를 통해 순수한 무돌의 가치만 추출합니다.</p>
+            </div>
         `;
 
         container.innerHTML = html;

@@ -315,6 +315,20 @@ button { font-family: inherit; }
     line-height: 1.5;
 }
 
+.rainbow-card-note {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.rainbow-card-total {
+    border-color: var(--primary);
+    background: var(--surface-hover);
+}
+
+.rainbow-card-total .rainbow-card-value {
+    color: var(--primary);
+}
+
 @media (max-width: 600px) {
     .rainbow-tab-layout {
         flex-direction: column;
@@ -330,7 +344,7 @@ button { font-family: inherit; }
    9. Summary & Logic Detail
    ======================================== */
 
-.shared-result-container {
+.gacha-result-container {
     border-top: 1.5px solid var(--border-light);
     margin-top: 10px;
 }
@@ -343,8 +357,6 @@ button { font-family: inherit; }
 }
 
 .summary {
-    background-color: var(--surface-medium);
-    border-left: 5px solid var(--accent-color);
     line-height: 1.8;
 }
 
@@ -356,7 +368,7 @@ button { font-family: inherit; }
 }
 
 .logic-title {
-    font-size: 1.1rem;
+    font-size: 1rem;
     font-weight: bold;
     color: var(--info-color);
     margin-bottom: 8px;

@@ -1,11 +1,11 @@
-﻿import { ResultView } from '../ResultView.js';
+﻿import { GachaBaseView } from './GachaBaseView.js';
 import { Formatter } from '../../utils/Formatter.js';
 import { ChartAdapter } from '../ChartAdapter.js';
 import { ChartUtils } from '../ChartUtils.js';
 import { getGachaConfig, getActiveSubTab } from './GachaViewConfig.js';
 import { FORMAT, CHART, CHART_RANGE, CHART_COLORS } from '../../config/UIConfig.js';
 
-export class GachaResultView extends ResultView {
+export class GachaResultView extends GachaBaseView {
 
     // ==========================================
     // 통합 렌더링 (리팩토링)
@@ -61,9 +61,9 @@ export class GachaResultView extends ResultView {
     static _renderTotalTab(gachaType, config, M, dpTotal, viewMode, context, charts) {
         const expected = dpTotal.reduce((acc, p, i) => acc + i * p, 0);
         const summaryFn = () => `
-            타겟(${M}종) 총 획득 기대 수: 약 <strong>${expected.toFixed(FORMAT.DECIMAL_PLACES.PROBABILITY)}개</strong><br>
-            <span style="font-size:0.85rem; color:#666;">※ 유효 픽업 ${M}종의 획득 개수 합계입니다.</span><br>
-            <span style="font-size:0.85rem; color:${CHART_COLORS.ERROR};">※ 천장 포함 버튼이 활성화 되어있는지 확인하세요.</span>
+            타겟(${M}종) 총 획득 기대 수: 약 <strong>${expected.toFixed(FORMAT.DECIMAL_PLACES.PROBABILITY)}개</strong>
+            <p class="reference-info">※ 유효 픽업 ${M}종의 획득 개수 합계입니다.</p>
+            <p class="reference-caution">※ 천장 포함 버튼이 활성화 되어있는지 확인하세요.</p>
         `;
 
         this.renderTotalCount(dpTotal, viewMode,
@@ -269,7 +269,7 @@ export class GachaResultView extends ResultView {
     // ==========================================
     // 공통: 효율 그래프 렌더링 (CDF 통합 버전)
     // ==========================================
-    static renderEfficiencyChart(data, canvasId, isWorst, chartRef, limit, M, groupName = '', isStar2 = false, summaryId = 'globalSummary', logicId = 'globalLogic', cdfData = null, targetProb = 0, totalM = M) {
+    static renderEfficiencyChart(data, canvasId, isWorst, chartRef, limit, M, groupName = '', isStar2 = false, summaryId = 'gachaSummary', logicId = 'gachaLogic', cdfData = null, targetProb = 0, totalM = M) {
         const { labels, normalData, stepupData } = data;
 
         const modeKey = isWorst ? 'worst' : 'best';

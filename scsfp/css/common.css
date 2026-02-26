@@ -287,7 +287,7 @@ body {
 }
 
 /* Global Header (빈 공간, footer와 동일) */
-#global-header {
+#app-header {
     background: var(--gray-100);
     padding: 10px 20px;
     min-height: 10px;
@@ -312,7 +312,7 @@ body {
 }
 
 /* Global Footer */
-#global-footer {
+#app-footer {
     background: var(--gray-100);
     padding: 10px 20px;
     text-align: center;
@@ -591,7 +591,6 @@ footer {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 10px;
     cursor: pointer;
 }
 
@@ -629,7 +628,6 @@ footer {
     background-color: var(--gray-50);
     border: 1.5px solid var(--border-color);
     border-radius: var(--border-radius-sm);
-    margin-bottom: 10px;
     position: relative;
     margin-top: 15px;
 }
@@ -804,16 +802,27 @@ body {
    범용 컴포넌트
    ======================================== */
 
-/* 테이블 참고 정보 */
-.table-reference-info {
-    margin-top: 10px;
-    padding: 8px 12px;
+/* 결과 참조 박스 (통합 컨테이너: border/bg/padding) */
+.result-box {
+    padding: 5px 15px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    background-color: var(--surface-medium);
+    border-left: 5px solid var(--accent-color);
+}
+
+/* 참고 정보 (범용) - font only */
+.reference-info {
     font-size: 0.8rem;
     line-height: 1.5;
     color: var(--text-secondary);
-    background: var(--gray-50);
-    border-left: 3px solid var(--secondary);
-    border-radius: 4px;
+}
+
+/* 주의/경고 정보 (범용) - font only */
+.reference-caution {    
+    font-size: 0.8rem;
+    line-height: 1.5;
+    color: var(--error-red);
 }
 
 /* ========================================
