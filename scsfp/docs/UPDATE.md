@@ -4,6 +4,52 @@
 
 ---
 
+## v1.9.6 (2026-02-26) - 무돌 탭 재설계 및 버그 수정
+
+### 새로운 기능
+
+**1. 무돌(虹の結晶) 탭 완전 재설계**
+- 기존 차트 제거, 카드형 결과 UI로 교체
+- P카드(3성/2성/1성), S카드(SSR/SR/R) 확률 직접 입력 가능 (기본값: 게임 확률)
+- 소수점 3자리까지 입력 지원, InputBinder/Observable 연동
+- 결과: 1회 기대값 / 10연 기대값 / 총 기대값 (N회) 카드형 표시
+- "2/SR확정" 토글 버튼 추가 (result-options-header 배치): 10연 보정 포함/미포함 전환
+- 상세 계산 근거: 가챠 횟수, 2/SR확정 여부, 등급별 확률×배율=기대값 수치 표시
+
+**2. 가챠 시스템 문서 분리**
+- `docs/GACHA_SYSTEM.md` 신규 생성: 가챠 시스템 전용 상세 사양 문서
+  - 3성/2성/생일/콜라보 스탭업 구조를 Step별 확률 표로 정리
+  - 무돌 배출 확률표, 10회째 보정, 기대값 계산 예시 포함
+- `docs/GAME_RULES.md`: 가챠 섹션 제거 후 GACHA_SYSTEM.md 링크로 교체
+
+### 버그 수정
+
+**1. 상세 계산 근거 열림/닫힘 상태 초기화 문제**
+- 버튼(모드 전환 등) 클릭으로 재렌더링 시 항상 닫힌 상태로 초기화되는 문제 수정
+- `ResultView._updateText`: 재렌더링 전 열림/닫힘 상태 보존 후 복원
+- 무돌 탭 `renderRainbowTab`: 동일하게 상태 보존 처리
+- 영향 범위: 3성/2성/생일/콜라보 모든 탭
+
+**2. 무돌 탭 전환 후 summary 미복원 문제**
+- 무돌 탭에서 다른 탭으로 이동 시 summary가 hidden 상태로 유지되는 문제 수정
+- `ResultView._updateText`: summary 갱신 시 `display` 명시적 복원
+
+**3. 2성 가챠 일반 vs 스탭업 차트 오류**
+- `GachaResultView._renderEfficiencyTab`에서 `model.targetProbability`가 없는 타입(Star2)에서 오류 발생 수정
+- `model.targetProbability?.value ?? null` 방어적 참조로 수정
+
+### 파일 변경
+
+- `js/view/ResultView.js`: 열림/닫힘 상태 보존, summary display 복원
+- `js/view/gacha/GachaResultView.js`: targetProbability 방어적 참조
+- `js/viewmodel/gacha/Star3GachaViewModel.js`: 무돌 탭 renderRainbowTab / _buildRainbowLogicDetail
+- `js/core/Constants.js`: APP_VERSION 1.9.6
+- `index.html`: 캐시 버스팅 ?v=1.9.6
+- `docs/GACHA_SYSTEM.md`: 신규 생성
+- `docs/GAME_RULES.md`: 가챠 시스템 섹션 분리
+
+---
+
 ## v1.9.5 (2026-02-23) - Constants/Config 리팩토링 및 하드코딩 제거
 
 ### 아키텍처 개선
