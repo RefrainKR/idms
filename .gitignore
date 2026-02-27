@@ -2,8 +2,5 @@
 .github
 
 test/
-logs/
-docs/gacha
 
-*.log
-
+docs/**/*.png
