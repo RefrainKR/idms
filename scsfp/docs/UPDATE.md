@@ -4,6 +4,76 @@
 
 ---
 
+## v1.9.7 (2026-02-27) - 무돌 탭 결과 표시 개선 및 구조 정리
+
+### 리팩토링
+
+**1. ResultView → GachaBaseView 이름 변경 및 디렉토리 이동**
+- `js/view/ResultView.js` → `js/view/gacha/GachaBaseView.js`로 이동 및 클래스명 변경
+- 가챠 전용 뷰임을 명확히 하기 위해 `gacha/` 서브디렉토리로 격하
+- `GachaResultView`: `extends ResultView` → `extends GachaBaseView`로 갱신
+
+**2. ID/class 네이밍 정리**
+- 가챠 전용 요소에 붙은 `global` 접두사를 의미에 맞게 변경:
+  - `#globalSummary` → `#gachaSummary`, `#globalLogic` → `#gachaLogic`
+  - `#shared-result-area` → `#gacha-result-area`
+  - `.shared-result-container` → `.gacha-result-container`
+- 페이지 수준 요소:
+  - `#global-header` → `#app-header`, `#global-footer` → `#app-footer`
+
+**3. CSS 책임 분리**
+- `.reference-info` / `.reference-caution`: 구조 스타일 제거, 폰트 전용으로 간소화
+- 신규 `.result-box`: 박스 구조(padding, border-left, border-radius, background) 담당
+- `PaymentView.js`: 두 `reference-info` 문장을 `<div class="result-box">`로 래핑
+
+**4. StorageManager import 경로 롤백**
+- `main.js`: `./model/utils/StorageManager.js` → `./utils/StorageManager.js`
+
+### 새로운 기능
+
+**1. 무돌 탭 결과 표시 재설계**
+- "1회 기대값" / "10연 기대값" rainbow-card 제거
+- `gachaSummary`를 메인 결과 영역으로 활용:
+  - 횟수 결과 (일반 N회 → XX개 / 스탭업 N회 → XX개 / 합계)
+  - 확률 참조표: 구간별 확률 및 기대 무돌 수치 (`data-table` 형식)
+- 확률 참조표 구간: 통상 1~9회, 통상 10회째 확정, Step3 1~9회, Step2/3 10회째 확정, Step4 40회째 확정
+- Step4 40회째 주의사항: P+S카드 동시 중복 시 50무돌이나 25무돌로만 산정함을 `reference-caution`으로 명시
+- 스탭업 행을 스탭업 횟수 입력 여부와 무관하게 항상 표시
+
+**2. 무돌 탭 레이아웃 개선**
+- `rainbow-tab-layout`: 전체 너비(100%) 사용으로 변경
+- `rainbow-input-panel`: P카드/S카드 확률 입력란을 가로(50%/50%) 배치
+- 모바일에서는 P카드/S카드 세로 배치 유지
+
+**3. data-table 모바일 스크롤**
+- 확률 참조표를 `.table-scroll` div로 래핑 → 모바일에서 X축 스크롤 발생, 텍스트 2줄 방지
+
+### 버그 수정
+
+**1. 3성 스탭업 Step2/3 10회째 확률 오류 수정**
+- `RainbowCrystalCalculator.step2_10thRates()`: 계산값 대신 게임 고정값으로 교체
+  - 수정 전: 통상 확률에서 P→★★★, S→SSR로 몰아서 반환 (25개로 과다 계산)
+  - 수정 후: 실측값 `{p3star:0.10, p2star:0.56, pSSR:0.06, pSR:0.28}` → 기대값 8.2개
+- `GACHA_SYSTEM.md`: Step 10회째 확률 표 전면 수정 (Step1~4 실측값 반영)
+
+### 파일 변경
+
+- `js/main.js`: StorageManager import 경로 롤백
+- `js/view/gacha/GachaBaseView.js`: 신규 (ResultView.js에서 이동)
+- `js/view/gacha/GachaResultView.js`: GachaBaseView 상속으로 변경
+- `js/view/payment/PaymentView.js`: result-box 래핑 추가
+- `js/viewmodel/gacha/Star3GachaViewModel.js`: renderRainbowTab 재설계, _buildProbTable/_buildResultCounts 분리
+- `js/viewmodel/gacha/Star2GachaViewModel.js`: gachaSummary ID 갱신
+- `js/view/gacha/GachaViewConfig.js`: gachaSummary/gachaLogic ID 갱신
+- `js/core/RainbowCrystalCalculator.js`: step2_10thRates 게임 고정값으로 수정
+- `css/common.css`: result-box 신규, reference-info/caution 폰트 전용화, app-header/footer
+- `css/gacha.css`: summary 간소화, rainbow-tab-layout/input-panel 레이아웃 개선, table-scroll/result-counts/logic-table-confirm 추가
+- `index.html`: ID/class 전면 갱신
+- `.gitignore`: `**/docs/**/*.png` 추가 (스크린샷 추적 제외)
+- `docs/GACHA_SYSTEM.md`: Step 확률 표 및 기대값 수정
+
+---
+
 ## v1.9.6 (2026-02-26) - 무돌 탭 재설계 및 버그 수정
 
 ### 새로운 기능
