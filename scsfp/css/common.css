@@ -813,14 +813,14 @@ body {
 
 /* 참고 정보 (범용) - font only */
 .reference-info {
-    font-size: 0.8rem;
+    font-size: 0.95rem;
     line-height: 1.5;
     color: var(--text-secondary);
 }
 
 /* 주의/경고 정보 (범용) - font only */
 .reference-caution {    
-    font-size: 0.8rem;
+    font-size: 0.95rem;
     line-height: 1.5;
     color: var(--error-red);
 }

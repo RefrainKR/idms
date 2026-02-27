@@ -245,19 +245,18 @@ button { font-family: inherit; }
    ======================================== */
 
 .rainbow-tab-layout {
-    display: flex;
-    gap: 16px;
-    align-items: flex-start;
+    display: block;
 }
 
 .rainbow-input-panel {
-    flex: 0 0 calc(50% - 8px);
+    width: 100%;
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     gap: 12px;
 }
 
 .rainbow-rate-group {
+    flex: 1;
     background: var(--surface-medium);
     border: 1px solid var(--border-light);
     border-radius: 8px;
@@ -275,10 +274,12 @@ button { font-family: inherit; }
 }
 
 #rainbow-result-area {
-    flex: 0 0 calc(50% - 8px);
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
+    display: none;
+}
+
+.table-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 .rainbow-card {
@@ -330,13 +331,8 @@ button { font-family: inherit; }
 }
 
 @media (max-width: 600px) {
-    .rainbow-tab-layout {
+    .rainbow-input-panel {
         flex-direction: column;
-    }
-    .rainbow-input-panel,
-    #rainbow-result-area {
-        flex: none;
-        width: 100%;
     }
 }
 
@@ -392,6 +388,33 @@ button { font-family: inherit; }
 
 .logic-table-confirm td {
     color: var(--primary);
+}
+
+.result-counts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 20px;
+    margin-bottom: 8px;
+    font-size: 0.9rem;
+    align-items: baseline;
+}
+
+.result-counts-item {
+    color: var(--text-secondary);
+}
+
+.result-counts-item strong {
+    color: var(--text-primary);
+}
+
+.result-counts-total {
+    flex-basis: 100%;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--primary);
+    border-top: 1px solid var(--border-color);
+    padding-top: 5px;
+    margin-top: 2px;
 }
 
 /* ========================================
