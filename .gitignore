@@ -1,7 +1,9 @@
 .claude
 .github
 
-test
-
+test/
 logs/
+docs/gacha
+
 *.log
+
