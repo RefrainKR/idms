@@ -382,18 +382,65 @@ export class Star3GachaViewModel extends BaseGachaViewModel {
 
     _buildRainbowLogicDetail(rates, include10th, REWARDS, bd, normalPulls, stepPulls) {
         const fmt = (v) => (v * 100).toFixed(3);
-        const pTotalPct = ((rates.p3star + rates.p2star + rates.p1star) * 100).toFixed(3);
-        const sTotalPct = ((rates.pSSR + rates.pSR + rates.pR) * 100).toFixed(3);
-        const p10_2star = rates.p3star + rates.p2star + rates.p1star - rates.p3star;
-        const p10_SR    = rates.pSSR + rates.pSR + rates.pR - rates.pSSR;
+        const dash = '—';
 
-        // Step3 보정 확률 계산 (표시용)
+        // Step3 보정 확률 계산
         const s3 = RainbowCrystalCalculator.step3Rates(rates);
+        // Step1/Normal 10회째: P카드 1성→2성, S카드 R→SR
+        const r10 = { p3star: rates.p3star, p2star: rates.p2star + rates.p1star, p1star: 0, pSSR: rates.pSSR, pSR: rates.pSR + rates.pR, pR: 0 };
+        // Step2/3 10회째: 게임 고정값
+        const step23_10th = RainbowCrystalCalculator.step2_10thRates();
 
-        const stepupLogic = stepPulls > 0 ? `
-                    <li>스탭업 가챠: ${stepPulls}회 기준 (Step1~4 반복)</li>
-                    <li>Step3 1~9회 보정: 3성 ${fmt(s3.p3star)}% / 2성 ${fmt(s3.p2star)}% / 1성 ${fmt(s3.p1star)}% / SSR ${fmt(s3.pSSR)}% / SR ${fmt(s3.pSR)}% / R ${fmt(s3.pR)}%</li>
-                    <li>Step4 40회째: 25무돌 고정 (항상 중복 가정, PJ 가챠 S카드 미제공 포함)</li>` : '';
+        const expBase   = RainbowCrystalCalculator.singleExpected(rates, false);
+        const expS3     = RainbowCrystalCalculator.singleExpected(s3, false);
+        const exp10th   = RainbowCrystalCalculator.singleExpected(r10, false);
+        const expS23    = RainbowCrystalCalculator.singleExpected(step23_10th, false);
+
+        // 일반 10회째 행 (include10th가 참일 때만 표시)
+        const normal10thRow = include10th ? `
+                        <tr class="logic-table-confirm">
+                            <td>통상 10회째 확정<br><small>(게임 자동 적용)</small></td>
+                            <td>${fmt(r10.p3star)}%</td>
+                            <td>${fmt(r10.p2star)}%</td>
+                            <td>0%</td>
+                            <td>${fmt(r10.pSSR)}%</td>
+                            <td>${fmt(r10.pSR)}%</td>
+                            <td>0%</td>
+                            <td>${exp10th.toFixed(2)}개</td>
+                        </tr>` : '';
+
+        // 스탭업 전용 행들 (stepPulls > 0일 때만 표시)
+        const stepupRows = stepPulls > 0 ? `
+                        <tr>
+                            <td>Step3 1~9회<br><small>(3성/SSR 2배 보정)</small></td>
+                            <td>${fmt(s3.p3star)}%</td>
+                            <td>${fmt(s3.p2star)}%</td>
+                            <td>${fmt(s3.p1star)}%</td>
+                            <td>${fmt(s3.pSSR)}%</td>
+                            <td>${fmt(s3.pSR)}%</td>
+                            <td>${fmt(s3.pR)}%</td>
+                            <td>${expS3.toFixed(2)}개</td>
+                        </tr>
+                        <tr class="logic-table-confirm">
+                            <td>Step2/3 10회째 확정<br><small>(게임 고정값)</small></td>
+                            <td>10%</td>
+                            <td>56%</td>
+                            <td>0%</td>
+                            <td>6%</td>
+                            <td>28%</td>
+                            <td>0%</td>
+                            <td>${expS23.toFixed(2)}개</td>
+                        </tr>
+                        <tr class="logic-table-confirm">
+                            <td>Step4 40회째 확정<br><small>(★3/SSR 확정枠)</small></td>
+                            <td>60%</td>
+                            <td>${dash}</td>
+                            <td>${dash}</td>
+                            <td>40%</td>
+                            <td>${dash}</td>
+                            <td>${dash}</td>
+                            <td>25.00개</td>
+                        </tr>` : '';
 
         return `
             <div class="section-header">
@@ -404,14 +451,36 @@ export class Star3GachaViewModel extends BaseGachaViewModel {
                 <ul class="logic-list">
                     <li>일반 가챠: ${normalPulls}회 / 스탭업 가챠: ${stepPulls}회</li>
                     <li>2/SR확정 보정 (일반): ${include10th ? '포함 (10연 단위)' : '미포함 (단차 기준)'}</li>
-                    <li>P카드: 3성 ${fmt(rates.p3star)}% (×${REWARDS.PCARD_3STAR} = ${bd.breakdown_p3.toFixed(3)}) / 2성 ${fmt(rates.p2star)}% (×${REWARDS.PCARD_2STAR} = ${bd.breakdown_p2.toFixed(3)}) / 1성 ${fmt(rates.p1star)}% (×${REWARDS.PCARD_1STAR} = ${bd.breakdown_p1.toFixed(3)}) — 합계 ${pTotalPct}%</li>
-                    <li>S카드: SSR ${fmt(rates.pSSR)}% (×${REWARDS.SCARD_SSR} = ${bd.breakdown_SSR.toFixed(3)}) / SR ${fmt(rates.pSR)}% (×${REWARDS.SCARD_SR} = ${bd.breakdown_SR.toFixed(3)}) / R ${fmt(rates.pR)}% (×${REWARDS.SCARD_R} = ${bd.breakdown_R.toFixed(3)}) — 합계 ${sTotalPct}%</li>
-                    ${include10th
-                        ? `<li>일반 10회째 보정: P카드 1성→2성 (${fmt(p10_2star)}%), S카드 R→SR (${fmt(p10_SR)}%)</li>`
-                        : ''}
-                    ${stepupLogic}
-                    <li>알고리즘: 기대값 선형 합산</li>
+                    <li>알고리즘: 기대값 선형 합산 / Step4 40회째 항상 중복 가정 (25무돌 고정)</li>
                 </ul>
+                <table class="data-table" style="margin-top:8px; font-size:0.82rem;">
+                    <thead>
+                        <tr>
+                            <th>구간</th>
+                            <th>3성(P)</th>
+                            <th>2성(P)</th>
+                            <th>1성(P)</th>
+                            <th>SSR(S)</th>
+                            <th>SR(S)</th>
+                            <th>R(S)</th>
+                            <th>기대 무돌</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>통상 1~9회</td>
+                            <td>${fmt(rates.p3star)}%</td>
+                            <td>${fmt(rates.p2star)}%</td>
+                            <td>${fmt(rates.p1star)}%</td>
+                            <td>${fmt(rates.pSSR)}%</td>
+                            <td>${fmt(rates.pSR)}%</td>
+                            <td>${fmt(rates.pR)}%</td>
+                            <td>${expBase.toFixed(2)}개</td>
+                        </tr>
+                        ${normal10thRow}
+                        ${stepupRows}
+                    </tbody>
+                </table>
             </div>`;
     }
 }

@@ -385,6 +385,15 @@ button { font-family: inherit; }
 
 .logic-view { display: block; }
 
+.logic-table-confirm {
+    background-color: var(--primary-light) !important;
+    font-weight: 600;
+}
+
+.logic-table-confirm td {
+    color: var(--primary);
+}
+
 /* ========================================
    10. Mobile Responsive
    ======================================== */

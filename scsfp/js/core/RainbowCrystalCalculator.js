@@ -112,14 +112,13 @@ export class RainbowCrystalCalculator {
     }
 
     /**
-     * Step2/Step3 10회째 확률 계산 (P카드 전체→3성, S카드 전체→SSR)
-     * @param {Object} rates
-     * @returns {Object} 보정된 rates
+     * Step2/Step3 10회째 확정枠 확률 (게임 고정값)
+     * ★2/SR이상확정枠: ★★★ 10%, ★★ 56%, SSR 6%, SR 28%
+     * (스크린샷 실측값 - 입력 rates와 무관한 고정값)
+     * @returns {Object} 고정 rates
      */
-    static step2_10thRates(rates) {
-        const pTotal = rates.p3star + rates.p2star + rates.p1star;
-        const sTotal = rates.pSSR + rates.pSR + rates.pR;
-        return { p3star: pTotal, p2star: 0, p1star: 0, pSSR: sTotal, pSR: 0, pR: 0 };
+    static step2_10thRates() {
+        return { p3star: 0.10, p2star: 0.56, p1star: 0, pSSR: 0.06, pSR: 0.28, pR: 0 };
     }
 
     /**
@@ -129,7 +128,7 @@ export class RainbowCrystalCalculator {
      */
     static calcStepup1Week(rates) {
         const step3Rates = this.step3Rates(rates);
-        const top10thRates = this.step2_10thRates(rates);
+        const top10thRates = this.step2_10thRates();
         // Step4 40회째: 25무돌 고정 (항상 중복 가정)
         const STEP4_40TH_FIXED = 25;
 
@@ -167,7 +166,7 @@ export class RainbowCrystalCalculator {
         if (stepPulls <= 0) return 0;
 
         const step3Rates = this.step3Rates(rates);
-        const top10thRates = this.step2_10thRates(rates);
+        const top10thRates = this.step2_10thRates();
         const STEP4_40TH_FIXED = 25;
 
         // Step 내 회차 순서: 각 40회 반복 주기 내 위치 판별
