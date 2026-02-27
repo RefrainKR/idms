@@ -3,4 +3,4 @@
 
 test/
 
-docs/**/*.png
+**/docs/**/*.png
