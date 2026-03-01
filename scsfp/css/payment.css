@@ -14,6 +14,11 @@
     max-height: 600px;
 }
 
+#fes-table-container {
+    width: 100%;
+    overflow-x: auto;
+}
+
 /* 통화 토글 버튼 커스터마이징 */
 #payment-toggle-currency.view-toggle-btn {
     background: var(--secondary);
@@ -209,6 +214,45 @@
     color: var(--primary);
 }
 
+/* 페스 패키지 비교표 */
+.fes-comparison-table .hide-krw {
+    display: none;
+}
+
+.fes-comparison-table .hide-jpy {
+    display: none;
+}
+
+.fes-comparison-table .header-package {
+    background: var(--primary);
+    width: 60px;
+}
+
+.fes-comparison-table .header-attr {
+    background: var(--secondary);
+    font-size: 0.8rem;
+}
+
+.fes-comparison-table .cell-package {
+    text-align: center;
+}
+
+.fes-comparison-table .cell-number {
+    white-space: nowrap;
+}
+
+.fes-comparison-table .cell-efficiency {
+    text-align: right;
+    font-weight: 600;
+    color: var(--accent-blue);
+}
+
+.fes-comparison-table .cell-multiplier {
+    text-align: center;
+    font-weight: 700;
+    color: var(--primary);
+}
+
 /* 무돌(虹の結晶) 가격 분석 테이블 */
 /* rainbow-crystal-table: common.css의 .data-table 상속 + 추가 스타일 */
 .rainbow-crystal-table {
@@ -275,6 +319,19 @@
     .payment-comparison-table .header-attr {
         font-size: 0.7rem;
         min-width: 70px;
+    }
+
+    .fes-comparison-table {
+        font-size: 0.75rem;
+    }
+
+    .fes-comparison-table th,
+    .fes-comparison-table td {
+        padding: 6px 4px;
+    }
+
+    .fes-comparison-table .header-attr {
+        font-size: 0.7rem;
     }
 
     .rainbow-crystal-table {

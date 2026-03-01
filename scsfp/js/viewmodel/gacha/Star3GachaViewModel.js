@@ -355,7 +355,7 @@ export class Star3GachaViewModel extends BaseGachaViewModel {
 
     _buildProbTable(rates, include10th, stepPulls) {
         const fmt = (v) => (v * 100).toFixed(3);
-        const dash = '—';
+        const dash = '-';
 
         const s3 = RainbowCrystalCalculator.step3Rates(rates);
         const r10 = { p3star: rates.p3star, p2star: rates.p2star + rates.p1star, p1star: 0, pSSR: rates.pSSR, pSR: rates.pSR + rates.pR, pR: 0 };

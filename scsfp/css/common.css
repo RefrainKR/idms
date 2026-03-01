@@ -532,6 +532,17 @@ footer {
     margin-left: auto;
 }
 
+/* Option Button Container (replaces result-options-header) */
+.option-button-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 15px;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
 /* ========================================
    4. Common Section Components
    ======================================== */
@@ -780,6 +791,18 @@ body {
     }
 }
 
+@media (max-width: 768px) {
+    .option-button-container {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .right-group {
+        margin-left: 0;
+        width: 100%;
+    }
+}
+
 /* Small Mobile (≤650px): 태블릿과 동일하게 가로 배치, 가운데 정렬 */
 @media (max-width: 650px) {
     .sidebar-item {
@@ -802,6 +825,12 @@ body {
    범용 컴포넌트
    ======================================== */
 
+/* Section Result Container (가챠/과금 공용 결과 영역) */
+.section-result-container {
+    border-top: 1.5px solid var(--border-light);
+    margin-top: 10px;
+}
+
 /* 결과 참조 박스 (통합 컨테이너: border/bg/padding) */
 .result-box {
     padding: 5px 15px;
@@ -813,14 +842,14 @@ body {
 
 /* 참고 정보 (범용) - font only */
 .reference-info {
-    font-size: 0.95rem;
+    font-size: 0.90rem;
     line-height: 1.5;
     color: var(--text-secondary);
 }
 
 /* 주의/경고 정보 (범용) - font only */
 .reference-caution {    
-    font-size: 0.95rem;
+    font-size: 0.90rem;
     line-height: 1.5;
     color: var(--error-red);
 }

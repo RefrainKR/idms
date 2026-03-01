@@ -10,9 +10,9 @@
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
 
     <!-- CSS -->
-    <link rel="stylesheet" href="css/common.css?v=1.9.7">
-    <link rel="stylesheet" href="css/gacha.css?v=1.9.7">
-    <link rel="stylesheet" href="css/payment.css?v=1.9.7">
+    <link rel="stylesheet" href="css/common.css?v=1.9.8">
+    <link rel="stylesheet" href="css/gacha.css?v=1.9.8">
+    <link rel="stylesheet" href="css/payment.css?v=1.9.8">
 </head>
 <body>
 
@@ -129,7 +129,7 @@
                     <button class="tab-button sub-tab-btn" data-tab="res-3s-rainbow">무돌</button>
                 </div>
 
-                <div class="result-options-header">
+                <div class="option-button-container">
                     <div class="btn-group left-group">
                         <button id="star3-toggle-ceiling" class="view-toggle-btn">천장</button>
                         <button id="star3-toggle-random" class="view-toggle-btn" data-role="calc-opt">랜덤</button>
@@ -277,7 +277,7 @@
                     <button class="tab-button sub-tab-btn" data-tab="res-bd-efficiency">일반vs스탭업</button>
                 </div>
 
-                <div class="result-options-header">
+                <div class="option-button-container">
                     <div class="btn-group left-group">
                         <button id="birthday-toggle-ceiling" class="view-toggle-btn">천장</button>
                         <button id="birthday-toggle-step3" class="view-toggle-btn">Step3</button>
@@ -384,7 +384,7 @@
                     <button class="tab-button sub-tab-btn" data-tab="res-cb-efficiency">일반vs스탭업</button>
                 </div>
 
-                <div class="result-options-header">
+                <div class="option-button-container">
                     <div class="btn-group left-group">
                         <button id="collab-toggle-ceiling" class="view-toggle-btn">천장</button>
                     </div>
@@ -507,7 +507,7 @@
                     <button class="tab-button sub-tab-btn" data-tab="res-2s-efficiency">일반 vs 스탭업</button>
                 </div>
 
-                <div class="result-options-header">
+                <div class="option-button-container">
                     <div class="btn-group left-group">
                         <button id="star2-toggle-ceiling" class="view-toggle-btn">천장</button>
                     </div>
@@ -540,7 +540,7 @@
         </section>
 
         <!-- 가챠 결과 요약 -->
-        <aside id="gacha-result-area" class="gacha-result-container">
+        <aside id="gacha-result-area" class="section-result-container">
             <div class="summary result-box" id="gachaSummary"></div>
             <div class="logic-detail" id="gachaLogic" data-collapsible="true" style="display:none;"></div>
         </aside>
@@ -593,6 +593,7 @@
                 <!-- 탭 네비게이션 -->
                 <nav class="main-tab-nav payment-tab-nav">
                     <button class="tab-button active" data-tab="payment-tab-packages">패키지</button>
+                    <button class="tab-button" data-tab="payment-tab-fes">페스</button>
                     <button class="tab-button" data-tab="payment-tab-rainbow">무돌</button>
                 </nav>
 
@@ -605,10 +606,12 @@
                         </div>
                         <div class="section-content force-block">
                             <!-- 토글 버튼 그룹 -->
-                            <div class="btn-group" style="margin-bottom: 15px;">
-                                <button id="payment-toggle-currency" class="view-toggle-btn" data-currency="JPY" data-state="included">엔화 (¥)</button>
-                                <button id="payment-toggle-efficiency" class="view-toggle-btn" data-mode="price-per-gem" data-state="included">¥/돌</button>
-                                <button id="payment-toggle-view" class="view-toggle-btn" data-view="all" data-state="included">All</button>
+                            <div class="option-button-container">
+                                <div class="btn-group">
+                                    <button id="payment-toggle-currency" class="view-toggle-btn" data-currency="JPY" data-state="included">엔화 (¥)</button>
+                                    <button id="payment-toggle-efficiency" class="view-toggle-btn" data-mode="price-per-gem" data-state="included">¥/돌</button>
+                                    <button id="payment-toggle-view" class="view-toggle-btn" data-view="all" data-state="included">All</button>
+                                </div>
                             </div>
 
                             <div id="payment-package-table-container">
@@ -620,7 +623,30 @@
                     </div>
                 </div>
 
-                <!-- 탭 2: 무돌 분석 -->
+                <!-- 탭 2: 페스 패키지 -->
+                <div id="payment-tab-fes" class="tab-content">
+                    <div class="collapsible-container" data-collapsible="true">
+                        <div class="section-header">
+                            <h3 class="section-title">페스 패키지 비교</h3>
+                            <button class="toggle-btn" data-toggle-section>▼</button>
+                        </div>
+                        <div class="section-content force-block">
+                            <div class="option-button-container">
+                                <div class="btn-group">
+                                    <button id="fes-toggle-currency" class="view-toggle-btn" data-currency="JPY" data-state="included">엔화 (¥)</button>
+                                    <button id="fes-toggle-efficiency" class="view-toggle-btn" data-mode="price-per-gem" data-state="included">¥/돌</button>
+                                </div>
+                            </div>
+                            <div id="fes-table-container">
+                                <p style="text-align: center; padding: 20px; color: var(--text-secondary);">
+                                    로딩 중...
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 탭 3: 무돌 분석 -->
                 <div id="payment-tab-rainbow" class="tab-content">
                     <div class="collapsible-container" data-collapsible="true">
                         <div class="section-header">
@@ -655,6 +681,11 @@
                 </div>
             </div>
 
+            <!-- 과금 결과 요약 -->
+            <aside id="payment-result-area" class="section-result-container">
+                <div class="summary result-box" id="paymentSummary"></div>
+            </aside>
+
             </main>
         </section>
         <!-- ========== [Section 2] 과금 효율 끝 ========== -->
@@ -669,7 +700,7 @@
     <!-- 향후 저작권, 링크 등 추가 예정 -->
 </footer>
 
-<script type="module" src="js/main.js?v=1.9.7"></script>
+<script type="module" src="js/main.js?v=1.9.8"></script>
 
 </body>
 </html>

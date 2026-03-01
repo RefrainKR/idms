@@ -123,15 +123,6 @@ button { font-family: inherit; }
    6. Toggle Buttons
    ======================================== */
 
-.result-options-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: 15px;
-    margin-bottom: 15px;
-    flex-wrap: wrap;
-    gap: 10px;
-}
 
 /* ========================================
    8. Charts & Results
@@ -340,10 +331,6 @@ button { font-family: inherit; }
    9. Summary & Logic Detail
    ======================================== */
 
-.gacha-result-container {
-    border-top: 1.5px solid var(--border-light);
-    margin-top: 10px;
-}
 
 .summary, .logic-detail {
     padding: 5px 15px;
@@ -506,13 +493,4 @@ button { font-family: inherit; }
         min-width: 600px;
     }
 
-    .result-options-header {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-
-    .right-group {
-        margin-left: 0;
-        width: 100%;
-    }
 }

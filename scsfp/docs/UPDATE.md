@@ -4,6 +4,48 @@
 
 ---
 
+## v1.9.8 (2026-03-01) - 페스 탭 추가 및 UI 공통 정리
+
+### 새로운 기능
+
+**1. 과금 효율 > 페스 탭 추가**
+- 시즌 페스 / 로그인 페스 패키지 비교표 (ASOBI, Android, iOS)
+- 원화/엔화 토글, 효율(x배) 배수 표시 (셀 클릭으로 기준 변경)
+- 로그인 페스가 시즌 페스보다 위에 표시되도록 순서 조정
+
+**2. 과금 효율 > 무돌 탭: 시즌 페스 행 추가**
+- ASOBI(2,250돌/165개) vs iOS(2,000돌/150개) 차이를 이용해 15개 무돌 단가 역산
+- 무료돌 단가 정규화 기준으로 계산
+
+**3. paymentSummary 추가**
+- 과금 효율 섹션에 `#paymentSummary` 추가 (가챠의 `#gachaSummary`와 동일한 패턴)
+- `#payment-result-area` aside: `section-result-container` 클래스 적용
+
+### 리팩토링
+
+**1. result-options-header → option-button-container**
+- `.result-options-header` → `.option-button-container`로 이름 변경
+- `gacha.css` → `common.css`로 이동 (가챠/과금 공용)
+- 가챠 섹션 4곳 적용, 과금 섹션 인라인 `margin-bottom` 제거 후 적용
+
+**2. 결과 컨테이너 CSS 공용화**
+- `.gacha-result-container` → `.section-result-container`로 변경
+- `gacha.css` → `common.css`로 이동
+
+### 파일 변경
+
+- `css/common.css`: `.option-button-container`, `.section-result-container` 추가, 모바일 미디어쿼리 적용
+- `css/gacha.css`: `.result-options-header`, `.gacha-result-container` 제거
+- `index.html`: `option-button-container` 전면 적용, `paymentSummary` aside 추가
+- `js/config/PaymentConfig.js`: `FES_PACKAGES` LOGIN/SEASON 순서 변경
+- `js/model/payment/PaymentModel.js`: `calculateSeasonFesRainbowPrice()` 추가
+- `js/view/payment/PaymentView.js`: `renderFesTable()` 추가, `renderRainbowCrystalAnalysis()` 시즌 행 추가
+- `js/viewmodel/payment/PaymentViewModel.js`: `bindFesToggle()`, `bindFesTableClick()`, `renderFesTable()` 추가
+- `docs/PAYMENT.md`: 신규 (패키지/결제 규칙/페스 정보 이전)
+- `docs/GAME_RULES.md`: 패키지 섹션 PAYMENT.md 참조로 교체
+
+---
+
 ## v1.9.7 (2026-02-27) - 무돌 탭 결과 표시 개선 및 구조 정리
 
 ### 리팩토링

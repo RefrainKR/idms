@@ -329,11 +329,129 @@ export class PaymentView {
     }
 
     /**
+     * 페스 패키지 비교표 렌더링
+     * @param {object} fesData - FES_PACKAGES 데이터
+     * @param {PaymentModel} model - PaymentModel 인스턴스
+     * @param {{ fesKey: string, platformKey: string }} baseline - 기준 셀
+     */
+    renderFesTable(fesData, model, baseline) {
+        const container = document.getElementById('fes-table-container');
+        if (!container) return;
+
+        const efficiencyBtn = document.getElementById('fes-toggle-efficiency');
+        const efficiencyMode = efficiencyBtn?.dataset.mode || 'price-per-gem';
+
+        // 기준 셀 효율 계산 (돌/¥ 기준)
+        const baselineFesData = fesData[baseline.fesKey];
+        const baselinePlatformData = baselineFesData?.platforms[baseline.platformKey];
+        let baselinePriceJPY = 0;
+        if (baselinePlatformData) {
+            if (baselinePlatformData.currency === 'KRW') {
+                const discKRW = model.applyKRWDiscount(baselinePlatformData.price);
+                baselinePriceJPY = Math.round((discKRW / model.exchangeRate.value) * 100);
+            } else {
+                baselinePriceJPY = model.applyJPYDiscount(baselinePlatformData.price);
+            }
+        }
+        const baselineEfficiency = baselinePriceJPY > 0 ? (baselinePlatformData?.freeGems ?? 0) / baselinePriceJPY : 0;
+
+        // 효율 헤더
+        const jpyHeader = efficiencyMode === 'price-per-gem' ? '¥/돌' : '돌/¥';
+        const krwHeader = efficiencyMode === 'price-per-gem' ? '₩/돌' : '돌/₩';
+
+        let html = '<table class="data-table fes-comparison-table">';
+
+        html += `<thead><tr>
+            <th class="header-package">패키지</th>
+            <th class="header-attr">플랫폼</th>
+            <th class="header-attr currency-jpy">가격(¥)</th>
+            <th class="header-attr currency-krw hide-krw">가격(₩)</th>
+            <th class="header-attr">무료돌</th>
+            <th class="header-attr">무돌</th>
+            <th class="header-attr">티켓</th>
+            <th class="header-attr">메달</th>
+            <th class="header-attr currency-jpy">${jpyHeader}</th>
+            <th class="header-attr currency-krw hide-krw">${krwHeader}</th>
+            <th class="header-attr">효율(x배)</th>
+        </tr></thead>`;
+
+        html += '<tbody>';
+
+        for (const [fesKey, fes] of Object.entries(fesData)) {
+            const platformNames = ['ASOBI', 'ANDROID', 'IOS'];
+            let isFirstRow = true;
+
+            for (const platformKey of platformNames) {
+                const p = fes.platforms[platformKey];
+                if (!p) continue;
+
+                // 가격 계산 (환율/할인 반영)
+                let discountedPriceJPY, discountedPriceKRW;
+                if (p.currency === 'KRW') {
+                    discountedPriceKRW = model.applyKRWDiscount(p.price);
+                    discountedPriceJPY = Math.round((discountedPriceKRW / model.exchangeRate.value) * 100);
+                } else {
+                    discountedPriceJPY = model.applyJPYDiscount(p.price);
+                    discountedPriceKRW = Math.round((discountedPriceJPY / 100) * model.exchangeRate.value);
+                }
+
+                // 효율 계산
+                let yenEfficiency, krwEfficiency;
+                if (efficiencyMode === 'price-per-gem') {
+                    yenEfficiency = p.freeGems > 0 ? discountedPriceJPY / p.freeGems : 0;
+                    krwEfficiency = p.freeGems > 0 ? discountedPriceKRW / p.freeGems : 0;
+                } else {
+                    yenEfficiency = discountedPriceJPY > 0 ? p.freeGems / discountedPriceJPY : 0;
+                    krwEfficiency = discountedPriceKRW > 0 ? p.freeGems / discountedPriceKRW : 0;
+                }
+
+                // 효율 배수 (항상 돌/¥ 기준)
+                const currentEfficiency = discountedPriceJPY > 0 ? p.freeGems / discountedPriceJPY : 0;
+                const multiplier = baselineEfficiency > 0 ? currentEfficiency / baselineEfficiency : 0;
+
+                const yenUnit = efficiencyMode === 'price-per-gem' ? '¥' : '돌';
+                const krwUnit = efficiencyMode === 'price-per-gem' ? '₩' : '돌';
+
+                const platformLabel = platformKey === 'ANDROID' ? 'Android' : platformKey === 'IOS' ? 'iOS' : 'ASOBI';
+
+                // 기준 셀 여부
+                const isSelected = fesKey === baseline.fesKey && platformKey === baseline.platformKey;
+                const selectedClass = isSelected ? ' selected' : '';
+                const firstClass = isSelected ? ' platform-first' : '';
+                const lastClass = isSelected ? ' platform-last' : '';
+
+                const attr = `data-fes="${fesKey}" data-platform="${platformKey}"`;
+
+                html += '<tr>';
+                if (isFirstRow) {
+                    html += `<td class="cell-package" rowspan="3">${fes.name}</td>`;
+                    isFirstRow = false;
+                }
+                html += `<td class="cell-package platform-cell${selectedClass}${firstClass}" ${attr}>${platformLabel}</td>`;
+                html += `<td class="cell-number platform-cell${selectedClass} currency-jpy" ${attr}>${discountedPriceJPY.toLocaleString()}¥</td>`;
+                html += `<td class="cell-number platform-cell${selectedClass} currency-krw hide-krw" ${attr}>${discountedPriceKRW.toLocaleString()}₩</td>`;
+                html += `<td class="cell-number platform-cell${selectedClass}" ${attr}>${p.freeGems.toLocaleString()}돌</td>`;
+                html += `<td class="cell-number platform-cell${selectedClass}" ${attr}>${p.rainbow ? p.rainbow.toLocaleString() + '개' : '-'}</td>`;
+                html += `<td class="cell-number platform-cell${selectedClass}" ${attr}>${p.ticket ? p.ticket + '장' : '-'}</td>`;
+                html += `<td class="cell-number platform-cell${selectedClass}" ${attr}>${p.medal ? p.medal + '개' : '-'}</td>`;
+                html += `<td class="cell-efficiency platform-cell${selectedClass} currency-jpy" ${attr}>${yenEfficiency.toFixed(FORMAT.DECIMAL_PLACES.EFFICIENCY)}${yenUnit}</td>`;
+                html += `<td class="cell-efficiency platform-cell${selectedClass} currency-krw hide-krw" ${attr}>${krwEfficiency.toFixed(FORMAT.DECIMAL_PLACES.EFFICIENCY)}${krwUnit}</td>`;
+                html += `<td class="cell-multiplier platform-cell${selectedClass}${lastClass}" ${attr}>${multiplier.toFixed(FORMAT.DECIMAL_PLACES.EFFICIENCY)}배</td>`;
+                html += '</tr>';
+            }
+        }
+
+        html += '</tbody></table>';
+        container.innerHTML = html;
+    }
+
+    /**
      * 무돌(虹の結晶) 가격 분석 테이블 렌더링
      * @param {object} packageData - 패키지 데이터
      * @param {PaymentModel} model - PaymentModel 인스턴스
+     * @param {object} fesData - FES_PACKAGES 데이터
      */
-    renderRainbowCrystalAnalysis(packageData, model) {
+    renderRainbowCrystalAnalysis(packageData, model, fesData) {
         const container = document.getElementById('rainbow-crystal-table-container');
         if (!container) return;
 
@@ -367,33 +485,38 @@ export class PaymentView {
         // 바디
         html += '<tbody>';
 
-        results.forEach(result => {
+        const renderRow = (label, result) => {
             const totalPrice = showKRW ? result.pricePerCrystal.total.krw : result.pricePerCrystal.total.jpy;
             const unitPrice = showKRW ? result.pricePerCrystal.krw : result.pricePerCrystal.jpy;
             const currency = showKRW ? '₩' : '¥';
             const isNegative = result.isNegative;
 
-            // 전체 가격 표시 (소수점 없이 반올림, 음수면 빨간색)
             const roundedTotalPrice = Math.round(totalPrice);
             const priceClass = isNegative ? 'price-negative' : '';
             const totalPriceDisplay = `<span class="${priceClass}">${roundedTotalPrice.toLocaleString()}${currency}</span>`;
-
-            // 개당 가격 표시 (소수점 3자리까지, 음수면 빨간색)
             const unitPriceDisplay = `<span class="${priceClass}">${unitPrice.toFixed(FORMAT.DECIMAL_PLACES.RAINBOW_PRICE)}${currency}</span>`;
-
-            // 권장 구매처: 음수 (ASOBI 더 비쌈) → "ASOBI", 양수 (iOS 더 비쌈) → "복합적"
             const recommendation = isNegative ? 'ASOBI' : '복합적';
 
-            html += `
+            return `
                 <tr>
-                    <td class="cell-package">${result.packageId}팩</td>
+                    <td class="cell-package">${label}</td>
                     <td class="cell-number">${result.rainbowCrystals}개</td>
                     <td class="cell-price">${unitPriceDisplay}</td>
                     <td class="cell-price">${totalPriceDisplay}</td>
                     <td class="cell-recommendation">${recommendation}</td>
                 </tr>
             `;
+        };
+
+        results.forEach(result => {
+            html += renderRow(`${result.packageId}팩`, result);
         });
+
+        // 시즌 페스 행 추가
+        const seasonResult = model.calculateSeasonFesRainbowPrice(fesData);
+        if (seasonResult) {
+            html += renderRow('시즌', seasonResult);
+        }
 
         html += '</tbody>';
         html += '</table>';
@@ -403,6 +526,7 @@ export class PaymentView {
             <div class="result-box">
                 <p class="reference-info">※ 동일 패키지의 ASOBI와 iOS 가격 차이를 통해 무돌의 가치를 역산합니다.</p>
                 <p class="reference-info">※ 정규화(유료돌 차이에 의한 계산)를 통해 순수한 무돌의 가치만 추출합니다.</p>
+                <p class="reference-info">※ 시즌: 시즌 페스 ASOBI(¥1,960/2,250돌/165개)와 iOS(₩17,000/2,000돌/150개) 차이, 무료돌 단가 정규화 기준.</p>
             </div>
         `;
 

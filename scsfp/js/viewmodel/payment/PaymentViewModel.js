@@ -1,6 +1,6 @@
 ﻿import { PaymentModel } from '../../model/payment/PaymentModel.js';
 import { PaymentView } from '../../view/payment/PaymentView.js';
-import { PAYMENT_CONFIG, PACKAGES } from '../../config/PaymentConfig.js';
+import { PAYMENT_CONFIG, PACKAGES, FES_PACKAGES } from '../../config/PaymentConfig.js';
 import { StorageManager } from '../../utils/StorageManager.js';
 import { InputBinder } from '../../component/InputBinder.js';
 import { BaseViewModel } from '../BaseViewModel.js';
@@ -14,7 +14,9 @@ export class PaymentViewModel extends BaseViewModel {
         super();
         this.model = new PaymentModel();
         this.view = new PaymentView();
-        this._clickHandlerBound = false; // 클릭 이벤트 바인딩 여부
+        this._clickHandlerBound = false;      // 패키지 클릭 이벤트 바인딩 여부
+        this._fesClickHandlerBound = false;   // 페스 클릭 이벤트 바인딩 여부
+        this._fesBaseline = { fesKey: 'SEASON', platformKey: 'ANDROID' }; // 페스 기준 셀
     }
 
     /**
@@ -41,7 +43,13 @@ export class PaymentViewModel extends BaseViewModel {
         // 6. 통화 토글 버튼 바인딩 (렌더링 후)
         this.bindCurrencyToggle();
 
-        // 7. 패키지 셀 클릭 이벤트 바인딩
+        // 7. 페스 토글 버튼 바인딩
+        this.bindFesToggle();
+
+        // 8. 페스 셀 클릭 이벤트 바인딩
+        this.bindFesTableClick();
+
+        // 9. 패키지 셀 클릭 이벤트 바인딩
         this.bindPackageCellClick();
     }
 
@@ -248,6 +256,108 @@ export class PaymentViewModel extends BaseViewModel {
     }
 
     /**
+     * 페스 토글 버튼 바인딩
+     */
+    bindFesToggle() {
+        const currencyBtn = document.getElementById('fes-toggle-currency');
+        const efficiencyBtn = document.getElementById('fes-toggle-efficiency');
+
+        if (!currencyBtn) return;
+
+        // 초기 상태: 원화 표시, 엔화 숨김
+        currencyBtn.dataset.currency = 'KRW';
+        currencyBtn.textContent = '원화 (₩)';
+        this.toggleFesCurrency('KRW');
+
+        // 효율 버튼 초기 텍스트
+        this.updateEfficiencyButtonText(efficiencyBtn, 'KRW');
+
+        // 통화 토글
+        currencyBtn.addEventListener('click', () => {
+            const currentCurrency = currencyBtn.dataset.currency;
+            const newCurrency = currentCurrency === 'JPY' ? 'KRW' : 'JPY';
+
+            currencyBtn.textContent = newCurrency === 'JPY' ? '엔화 (¥)' : '원화 (₩)';
+            currencyBtn.dataset.currency = newCurrency;
+            this.toggleFesCurrency(newCurrency);
+            this.updateEfficiencyButtonText(efficiencyBtn, newCurrency);
+        });
+
+        // 효율 모드 토글
+        if (efficiencyBtn) {
+            efficiencyBtn.addEventListener('click', () => {
+                const currentMode = efficiencyBtn.dataset.mode;
+                const newMode = currentMode === 'price-per-gem' ? 'gem-per-price' : 'price-per-gem';
+                efficiencyBtn.dataset.mode = newMode;
+
+                const currency = currencyBtn.dataset.currency || 'JPY';
+                this.updateEfficiencyButtonText(efficiencyBtn, currency);
+
+                this.renderFesTable();
+            });
+        }
+    }
+
+    /**
+     * 페스 테이블 통화 전환
+     */
+    toggleFesCurrency(currency) {
+        const jpyCells = document.querySelectorAll('.fes-comparison-table .currency-jpy');
+        const krwCells = document.querySelectorAll('.fes-comparison-table .currency-krw');
+
+        if (currency === 'KRW') {
+            jpyCells.forEach(cell => cell.classList.add('hide-jpy'));
+            krwCells.forEach(cell => cell.classList.remove('hide-krw'));
+        } else {
+            jpyCells.forEach(cell => cell.classList.remove('hide-jpy'));
+            krwCells.forEach(cell => cell.classList.add('hide-krw'));
+        }
+    }
+
+    /**
+     * 페스 테이블 셀 클릭 이벤트 바인딩 (이벤트 위임)
+     */
+    bindFesTableClick() {
+        if (this._fesClickHandlerBound) return;
+
+        const container = document.getElementById('fes-table-container');
+        if (!container) return;
+
+        container.addEventListener('click', (event) => {
+            const cell = event.target.closest('.platform-cell');
+            if (!cell) return;
+
+            const fesKey = cell.dataset.fes;
+            const platformKey = cell.dataset.platform;
+
+            if (fesKey && platformKey) {
+                this._fesBaseline = { fesKey, platformKey };
+                this.renderFesTable();
+            }
+        });
+
+        container.addEventListener('mouseover', (event) => {
+            const cell = event.target.closest('.platform-cell');
+            if (!cell) return;
+            const fesKey = cell.dataset.fes;
+            const platformKey = cell.dataset.platform;
+            if (fesKey && platformKey) {
+                container.querySelectorAll(`.platform-cell[data-fes="${fesKey}"][data-platform="${platformKey}"]`)
+                    .forEach(c => c.classList.add('hover-group'));
+            }
+        });
+
+        container.addEventListener('mouseout', (event) => {
+            const cell = event.target.closest('.platform-cell');
+            if (!cell) return;
+            container.querySelectorAll('.platform-cell.hover-group')
+                .forEach(c => c.classList.remove('hover-group'));
+        });
+
+        this._fesClickHandlerBound = true;
+    }
+
+    /**
      * 패키지 셀 클릭 이벤트 바인딩 (이벤트 위임)
      */
     bindPackageCellClick() {
@@ -328,6 +438,9 @@ export class PaymentViewModel extends BaseViewModel {
         // 무돌 분석 테이블 렌더링
         this.renderRainbowCrystalAnalysis();
 
+        // 페스 테이블 렌더링
+        this.renderFesTable();
+
         // 스크롤 위치 복원 (DOM 업데이트 후에 실행)
         if (container && (scrollLeft > 0 || scrollTop > 0)) {
             requestAnimationFrame(() => {
@@ -343,7 +456,21 @@ export class PaymentViewModel extends BaseViewModel {
      * 무돌(虹の結晶) 분석 테이블 렌더링
      */
     renderRainbowCrystalAnalysis() {
-        this.view.renderRainbowCrystalAnalysis(PACKAGES, this.model);
+        this.view.renderRainbowCrystalAnalysis(PACKAGES, this.model, FES_PACKAGES);
+    }
+
+    /**
+     * 페스 패키지 비교표 렌더링
+     */
+    renderFesTable() {
+        this.view.renderFesTable(FES_PACKAGES, this.model, this._fesBaseline);
+
+        // 렌더링 후 통화 토글 재적용
+        const toggleBtn = document.getElementById('fes-toggle-currency');
+        if (toggleBtn) {
+            const currency = toggleBtn.dataset.currency || 'JPY';
+            this.toggleFesCurrency(currency);
+        }
     }
 
     /**

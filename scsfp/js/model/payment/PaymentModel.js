@@ -169,6 +169,58 @@ export class PaymentModel {
         return results;
     }
 
+    /**
+     * 시즌 페스 무돌 가격 계산
+     * ASOBI(2,250돌 + 165무돌) vs iOS(2,000돌 + 150무돌) 차이로 15개 무돌 가치 역산
+     *
+     * 정규화 가정: iOS 가격을 2,000 freeGems 기준으로 보고 gem 단가를 구한 뒤
+     * ASOBI의 2,250 gems 가치를 빼서 15개 무돌의 가치를 추출
+     *
+     * @param {object} fesData - FES_PACKAGES 데이터
+     * @returns {object|null} { rainbowCrystals, pricePerCrystal: {jpy, krw, total}, isNegative }
+     */
+    calculateSeasonFesRainbowPrice(fesData) {
+        const season = fesData?.SEASON;
+        if (!season) return null;
+
+        const asobi = season.platforms.ASOBI;
+        const ios = season.platforms.IOS;
+        if (!asobi || !ios) return null;
+
+        const rainbowDiff = asobi.rainbow - ios.rainbow; // 165 - 150 = 15
+
+        // iOS 가격 (KRW, 할인 적용)
+        const iosDiscountedKRW = this.applyKRWDiscount(ios.price);
+
+        // ASOBI 가격 (JPY → KRW, 할인 적용)
+        const asobiDiscountedJPY = this.applyJPYDiscount(asobi.price);
+        const asobiDiscountedKRW = this.convertToKRW(asobiDiscountedJPY);
+
+        // 정규화: iOS gem 단가 (무료돌 기준)
+        const iosGemPriceKRW = iosDiscountedKRW / ios.freeGems;
+
+        // ASOBI gem 정규화 가치
+        const asobiNormalizedGemValueKRW = asobi.freeGems * iosGemPriceKRW;
+
+        // 15개 무돌 총 가치
+        const rainbowTotalValueKRW = asobiDiscountedKRW - asobiNormalizedGemValueKRW;
+        const pricePerCrystalKRW = rainbowTotalValueKRW / rainbowDiff;
+        const pricePerCrystalJPY = (pricePerCrystalKRW / this.exchangeRate.value) * 100;
+
+        return {
+            rainbowCrystals: rainbowDiff,
+            pricePerCrystal: {
+                jpy: pricePerCrystalJPY,
+                krw: pricePerCrystalKRW,
+                total: {
+                    jpy: pricePerCrystalJPY * rainbowDiff,
+                    krw: pricePerCrystalKRW * rainbowDiff
+                }
+            },
+            isNegative: rainbowTotalValueKRW < 0
+        };
+    }
+
     toJSON() {
         return {
             exchangeRate: this.exchangeRate.value,

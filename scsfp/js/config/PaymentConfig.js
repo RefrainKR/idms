@@ -128,3 +128,26 @@ export const PACKAGES = {
     }
 };
 
+/**
+ * 페스 패키지 정보
+ * 구조: { fesType: { name, platforms: { platform: { price, currency, freeGems, rainbow, ticket, medal } } } }
+ */
+export const FES_PACKAGES = {
+    LOGIN: {
+        name: '로그인',
+        platforms: {
+            ASOBI:   { price: 1000, currency: 'JPY', freeGems: 2750, rainbow: 0, ticket: 0, medal: 25 },
+            ANDROID: { price: 1000, currency: 'JPY', freeGems: 2500, rainbow: 0, ticket: 0, medal: 25 },
+            IOS:     { price: 8800, currency: 'KRW', freeGems: 2500, rainbow: 0, ticket: 0, medal: 25 }
+        }
+    },
+    SEASON: {
+        name: '시즌',
+        platforms: {
+            ASOBI:   { price: 1960, currency: 'JPY', freeGems: 2250, rainbow: 165, ticket: 4, medal: 75 },
+            ANDROID: { price: 1960, currency: 'JPY', freeGems: 2000, rainbow: 150, ticket: 4, medal: 75 },
+            IOS:     { price: 17000, currency: 'KRW', freeGems: 2000, rainbow: 150, ticket: 4, medal: 75 }
+        }
+    }
+};
+
