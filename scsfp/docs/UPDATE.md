@@ -4,6 +4,32 @@
 
 ---
 
+## v1.9.9 (2026-03-02) - 컴포넌트 구조 정리
+
+### 리팩토링
+
+**1. gachaLogic → CollapsibleSection 활용 통일**
+- `GachaBaseView._updateText()` 내 수동 collapsible 처리 코드 제거
+- `CollapsibleSection.initSection(container)` 정적 메서드 추가
+  - 동적으로 innerHTML이 교체된 후 단일 컨테이너의 접힘/펼침 상태를 복원
+  - `data-collapsed` 속성값을 읽어 btn 텍스트·content 표시 동기화
+- `#gachaLogic`에 `data-collapsed="true"` 명시 (초기 상태를 HTML에 선언적 표기)
+
+**2. 천장/랜덤/Step4 버튼 → 무돌 탭에서 숨김**
+- `GachaViewConfig.js` star3 `buttonVisibility` 수정
+  - collection/total/efficiency 탭: 천장/랜덤/Step4 버튼 포함
+  - rainbow(무돌) 탭: `star3-rainbow-10th` 버튼만 표시
+  - `applyTabVisibility()` 가 나머지를 자동 숨김 처리
+
+### 파일 변경
+
+- `js/component/CollapsibleSection.js`: `static initSection(container)` 추가
+- `js/view/gacha/GachaBaseView.js`: `CollapsibleSection` import, `_updateText()` 수동 코드 → `initSection()` 위임
+- `js/view/gacha/GachaViewConfig.js`: star3 `buttonVisibility` 천장/랜덤/Step4 항목 추가
+- `index.html`: `#gachaLogic`에 `data-collapsed="true"` 추가
+
+---
+
 ## v1.9.8 (2026-03-01) - 페스 탭 추가 및 UI 공통 정리
 
 ### 새로운 기능

@@ -341,7 +341,13 @@ export class PaymentView {
         const efficiencyBtn = document.getElementById('fes-toggle-efficiency');
         const efficiencyMode = efficiencyBtn?.dataset.mode || 'price-per-gem';
 
-        // 기준 셀 효율 계산 (돌/¥ 기준)
+        // 티켓 가치 (돌 환산)
+        const ticketValue = model.ticketValue?.value ?? 0;
+
+        // 유효 돌 수 계산 (freeGems + 티켓 가치 환산)
+        const effectiveGems = (p) => p.freeGems + (p.ticket || 0) * ticketValue;
+
+        // 기준 셀 효율 계산 (돌/¥ 기준, 티켓 가치 포함)
         const baselineFesData = fesData[baseline.fesKey];
         const baselinePlatformData = baselineFesData?.platforms[baseline.platformKey];
         let baselinePriceJPY = 0;
@@ -353,7 +359,7 @@ export class PaymentView {
                 baselinePriceJPY = model.applyJPYDiscount(baselinePlatformData.price);
             }
         }
-        const baselineEfficiency = baselinePriceJPY > 0 ? (baselinePlatformData?.freeGems ?? 0) / baselinePriceJPY : 0;
+        const baselineEfficiency = baselinePriceJPY > 0 ? effectiveGems(baselinePlatformData ?? {}) / baselinePriceJPY : 0;
 
         // 효율 헤더
         const jpyHeader = efficiencyMode === 'price-per-gem' ? '¥/돌' : '돌/¥';
@@ -395,18 +401,21 @@ export class PaymentView {
                     discountedPriceKRW = Math.round((discountedPriceJPY / 100) * model.exchangeRate.value);
                 }
 
-                // 효율 계산
+                // 유효 돌 수 (freeGems + 티켓 환산)
+                const gems = effectiveGems(p);
+
+                // 효율 계산 (티켓 가치 포함)
                 let yenEfficiency, krwEfficiency;
                 if (efficiencyMode === 'price-per-gem') {
-                    yenEfficiency = p.freeGems > 0 ? discountedPriceJPY / p.freeGems : 0;
-                    krwEfficiency = p.freeGems > 0 ? discountedPriceKRW / p.freeGems : 0;
+                    yenEfficiency = gems > 0 ? discountedPriceJPY / gems : 0;
+                    krwEfficiency = gems > 0 ? discountedPriceKRW / gems : 0;
                 } else {
-                    yenEfficiency = discountedPriceJPY > 0 ? p.freeGems / discountedPriceJPY : 0;
-                    krwEfficiency = discountedPriceKRW > 0 ? p.freeGems / discountedPriceKRW : 0;
+                    yenEfficiency = discountedPriceJPY > 0 ? gems / discountedPriceJPY : 0;
+                    krwEfficiency = discountedPriceKRW > 0 ? gems / discountedPriceKRW : 0;
                 }
 
-                // 효율 배수 (항상 돌/¥ 기준)
-                const currentEfficiency = discountedPriceJPY > 0 ? p.freeGems / discountedPriceJPY : 0;
+                // 효율 배수 (항상 돌/¥ 기준, 티켓 가치 포함)
+                const currentEfficiency = discountedPriceJPY > 0 ? gems / discountedPriceJPY : 0;
                 const multiplier = baselineEfficiency > 0 ? currentEfficiency / baselineEfficiency : 0;
 
                 const yenUnit = efficiencyMode === 'price-per-gem' ? '¥' : '돌';
@@ -521,15 +530,16 @@ export class PaymentView {
         html += '</tbody>';
         html += '</table>';
 
-        // 참고 정보 추가
-        html += `
-            <div class="result-box">
+        container.innerHTML = html;
+
+        // paymentSummary에 참고 정보 표시 (summary result-box 자체가 컨테이너)
+        const summaryEl = document.getElementById('paymentSummary');
+        if (summaryEl) {
+            summaryEl.innerHTML = `
                 <p class="reference-info">※ 동일 패키지의 ASOBI와 iOS 가격 차이를 통해 무돌의 가치를 역산합니다.</p>
                 <p class="reference-info">※ 정규화(유료돌 차이에 의한 계산)를 통해 순수한 무돌의 가치만 추출합니다.</p>
                 <p class="reference-info">※ 시즌: 시즌 페스 ASOBI(¥1,960/2,250돌/165개)와 iOS(₩17,000/2,000돌/150개) 차이, 무료돌 단가 정규화 기준.</p>
-            </div>
-        `;
-
-        container.innerHTML = html;
+            `;
+        }
     }
 }

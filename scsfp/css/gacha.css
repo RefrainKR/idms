@@ -217,19 +217,6 @@ button { font-family: inherit; }
     position: relative;
 }
 
-/* CDF 입력 영역 */
-.cdf-input-area {
-    background-color: var(--surface-medium);
-    padding: 15px;
-    border-radius: 8px;
-    margin-top: 15px;
-    border: 1px solid var(--border-light);
-}
-
-.cdf-input-area .input-item {
-    max-width: 300px;
-    margin: 0 auto;
-}
 
 /* ========================================
    무돌 탭 레이아웃
@@ -332,18 +319,12 @@ button { font-family: inherit; }
    ======================================== */
 
 
-.summary, .logic-detail {
+.logic-detail {
     padding: 5px 15px;
     border-radius: 8px;
     font-size: 0.95rem;
     margin-bottom: 10px;
-}
 
-.summary {
-    line-height: 1.8;
-}
-
-.logic-detail {
     background-color: var(--primary-light);
     border-left: 5px solid var(--info-color);
     line-height: 1.6;

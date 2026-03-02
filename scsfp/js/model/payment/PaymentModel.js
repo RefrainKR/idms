@@ -21,6 +21,9 @@ export class PaymentModel {
         // 기준 패키지 설정 (효율 배수 계산용)
         // 형식: { platform: 'ASOBI', category: 'NORMAL', id: 'F' }
         this.baselinePackage = new Observable({ platform: 'ASOBI', category: 'NORMAL', id: 'F' });
+
+        // 티켓 가치 설정 (무료돌 250당 기준, 1장 = 250돌 = 가챠 1회)
+        this.ticketValue = new Observable(inputs.TICKET_VALUE.value);
     }
 
     /**

@@ -25,10 +25,11 @@ export const GACHA_TYPE_CONFIG = {
         hasRandomMode: true,
         hasStep4Mode: true,
         // 탭별 버튼 visibility 규칙
+        // 천장/랜덤/Step4는 픽업 계산 탭에서만 표시 (rainbow 탭 제외)
         buttonVisibility: {
-            efficiency: ['star3-efficiency-toggle'],
-            collection: ['star3-toggle-view'],
-            total: ['star3-toggle-view'],
+            efficiency: ['star3-efficiency-toggle', 'star3-toggle-ceiling', 'star3-toggle-random', 'star3-toggle-step4'],
+            collection: ['star3-toggle-view', 'star3-toggle-ceiling', 'star3-toggle-random', 'star3-toggle-step4'],
+            total: ['star3-toggle-view', 'star3-toggle-ceiling', 'star3-toggle-random', 'star3-toggle-step4'],
             rainbow: ['star3-rainbow-10th']
         }
     },

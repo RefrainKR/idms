@@ -7,6 +7,7 @@ import { ChartAdapter } from '../ChartAdapter.js';
 import { Formatter } from '../../utils/Formatter.js';
 import { PROBABILITY_MODE } from '../../config/GachaConfig.js';
 import { CHART_COLORS } from '../../config/UIConfig.js';
+import { CollapsibleSection } from '../../component/CollapsibleSection.js';
 
 export class GachaBaseView {
 
@@ -27,22 +28,7 @@ export class GachaBaseView {
             if (generators.logic) {
                 logicContainer.innerHTML = generators.logic();
                 logicContainer.style.display = 'block';
-
-                // 동적으로 생성된 collapsible 섹션 초기화 (기존 열림/닫힘 상태 보존)
-                const btn = logicContainer.querySelector('[data-toggle-section]');
-                const content = logicContainer.querySelector('.section-content');
-                if (btn && content) {
-                    const wasCollapsed = logicContainer.dataset.collapsed !== 'false';
-                    if (wasCollapsed) {
-                        logicContainer.dataset.collapsed = 'true';
-                        content.style.display = 'none';
-                        btn.textContent = '▲';
-                    } else {
-                        logicContainer.dataset.collapsed = 'false';
-                        content.style.display = '';
-                        btn.textContent = '▼';
-                    }
-                }
+                CollapsibleSection.initSection(logicContainer);
             } else {
                 logicContainer.style.display = 'none';
                 logicContainer.innerHTML = '';
@@ -185,10 +171,6 @@ export class GachaBaseView {
         }
 
         this._updateText(elementIds, htmlGenerator);
-
-        // 상세 로직 숨김 처리 (Bar Chart는 보통 Summary만 보여줌)
-        const logicContainer = document.getElementById(elementIds.logic || 'gachaLogic');
-        if (logicContainer) logicContainer.style.display = 'none';
 
         ChartAdapter.renderBarChart(elementIds.chart, labels, data, colors, tooltipVals, chartRef);
     }

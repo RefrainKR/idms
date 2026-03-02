@@ -85,6 +85,15 @@ export class PaymentViewModel extends BaseViewModel {
                 min: cfg.min, max: cfg.max, type: 'float'
             }));
         }
+
+        // 티켓 가치 (무료돌 100당)
+        const ticketValueInput = document.getElementById('fes-ticket-value');
+        if (ticketValueInput) {
+            const cfg = inputs.TICKET_VALUE;
+            this._inputBinders.push(new InputBinder(ticketValueInput, this.model.ticketValue, {
+                min: cfg.min, max: cfg.max, type: 'int'
+            }));
+        }
     }
 
     /**
@@ -108,6 +117,15 @@ export class PaymentViewModel extends BaseViewModel {
             });
             this._subscriptions.push(unsubscribe);
         });
+
+        // 티켓 가치 변경 시 페스 테이블만 재렌더링
+        this._subscriptions.push(
+            this.model.ticketValue.subscribe(() => {
+                if (!this.isInitializing) {
+                    this.renderFesTable();
+                }
+            })
+        );
     }
 
     /**
@@ -141,8 +159,15 @@ export class PaymentViewModel extends BaseViewModel {
     /**
      * 탭 전환 시 호출
      */
-    onTabChange(_tabId) {
-        // 향후 탭별 특정 작업 추가 가능
+    onTabChange(tabId) {
+        // 무돌 탭이 아닐 경우 paymentSummary 비우기
+        if (tabId !== 'payment-tab-rainbow') {
+            const summaryEl = document.getElementById('paymentSummary');
+            if (summaryEl) summaryEl.innerHTML = '';
+        } else {
+            // 무돌 탭으로 전환 시 재렌더링 (요약 복원)
+            this.renderRainbowCrystalAnalysis();
+        }
     }
 
     /**

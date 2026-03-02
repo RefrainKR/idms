@@ -16,7 +16,8 @@ export const PAYMENT_CONFIG = {
     INPUTS: {
         EXCHANGE_RATE:    { value: 950, min: 0, max: 9999 },
         JPY_DISCOUNT_RATE: { value: 0,   min: 0, max: 100 },
-        KRW_DISCOUNT_RATE: { value: 0,   min: 0, max: 100 }
+        KRW_DISCOUNT_RATE: { value: 0,   min: 0, max: 100 },
+        TICKET_VALUE:     { value: 250,  min: 0, max: 250 }  // 티켓 1장 가치 (무료돌 250당 기준, 1회 가챠 = 250돌)
     }
 };
 

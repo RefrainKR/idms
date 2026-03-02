@@ -825,6 +825,29 @@ body {
    범용 컴포넌트
    ======================================== */
 
+/* 서브 입력 영역 (차트 하단 입력 등 보조 영역, 구 cdf-input-area) */
+.sub-input-area {
+    background-color: var(--surface-medium);
+    padding: 15px;
+    border-radius: 8px;
+    margin-top: 15px;
+    border: 1px solid var(--border-light);
+}
+
+.sub-input-area .input-item {
+    max-width: 300px;
+    margin: 0 auto;
+}
+
+/* Summary (가챠/과금 공용 결과 요약 영역) */
+.summary {
+    padding: 5px 15px;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    margin-bottom: 10px;
+    line-height: 1.8;
+}
+
 /* Section Result Container (가챠/과금 공용 결과 영역) */
 .section-result-container {
     border-top: 1.5px solid var(--border-light);

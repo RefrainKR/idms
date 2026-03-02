@@ -93,4 +93,25 @@ export class CollapsibleSection {
     updateButtonText(btn, isCollapsed) {
         btn.textContent = isCollapsed ? '▲' : '▼';
     }
+
+    /**
+     * 동적으로 삽입된 콘텐츠에 대해 단일 섹션 초기화
+     * innerHTML 교체 후 호출하여 data-collapsed 상태를 새 DOM에 적용한다.
+     * data-collapsed가 없으면 기본값 'false' (펼쳐진 상태).
+     * @param {HTMLElement} container - [data-collapsible] 요소
+     */
+    static initSection(container) {
+        if (!container) return;
+        const btn = container.querySelector('[data-toggle-section]');
+        const content = container.querySelector('.section-content');
+        if (!btn || !content) return;
+
+        if (!container.dataset.collapsed) {
+            container.dataset.collapsed = 'false';
+        }
+
+        const isCollapsed = container.dataset.collapsed === 'true';
+        btn.textContent = isCollapsed ? '▲' : '▼';
+        content.style.display = isCollapsed ? 'none' : '';
+    }
 }
