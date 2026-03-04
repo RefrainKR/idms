@@ -17,12 +17,15 @@ export class EfficiencyCalculator {
      * 3성 가챠 - 특정 pulls 수에 대해 일반/스탭업 DP를 시뮬레이션
      * @returns {{ dpN: Array, dpS: Array, sSelectCnt: number }}
      */
-    static _simulate3Star(pulls, { N, M, p_indiv, p_step4_total, stepupLimit, loopRewards, ceilingMode, step4Mode, randomMode }) {
+    static _simulate3Star(pulls, { N, M, p_indiv, p_step4_total, stepupLimit, loopRewards, ceilingMode, step4Mode, randomMode, targetMode = 'snipe' }) {
+        // 아무나 모드: capacity = N, 저격 모드: capacity = null (dp.length - 1 = M 기본값)
+        const cap = targetMode === 'any' ? N : null;
+
         // 일반 가챠
         let dpN = new Array(M + 1).fill(0);
         dpN[0] = 1.0;
         for (let i = 0; i < pulls; i++) {
-            dpN = ProbabilityEngine.runSinglePull(dpN, p_indiv);
+            dpN = ProbabilityEngine.runSinglePull(dpN, p_indiv, cap);
         }
         if (ceilingMode === 'included') {
             const nCeil = Math.floor(pulls / GACHA_RULES.STAR3.CEILING_INTERVAL);
@@ -42,12 +45,12 @@ export class EfficiencyCalculator {
             const curLoop = Math.ceil(i / GACHA_RULES.STAR3.STEPUP_CYCLE);
             const useStep4 = (isStep4 && i <= stepupLimit && step4Mode === 'included');
 
-            dpS = ProbabilityEngine.runSinglePull(dpS, useStep4 ? (p_step4_total / N) : p_indiv);
+            dpS = ProbabilityEngine.runSinglePull(dpS, useStep4 ? (p_step4_total / N) : p_indiv, cap);
 
             if (isStep4 && i <= stepupLimit) {
                 const reward = loopRewards[curLoop];
                 if (reward === 'random' && randomMode === 'included') {
-                    dpS = ProbabilityEngine.runRandomTicket(dpS, N);
+                    dpS = ProbabilityEngine.runRandomTicket(dpS, N, cap);
                 } else if (reward === 'select') {
                     sSelectCnt++;
                 }
@@ -58,7 +61,7 @@ export class EfficiencyCalculator {
         if (pulls > stepupLimit) {
             const extraPulls = pulls - stepupLimit;
             for (let i = 0; i < extraPulls; i++) {
-                dpS = ProbabilityEngine.runSinglePull(dpS, p_indiv);
+                dpS = ProbabilityEngine.runSinglePull(dpS, p_indiv, cap);
             }
         }
 
@@ -131,12 +134,12 @@ export class EfficiencyCalculator {
      * 3성 가챠 효율 데이터 계산
      * @returns {Object} { labels, normalData, stepupData }
      */
-    static calculate3Star({ N, M, p_indiv, p_step4_total, maxLoops, loopRewards, ceilingMode, step4Mode, randomMode }) {
+    static calculate3Star({ N, M, p_indiv, p_step4_total, maxLoops, loopRewards, ceilingMode, step4Mode, randomMode, targetMode = 'snipe' }) {
         const labels = [];
         const normalData = [];
         const stepupData = [];
         const stepupLimit = maxLoops * GACHA_RULES.STAR3.STEPUP_CYCLE;
-        const simParams = { N, M, p_indiv, p_step4_total, stepupLimit, loopRewards, ceilingMode, step4Mode, randomMode };
+        const simParams = { N, M, p_indiv, p_step4_total, stepupLimit, loopRewards, ceilingMode, step4Mode, randomMode, targetMode };
 
         for (let pulls = 0; pulls <= CHART_RANGE.EFFICIENCY_MAX_PULLS; pulls++) {
             labels.push(pulls);
@@ -202,13 +205,13 @@ export class EfficiencyCalculator {
      * 3성 가챠 CDF(누적분포함수) 데이터 계산
      * @returns {Object} { labels, cdfDataStepup, cdfDataNormal, stepupRequired, normalRequired }
      */
-    static calculate3StarCDF({ N, M, p_indiv, p_step4_total, maxLoops, loopRewards, ceilingMode, step4Mode, randomMode, targetProb = 0.9 }) {
+    static calculate3StarCDF({ N, M, p_indiv, p_step4_total, maxLoops, loopRewards, ceilingMode, step4Mode, randomMode, targetProb = 0.9, targetMode = 'snipe' }) {
         const labels = [];
         const cdfDataStepup = [];
         const cdfDataNormal = [];
         const maxPulls = CHART_RANGE.EFFICIENCY_MAX_PULLS;
         const stepupLimit = maxLoops * GACHA_RULES.STAR3.STEPUP_CYCLE;
-        const simParams = { N, M, p_indiv, p_step4_total, stepupLimit, loopRewards, ceilingMode, step4Mode, randomMode };
+        const simParams = { N, M, p_indiv, p_step4_total, stepupLimit, loopRewards, ceilingMode, step4Mode, randomMode, targetMode };
 
         let stepupRequired = null;
         let normalRequired = null;

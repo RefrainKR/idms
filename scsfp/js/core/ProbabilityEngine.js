@@ -7,22 +7,22 @@ export class ProbabilityEngine {
     // 1. 상태 전이 (Transition) - 수집
     // ==========================================
 
-    static runSinglePull(dp, prob) {
-        const size = dp.length - 1; 
-        let nextDP = new Array(size + 1).fill(0);
+    static runSinglePull(dp, prob, capacity = null) {
+        const size = capacity ?? (dp.length - 1);
+        let nextDP = new Array(dp.length).fill(0);
 
         // [개선] 중앙화된 확률 검증
         const validProb = ProbabilityValidator.clamp(prob);
 
-        for (let k = 0; k <= size; k++) {
+        for (let k = 0; k < dp.length; k++) {
             if (dp[k] === 0) continue;
-            
-            if (k === size) {
+
+            if (k === dp.length - 1 || size - k <= 0) {
                 nextDP[k] += dp[k];
             } else {
                 // [개선] getTotalProb 사용으로 안전성 강화
                 const p_new = ProbabilityValidator.getTotalProb(validProb, size - k);
-                
+
                 nextDP[k] += dp[k] * (1.0 - p_new);
                 nextDP[k + 1] += dp[k] * p_new;
             }
@@ -42,19 +42,19 @@ export class ProbabilityEngine {
         return nextDP;
     }
 
-    static runRandomTicket(dp, poolSize) {
-        const size = dp.length - 1; 
-        let nextDP = new Array(size + 1).fill(0);
+    static runRandomTicket(dp, poolSize, capacity = null) {
+        const size = capacity ?? (dp.length - 1);
+        let nextDP = new Array(dp.length).fill(0);
 
-        for (let k = 0; k <= size; k++) {
+        for (let k = 0; k < dp.length; k++) {
             if (dp[k] === 0) continue;
-            if (k === size) {
-                nextDP[size] += dp[k];
+            if (k === dp.length - 1 || size - k <= 0) {
+                nextDP[k] += dp[k];
             } else {
                 // [개선] 확률 계산 안전성 강화
                 const individualProb = 1.0 / poolSize;
                 const p_new = ProbabilityValidator.getTotalProb(individualProb, size - k);
-                
+
                 nextDP[k] += dp[k] * (1.0 - p_new);
                 nextDP[k + 1] += dp[k] * p_new;
             }

@@ -4,6 +4,49 @@
 
 ---
 
+## v1.9.10 (2026-03-04) - 저격/아무나 모드, PJ 가챠 확률 개선
+
+### 새로운 기능
+
+**1. 저격/아무나 토글 버튼 (3성 가챠)**
+- "픽업 수" 입력란 라벨에 토글 버튼 추가
+  - **저격** (기본): M명의 특정 픽업을 올 컴플릿하는 확률 계산
+  - **아무나**: N명 중 M명 이상을 어떤 조합이든 획득하는 확률 계산
+- `ProbabilityEngine.runSinglePull/runRandomTicket`: `capacity` 파라미터 추가
+  - any 모드: `capacity=N` → N-k 잔여 기준 전이 확률 계산
+  - snipe 모드: `capacity=null` → 기존 M-k 기준 동작 유지
+- `EfficiencyCalculator._simulate3Star/calculate3Star/calculate3StarCDF`: `targetMode` 전파
+- `GachaResultView`: 결과 텍스트에 모드 표시 (`N픽업 중 M픽업 저격` / `N픽업 중 아무나 M픽업 이상`)
+
+**2. RainbowCrystalCalculator - step2_10thRates 동적 계산**
+- 기존 고정값(`★★★10%, ★★56%, SSR6%, SR28%`)에서 입력 확률 기반 동적 계산으로 변경
+- 법칙: ★★★/SSR 각 2배, 나머지(1 - ★★★×2 - SSR×2)를 ★★:SR = 2:1 비율로 배분
+- PJ 가챠(★★★ 7.5% 기준) 무돌 탭에서 Step2/3 10회째 확정枠 확률이 올바르게 표시됨
+
+**3. 프리셋 rainbow 확률 기본값 연동**
+- 정규/PJ 프리셋 클릭 시 무돌 탭의 확률 입력값도 해당 가챠 기본값으로 적용
+- Step4 확정枠: `isPJ` 판별(`p3star >= 0.075`)로 PJ는 100%, 정규는 60%+SSR40% 표시
+
+### 버그 수정
+
+- **정규 가챠 프리셋 `step4Rate` 수정**: 40% → 20% (픽업 총 확률 기준 정정)
+- **`star3-targetMode-btn` 클릭 불가 수정**: 버튼을 `<label>` 내부에서 외부(`<span class="label-with-btn">`)로 이동. `<button>`이 `<label>` 안에 있을 때 발생하는 브라우저 클릭 이벤트 충돌 해결
+
+### 파일 변경
+
+- `css/gacha.css`: `.mode-tag-btn`, `.label-with-btn` 스타일 추가
+- `index.html`: targetMode 버튼을 `<span class="label-with-btn">` 구조로 변경
+- `js/model/gacha/Star3GachaModel.js`: `targetMode` Observable 추가
+- `js/viewmodel/gacha/Star3GachaViewModel.js`: 토글 버튼 바인딩, any/snipe 분기 계산, 프리셋 rainbow 적용
+- `js/core/ProbabilityEngine.js`: `runSinglePull`, `runRandomTicket`에 `capacity` 파라미터 추가
+- `js/core/EfficiencyCalculator.js`: `_simulate3Star`, `calculate3Star`, `calculate3StarCDF`에 `targetMode` 전파
+- `js/core/RainbowCrystalCalculator.js`: `step2_10thRates(rates)` 동적 계산으로 변경
+- `js/config/GachaConfig.js`: 프리셋에 `rainbow` 기본값 추가, 정규 `step4Rate` 수정
+- `docs/GACHA_SYSTEM.md`: PJ 가챠 배율표, 확정枠 분배 규칙, 픽업 확률 구조 설명 추가
+- `docs/GAME_RULES.md`: 날개(Wings) 시스템, 무돌-날개 교환 누진표 추가
+
+---
+
 ## v1.9.9 (2026-03-02) - 컴포넌트 구조 정리
 
 ### 리팩토링

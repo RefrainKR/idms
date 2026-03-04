@@ -33,15 +33,21 @@ export const CONFIG = {
         PRESETS: [
             {
                 id: 'presetGeneral',
-                label: '일반',
-                title: '일반 통상,한정(한정1+통상1 기준)',
-                settings: { pickupCount: 2, pickupRate: 1, maxLoops: 2, step4Rate: 40, rewards: { 2: 'random' } }
+                label: '정규',
+                title: '정규 (통상·한정, 픽업2 기준)',
+                settings: {
+                    pickupCount: 2, pickupRate: 1, maxLoops: 2, step4Rate: 20, rewards: { 2: 'random' },
+                    rainbow: { p3star: 5, p2star: 15, p1star: 33, pSSR: 3, pSR: 5, pR: 39 }
+                }
             },
             {
                 id: 'presetPJ',
                 label: 'PJ',
                 title: 'PJ: REFRAC7IONS 가챠(4픽업 기준)',
-                settings: { pickupCount: 4, pickupRate: 1, maxLoops: 3, step4Rate: 40, rewards: { 2: 'random', 3: 'select' } }
+                settings: {
+                    pickupCount: 4, pickupRate: 1, maxLoops: 3, step4Rate: 40, rewards: { 2: 'random', 3: 'select' },
+                    rainbow: { p3star: 7.5, p2star: 15, p1star: 30.5, pSSR: 3, pSR: 5, pR: 39 }
+                }
             }
         ],
         // Observable 의존성 정의 (setupDataDependencies 대체)

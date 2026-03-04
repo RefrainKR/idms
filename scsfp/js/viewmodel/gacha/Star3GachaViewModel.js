@@ -60,6 +60,20 @@ export class Star3GachaViewModel extends BaseGachaViewModel {
             this.model.rainbow10thMode.value = s.name;
             this.renderRainbowTab();
         }, this.model.rainbow10thMode.value);
+
+        const targetModeBtn = document.getElementById('star3-targetMode-btn');
+        if (targetModeBtn) {
+            targetModeBtn.addEventListener('click', () => {
+                this.model.targetMode.value = this.model.targetMode.value === 'snipe' ? 'any' : 'snipe';
+            });
+            this.model.targetMode.subscribe((mode) => {
+                targetModeBtn.textContent = mode === 'snipe' ? '저격' : '아무나';
+                targetModeBtn.dataset.mode = mode;
+            });
+            // 초기 상태 동기화
+            targetModeBtn.textContent = this.model.targetMode.value === 'snipe' ? '저격' : '아무나';
+            targetModeBtn.dataset.mode = this.model.targetMode.value;
+        }
     }
 
     onTabChange(tabId) {
@@ -139,7 +153,16 @@ export class Star3GachaViewModel extends BaseGachaViewModel {
         if (settings.pickupRate !== undefined) this.model.pickupRate.value = settings.pickupRate;
         if (settings.maxLoops !== undefined) this.model.maxLoops.value = settings.maxLoops;
         if (settings.step4Rate !== undefined) this.model.step4Rate.value = settings.step4Rate;
-        
+        if (settings.rainbow) {
+            const r = settings.rainbow;
+            if (r.p3star !== undefined) this.model.rainbow_p3star.value = r.p3star;
+            if (r.p2star !== undefined) this.model.rainbow_p2star.value = r.p2star;
+            if (r.p1star !== undefined) this.model.rainbow_p1star.value = r.p1star;
+            if (r.pSSR   !== undefined) this.model.rainbow_pSSR.value   = r.pSSR;
+            if (r.pSR    !== undefined) this.model.rainbow_pSR.value    = r.pSR;
+            if (r.pR     !== undefined) this.model.rainbow_pR.value     = r.pR;
+        }
+
         this.model.normalPulls.value = 0;
         this.model.stepPulls.value = 0;
 
@@ -166,6 +189,10 @@ export class Star3GachaViewModel extends BaseGachaViewModel {
         let M = (targetVal === 0 || !targetVal) ? N : Number(targetVal);
         if (M > N) M = N;
 
+        const targetMode = this.model.targetMode.value;
+        // 아무나 모드: dp 전이 시 capacity=N (N-k개 잔여), 저격 모드: capacity=null (M-k 기본값)
+        const cap = targetMode === 'any' ? N : null;
+
         const p_indiv = Number(this.model.pickupRate.value) / 100;  // 개별 1명 확률
         const p_step4_total = Number(this.model.step4Rate.value) / 100;
         const normalPulls = Number(this.model.normalPulls.value);
@@ -178,29 +205,30 @@ export class Star3GachaViewModel extends BaseGachaViewModel {
         let dpTotal = [1.0];
 
         // --- 일반 가챠 ---
-        // p_indiv: 특정 1명을 얻을 개별 확률
-        // runSinglePull 내부에서 (M-k) × p_indiv 계산
-        const p_any_normal = ProbabilityValidator.getTotalProb(p_indiv, M);
-        
+        // 아무나 모드: getTotalProb(p, N) — N명 중 1명 이상 획득 확률
+        // 저격 모드:   getTotalProb(p, M) — M명 중 1명 이상 획득 확률
+        const effectiveCount = targetMode === 'any' ? N : M;
+        const p_any_normal = ProbabilityValidator.getTotalProb(p_indiv, effectiveCount);
+
         for (let i = 0; i < normalPulls; i++) {
-            dp = ProbabilityEngine.runSinglePull(dp, p_indiv);
+            dp = ProbabilityEngine.runSinglePull(dp, p_indiv, cap);
             dpTotal = ProbabilityEngine.accumulateCountProb(dpTotal, p_any_normal);
         }
 
         // --- 스탭업 가챠 ---
         let countStep4 = 0, countNormal = 0, randomCnt = 0, selectCnt = 0;
-        
+
         for (let i = 1; i <= stepPulls; i++) {
             const isStep4 = (i % GACHA_RULES.STAR3.STEPUP_CYCLE === 0);
             const curLoop = Math.ceil(i / GACHA_RULES.STAR3.STEPUP_CYCLE);
             const useStep4 = (isStep4 && this.model.step4Mode.value === 'included');
-            
+
             if (isStep4) countStep4++; else countNormal++;
 
             const p = useStep4 ? p_step4_indiv : p_indiv;
-            const p_any = ProbabilityValidator.getTotalProb(p, M);
+            const p_any = ProbabilityValidator.getTotalProb(p, effectiveCount);
 
-            dp = ProbabilityEngine.runSinglePull(dp, p);
+            dp = ProbabilityEngine.runSinglePull(dp, p, cap);
             dpTotal = ProbabilityEngine.accumulateCountProb(dpTotal, p_any);
 
             if (isStep4) {
@@ -208,8 +236,8 @@ export class Star3GachaViewModel extends BaseGachaViewModel {
                 if (reward === 'random') {
                     randomCnt++;
                     if (this.model.randomMode.value === 'included') {
-                        dp = ProbabilityEngine.runRandomTicket(dp, N);
-                        dpTotal = ProbabilityEngine.accumulateCountProb(dpTotal, M/N);
+                        dp = ProbabilityEngine.runRandomTicket(dp, N, cap);
+                        dpTotal = ProbabilityEngine.accumulateCountProb(dpTotal, effectiveCount / N);
                     }
                 } else if (reward === 'select') {
                     selectCnt++;
@@ -228,8 +256,8 @@ export class Star3GachaViewModel extends BaseGachaViewModel {
             }
         }
 
-        const efficiencyData = this._calculateEfficiencyData(N, M, p_indiv, p_step4_total);
-        const cdfData = this._calculateCDFData(N, M, p_indiv, p_step4_total);
+        const efficiencyData = this._calculateEfficiencyData(N, M, p_indiv, p_step4_total, targetMode);
+        const cdfData = this._calculateCDFData(N, M, p_indiv, p_step4_total, targetMode);
 
         const context = {
             N, M, p_indiv: p_indiv * 100, p_step4_total: p_step4_total * 100,
@@ -238,13 +266,13 @@ export class Star3GachaViewModel extends BaseGachaViewModel {
             totalCeilingCount: totalCeil, selectRewardCount: selectCnt,
             normalCeiling: normalCeil, maxLoops: this.model.maxLoops.value,
             loopRewards, efficiencyData, efficiencyLimit: this.model.maxLoops.value * GACHA_RULES.STAR3.STEPUP_CYCLE,
-            cdfData
+            cdfData, targetMode
         };
 
         GachaResultView.render('star3', { N, M, dp, dpTotal }, context, this.model, this.chartRefs);
     }
 
-    _calculateEfficiencyData(N, M, p_indiv, p_step4_total) {
+    _calculateEfficiencyData(N, M, p_indiv, p_step4_total, targetMode = 'snipe') {
         return EfficiencyCalculator.calculate3Star({
             N,
             M,
@@ -254,12 +282,12 @@ export class Star3GachaViewModel extends BaseGachaViewModel {
             loopRewards: this.model.loopRewards.value,
             ceilingMode: this.model.ceilingMode.value,
             step4Mode: this.model.step4Mode.value,
-            randomMode: this.model.randomMode.value
+            randomMode: this.model.randomMode.value,
+            targetMode
         });
     }
-    
-    _calculateCDFData(N, M, p_indiv, p_step4_total) {
-        // [개선] EfficiencyCalculator로 위임하여 중복 제거
+
+    _calculateCDFData(N, M, p_indiv, p_step4_total, targetMode = 'snipe') {
         return EfficiencyCalculator.calculate3StarCDF({
             N,
             M,
@@ -270,7 +298,8 @@ export class Star3GachaViewModel extends BaseGachaViewModel {
             ceilingMode: this.model.ceilingMode.value,
             step4Mode: this.model.step4Mode.value,
             randomMode: this.model.randomMode.value,
-            targetProb: this.model.targetProbability.value / 100
+            targetProb: this.model.targetProbability.value / 100,
+            targetMode
         });
     }
 
@@ -359,12 +388,16 @@ export class Star3GachaViewModel extends BaseGachaViewModel {
 
         const s3 = RainbowCrystalCalculator.step3Rates(rates);
         const r10 = { p3star: rates.p3star, p2star: rates.p2star + rates.p1star, p1star: 0, pSSR: rates.pSSR, pSR: rates.pSR + rates.pR, pR: 0 };
-        const step23_10th = RainbowCrystalCalculator.step2_10thRates();
+        const step23_10th = RainbowCrystalCalculator.step2_10thRates(rates);
 
         const expBase = RainbowCrystalCalculator.singleExpected(rates, false);
         const expS3   = RainbowCrystalCalculator.singleExpected(s3, false);
         const exp10th = RainbowCrystalCalculator.singleExpected(r10, false);
         const expS23  = RainbowCrystalCalculator.singleExpected(step23_10th, false);
+
+        // PJ 가챠: ★★★ 7.5% 이상이면 Step4 확정枠 = ★★★ 100% (SSR 없음)
+        // 정규 가챠: Step4 확정枠 = ★★★ 60% + SSR 40%
+        const isPJ = rates.p3star >= 0.075;
 
         const normal10thRow = include10th ? `
                         <tr class="logic-table-confirm">
@@ -391,20 +424,20 @@ export class Star3GachaViewModel extends BaseGachaViewModel {
                         </tr>
                         <tr class="logic-table-confirm">
                             <td>Step2/3 10회째 확정</td>
-                            <td>10%</td>
-                            <td>56%</td>
+                            <td>${fmt(step23_10th.p3star)}%</td>
+                            <td>${fmt(step23_10th.p2star)}%</td>
                             <td>0%</td>
-                            <td>6%</td>
-                            <td>28%</td>
+                            <td>${fmt(step23_10th.pSSR)}%</td>
+                            <td>${fmt(step23_10th.pSR)}%</td>
                             <td>0%</td>
                             <td>${expS23.toFixed(2)}개</td>
                         </tr>
                         <tr class="logic-table-confirm">
                             <td>Step4 40회째 확정</td>
-                            <td>60%</td>
+                            <td>${isPJ ? '100%' : '60%'}</td>
                             <td>${dash}</td>
                             <td>${dash}</td>
-                            <td>40%</td>
+                            <td>${isPJ ? dash : '40%'}</td>
                             <td>${dash}</td>
                             <td>${dash}</td>
                             <td>25.00개</td>

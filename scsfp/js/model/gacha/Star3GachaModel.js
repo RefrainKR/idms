@@ -24,6 +24,7 @@ export class Star3GachaModel {
         this.step4Mode = new Observable('included');
         this.viewMode = new Observable('individual');
         this.efficiencyMode = new Observable('best');
+        this.targetMode = new Observable('snipe');  // 'snipe' | 'any'
 
         // 무돌 탭 - 확률 입력값 (기본값: 현재 게임 확률)
         const R = RAINBOW_CRYSTAL_RULES.STAR3_RATES;
@@ -58,7 +59,8 @@ export class Star3GachaModel {
             rainbow_pSSR: this.rainbow_pSSR.value,
             rainbow_pSR: this.rainbow_pSR.value,
             rainbow_pR: this.rainbow_pR.value,
-            rainbow10thMode: this.rainbow10thMode.value
+            rainbow10thMode: this.rainbow10thMode.value,
+            targetMode: this.targetMode.value
         };
     }
 
@@ -82,5 +84,6 @@ export class Star3GachaModel {
         if (data.rainbow_pSR !== undefined) this.rainbow_pSR.value = data.rainbow_pSR;
         if (data.rainbow_pR !== undefined) this.rainbow_pR.value = data.rainbow_pR;
         if (data.rainbow10thMode !== undefined) this.rainbow10thMode.value = data.rainbow10thMode;
+        if (data.targetMode !== undefined) this.targetMode.value = data.targetMode;
     }
 }

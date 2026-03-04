@@ -1,4 +1,32 @@
 /* ========================================
+   1. Mode Tag Button (저격/아무나 inline toggle)
+   ======================================== */
+
+.mode-tag-btn {
+    display: inline-flex;
+    align-items: center;
+    padding: 1px 7px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    vertical-align: middle;
+    line-height: 1.4;
+    transition: background 0.15s;
+    user-select: none;
+}
+.mode-tag-btn[data-mode="snipe"] { background: var(--secondary); color: white; }
+.mode-tag-btn[data-mode="any"]   { background: var(--primary-color); color: white; }
+.mode-tag-btn:hover { filter: brightness(1.1); }
+
+.label-with-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* ========================================
    2. Gacha-Specific Subsection Styles
    ======================================== */
 

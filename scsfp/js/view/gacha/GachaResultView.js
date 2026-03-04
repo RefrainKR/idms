@@ -127,11 +127,13 @@ export class GachaResultView extends GachaBaseView {
         const N = context.N || M;
 
         if (gachaType === 'star3') {
+            const tMode = context.targetMode;
+            const modeLabel = tMode === 'any' ? `아무나 ${M}픽업 이상` : `${M}픽업 저격`;
             return () => `
-                <strong>결과</strong> (${N}픽업 중 ${M}픽업)<br>
+                <strong>결과</strong> (${N}픽업 중 ${modeLabel})<br>
                 - 가챠 횟수 : ${context.totalPulls}회 (일반 ${context.normalPulls} + 스탭업 ${context.stepPulls})<br>
                 - 천장 교환 : ${context.totalCeilingCount}회 (통합 ${context.normalCeiling} + 스탭업 ${context.selectRewardCount})<br>
-                - 목표(${M}종) 올컴플릿 확률 : <strong>${Formatter.probabilityFraction(dp[M])}</strong>
+                - ${modeLabel} 확률 : <strong>${Formatter.probabilityFraction(dp[M])}</strong>
             `;
         } else if (gachaType === 'birthday') {
             const guaranteedMsg = context.stepGuaranteed > 0
