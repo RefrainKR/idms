@@ -50,11 +50,18 @@ npx serve
   - 모델과 뷰를 연결, 사용자 상호작용 처리, core 서비스 오케스트레이션
 
 - **Views** ([js/view/](scsfp/js/view/)): UI 렌더링
-  - [GachaResultView.js](scsfp/js/view/gacha/GachaResultView.js)가 모든 가챠 타입의 결과 렌더링
+  - [GachaResultView.js](scsfp/js/view/gacha/GachaResultView.js): 가챠 결과 렌더링 (수집/총획득/효율 탭)
+  - [RainbowTabView.js](scsfp/js/view/gacha/RainbowTabView.js): 무돌(虹の結晶) 탭 렌더링
   - DOM 조작 및 Chart.js 통합
 
+- **Component** ([js/component/](scsfp/js/component/)): UI 컴포넌트
+  - [SectionManager.js](scsfp/js/component/SectionManager.js): SPA 섹션 전환 및 히스토리 관리
+  - [TabManager.js](scsfp/js/component/TabManager.js): 탭 네비게이션 관리
+  - [InputBinder.js](scsfp/js/component/InputBinder.js): HTML input ↔ Observable 양방향 바인딩
+  - [ToggleButton.js](scsfp/js/component/ToggleButton.js): 다중 상태 토글 버튼
+  - [CollapsibleSection.js](scsfp/js/component/CollapsibleSection.js): 접힘/펼침 섹션
+
 - **Core** ([js/core/](scsfp/js/core/)): 앱 특화 도메인 로직
-  - [SectionManager.js](scsfp/js/core/SectionManager.js): SPA 섹션 전환 및 히스토리 관리
   - [ProbabilityEngine.js](scsfp/js/core/ProbabilityEngine.js): DP 상태 전이, 컨벌루션
   - [Constants.js](scsfp/js/core/Constants.js): 불변 상수 (게임 규칙, 수학 상수, 앱 버전)
   - [EfficiencyCalculator.js](scsfp/js/core/EfficiencyCalculator.js): 효율 계산 서비스 클래스
@@ -597,6 +604,17 @@ calculate() {
 - `StorageManager.js`가 `APP_VERSION` 체크
 - 버전 변경 시 `VERSION_CONFIG`에 따라 자동 마이그레이션
 - 사용자 데이터 보존하면서 설정 업데이트
+
+## Git 커밋 금지
+
+**Claude Code는 git 커밋을 절대 생성하지 않는다.**
+
+- 사용자가 버전 관리 브랜치(`1.9.x`등)와 `main` 브랜치 간 커밋을 수동으로 직접 관리함
+- 커밋 메시지 제안, 커밋 실행, PR 생성 등 모든 git 커밋 관련 작업 금지
+- 파일 수정 후 "커밋할까요?" 같은 질문도 하지 말 것
+- 버전 체크리스트 안내 시에도 실제 커밋 동작은 수행하지 않음
+
+---
 
 ## 필수 규칙
 

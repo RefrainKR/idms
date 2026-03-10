@@ -36,7 +36,7 @@ export const CONFIG = {
                 label: '정규',
                 title: '정규 (통상·한정, 픽업2 기준)',
                 settings: {
-                    pickupCount: 2, pickupRate: 1, maxLoops: 2, step4Rate: 20, rewards: { 2: 'random' },
+                    pickupCount: 2, pickupRate: 1, maxLoops: 2, step4Rate: 40, rewards: { 2: 'random' },
                     rainbow: { p3star: 5, p2star: 15, p1star: 33, pSSR: 3, pSR: 5, pR: 39 }
                 }
             },
