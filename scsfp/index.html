@@ -10,9 +10,9 @@
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
 
     <!-- CSS -->
-    <link rel="stylesheet" href="css/common.css?v=1.9.9">
-    <link rel="stylesheet" href="css/gacha.css?v=1.9.9">
-    <link rel="stylesheet" href="css/payment.css?v=1.9.9">
+    <link rel="stylesheet" href="css/common.css?v=1.10.0">
+    <link rel="stylesheet" href="css/gacha.css?v=1.10.0">
+    <link rel="stylesheet" href="css/payment.css?v=1.10.0">
 </head>
 <body>
 
@@ -102,7 +102,7 @@
                     <button class="toggle-btn" data-toggle-section>▼</button>
                 </div>
                 <div class="section-content">
-                    <div class="subsection-group">
+                    <div class="subsection-group no-title">
                         <div class="input-item">
                             <label for="star3-normalPulls">횟수: 일반</label>
                             <input type="number" id="star3-normalPulls">
@@ -254,7 +254,7 @@
                     <button class="toggle-btn" data-toggle-section>▼</button>
                 </div>
                 <div class="section-content">
-                    <div class="subsection-group">
+                    <div class="subsection-group no-title">
                         <div class="input-item">
                             <label for="birthday-normalPulls">횟수: 일반</label>
                             <input type="number" id="birthday-normalPulls">
@@ -361,7 +361,7 @@
                     <button class="toggle-btn" data-toggle-section>▼</button>
                 </div>
                 <div class="section-content">
-                    <div class="subsection-group">
+                    <div class="subsection-group no-title">
                         <div class="input-item">
                             <label for="collab-normalPulls">횟수: 일반</label>
                             <input type="number" id="collab-normalPulls">
@@ -473,7 +473,7 @@
                     <button class="toggle-btn" data-toggle-section>▼</button>
                 </div>
                 <div class="section-content">
-                    <div class="subsection-group subsection-group-block">
+                    <div class="subsection-group subsection-group-block no-title">
                         <div class="input-row-half">
                             <div class="input-item">
                                 <label for="star2-normalPulls">일반 횟수</label>
@@ -591,6 +591,28 @@
                 </div>
             </div>
 
+            <!-- 가치 설정 -->
+            <div class="collapsible-container" data-collapsible="true">
+                <div class="section-header">
+                    <h3 class="section-title">가치 설정</h3>
+                    <button class="toggle-btn" data-toggle-section>▼</button>
+                </div>
+                <div class="section-content">
+                    <div class="subsection-group no-title">
+                        <div class="input-item">
+                            <label for="payment-free-gem-value">무료돌 가치</label>
+                            <span class="input-hint">유료돌 100당</span>
+                            <input type="number" id="payment-free-gem-value">
+                        </div>
+                        <div class="input-item">
+                            <label for="payment-ticket-value">티켓 가치</label>
+                            <span class="input-hint">무료돌 250당</span>
+                            <input type="number" id="payment-ticket-value">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- 메인 탭 시스템 -->
             <div id="payment-tab-system" class="main-tab-system">
                 <!-- 탭 네비게이션 -->
@@ -644,13 +666,6 @@
                                 <p style="text-align: center; padding: 20px; color: var(--text-secondary);">
                                     로딩 중...
                                 </p>
-                            </div>
-                            <div class="sub-input-area">
-                                <div class="input-item">
-                                    <label for="fes-ticket-value">티켓 가치</label>
-                                    <span class="input-hint">무료돌 250당</span>
-                                    <input type="number" id="fes-ticket-value" max="250">
-                                </div>
                             </div>
                         </div>
                     </div>
@@ -710,7 +725,7 @@
     <!-- 향후 저작권, 링크 등 추가 예정 -->
 </footer>
 
-<script type="module" src="js/main.js?v=1.9.9"></script>
+<script type="module" src="js/main.js?v=1.10.0"></script>
 
 </body>
 </html>

@@ -4,6 +4,55 @@
 
 ---
 
+## v1.10.0 (2026-03-12) - 과금 패키지 비교표 전면 개편
+
+### 새로운 기능
+
+**1. 패키지 비교표 구조 개편**
+- **공통 유료돌 열 추가**: 플랫폼별로 분산되어 있던 유료돌 표시를 `공통` 열로 통합
+  - ASOBI/Android/iOS의 유료돌 수가 동일함을 명확히 표현
+- **ASOBI 무료돌 열 추가**: ASOBI 전용 추가 무료돌을 별도 열로 표시
+- **차이값 열 추가**: iOS 가격 - ASOBI 가격을 별도 열로 표시, 통화 토글(¥/₩)과 연동
+- `PaymentConfig.js`: ASOBI NORMAL 패키지를 `paidGems`(유료돌)와 `freeGems`(추가 무료돌)로 분리
+
+**2. 가치 설정 섹션 신설**
+- 기존 페스 탭의 "티켓 가치" 입력을 독립 섹션으로 이동
+- **무료돌 가치** (유료돌 100당): 무료돌의 유료돌 환산 비율 설정
+- **티켓 가치** (무료돌 250당): 페스 티켓 가치 설정
+- `PaymentModel.js`: `freeGemValue` Observable 추가, `toJSON`/`fromJSON` 직렬화 포함
+
+**3. 효율 계산에 무료돌 가치 반영**
+- `effectiveGems = paidGems + freeGems × (freeGemValue / 100)` 공식 적용
+- `_getBaselineEfficiency`, `_renderPackageRow` 모두 반영
+- `freeGemValue` 변경 시 패키지 테이블 실시간 재렌더링
+
+**4. UI 컴포넌트 개선 - subsection-group.no-title**
+- 타이틀 없는 subsection-group용 CSS modifier 클래스 추가
+  - `margin-top: 8px` (기존 15px의 절반), `padding-top: 12px` (기존 15px → 12px)
+- 3성/생일/콜라보/2성 사용자 설정 및 과금 가치 설정에 적용
+
+### 버그 수정
+
+- **All 모드에서 기타 열 항상 숨김**: `cell-extras` TD 3곳에 `hide-simple` 하드코딩 → `${simpleClass}` 조건부 클래스로 수정
+
+### 게임 데이터 업데이트
+
+- `docs/GAME_RULES.md`: 날개 누진 구간별 소요량 테이블 추가
+  - 3성 → 4성: 200개, 4성 → 5성: 300개 (합계 500개)
+  - 카드별 리셋, 무료 획득 날개 미포함 기준 명확화
+
+### 파일 변경
+
+- `js/config/PaymentConfig.js`: ASOBI NORMAL 패키지 `paidGems`/`freeGems` 분리, `FREE_GEM_VALUE` INPUTS 추가
+- `js/model/payment/PaymentModel.js`: `freeGemValue` Observable 추가, 무돌 역산 계산에 반영
+- `js/view/payment/PaymentView.js`: 테이블 구조 개편 (공통 유료돌, 무료돌, 차이값 열), 기타 열 표시 버그 수정
+- `js/viewmodel/payment/PaymentViewModel.js`: `freeGemValue`/`ticketValue` 입력 바인딩 추가
+- `index.html`: 가치 설정 섹션 추가, 가챠 4종 + 과금 사용자 설정에 `subsection-group.no-title` 적용
+- `css/common.css`: `.subsection-group.no-title` CSS modifier 추가
+- `docs/GAME_RULES.md`: 날개 한계돌파 구간별 소요량 추가
+
+---
+
 ## v1.9.10 (2026-03-04) - 저격/아무나 모드, PJ 가챠 확률 개선
 
 ### 새로운 기능

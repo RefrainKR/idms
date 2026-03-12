@@ -22,6 +22,9 @@ export class PaymentModel {
         // 형식: { platform: 'ASOBI', category: 'NORMAL', id: 'F' }
         this.baselinePackage = new Observable({ platform: 'ASOBI', category: 'NORMAL', id: 'F' });
 
+        // 무료돌 가치 설정 (유료돌 100당 기준, 기본 100 = 1:1)
+        this.freeGemValue = new Observable(inputs.FREE_GEM_VALUE.value);
+
         // 티켓 가치 설정 (무료돌 250당 기준, 1장 = 250돌 = 가챠 1회)
         this.ticketValue = new Observable(inputs.TICKET_VALUE.value);
     }
@@ -107,8 +110,13 @@ export class PaymentModel {
             const asobiDiscountedJPY = this.applyJPYDiscount(asobiPriceJPY);
             const asobiDiscountedKRW = this.convertToKRW(asobiDiscountedJPY);
 
-            // Step 3: ASOBI 유료돌을 iOS 기준 가격으로 정규화
-            const asobiNormalizedGemValueKRW = asobiPkg.paidGems * iosGemPriceKRW;
+            // Step 3: ASOBI 실질 돌 수 계산 (무료돌 가치 반영)
+            // freeGems는 별도 컬럼에 표시되며, freeGemValue 설정으로 유료돌 환산 비율 조정
+            const freeGemValue = this.freeGemValue?.value ?? 100;
+            const totalAsobiGems = asobiPkg.paidGems + (asobiPkg.freeGems || 0) * (freeGemValue / 100);
+
+            // Step 3: ASOBI 실질 돌을 iOS 기준 가격으로 정규화
+            const asobiNormalizedGemValueKRW = totalAsobiGems * iosGemPriceKRW;
 
             // Step 4: 차액 = 무돌의 총 가치
             const rainbowCrystalTotalValueKRW = asobiDiscountedKRW - asobiNormalizedGemValueKRW;
@@ -150,7 +158,7 @@ export class PaymentModel {
                     jpy: Math.round((iosDiscountedKRW / this.exchangeRate.value) * 100),
                     krw: iosDiscountedKRW
                 },
-                gemDiff: asobiPkg.paidGems - iosPkg.paidGems,
+                gemDiff: asobiPkg.freeGems || 0,  // ASOBI 전용 무료돌 수
                 normalizedPriceDiff: {
                     jpy: Math.round((rainbowCrystalTotalValueKRW / this.exchangeRate.value) * 100),
                     krw: Math.round(rainbowCrystalTotalValueKRW)
@@ -229,7 +237,9 @@ export class PaymentModel {
             exchangeRate: this.exchangeRate.value,
             jpyDiscountRate: this.jpyDiscountRate.value,
             krwDiscountRate: this.krwDiscountRate.value,
-            baselinePackage: this.baselinePackage.value
+            baselinePackage: this.baselinePackage.value,
+            freeGemValue: this.freeGemValue.value,
+            ticketValue: this.ticketValue.value
         };
     }
 
@@ -239,5 +249,7 @@ export class PaymentModel {
         if (data.jpyDiscountRate !== undefined) this.jpyDiscountRate.value = data.jpyDiscountRate;
         if (data.krwDiscountRate !== undefined) this.krwDiscountRate.value = data.krwDiscountRate;
         if (data.baselinePackage !== undefined) this.baselinePackage.value = data.baselinePackage;
+        if (data.freeGemValue !== undefined) this.freeGemValue.value = data.freeGemValue;
+        if (data.ticketValue !== undefined) this.ticketValue.value = data.ticketValue;
     }
 }

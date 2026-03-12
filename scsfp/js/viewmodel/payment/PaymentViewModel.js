@@ -86,8 +86,17 @@ export class PaymentViewModel extends BaseViewModel {
             }));
         }
 
-        // 티켓 가치 (무료돌 100당)
-        const ticketValueInput = document.getElementById('fes-ticket-value');
+        // 무료돌 가치 (유료돌 100당)
+        const freeGemValueInput = document.getElementById('payment-free-gem-value');
+        if (freeGemValueInput) {
+            const cfg = inputs.FREE_GEM_VALUE;
+            this._inputBinders.push(new InputBinder(freeGemValueInput, this.model.freeGemValue, {
+                min: cfg.min, max: cfg.max, type: 'int'
+            }));
+        }
+
+        // 티켓 가치 (무료돌 250당)
+        const ticketValueInput = document.getElementById('payment-ticket-value');
         if (ticketValueInput) {
             const cfg = inputs.TICKET_VALUE;
             this._inputBinders.push(new InputBinder(ticketValueInput, this.model.ticketValue, {
@@ -118,10 +127,21 @@ export class PaymentViewModel extends BaseViewModel {
             this._subscriptions.push(unsubscribe);
         });
 
+        // 무료돌 가치 변경 시 패키지 테이블 재렌더링 (ASOBI 효율 영향)
+        this._subscriptions.push(
+            this.model.freeGemValue.subscribe(() => {
+                if (!this.isInitializing) {
+                    this.save();
+                    this.renderPackageTables();
+                }
+            })
+        );
+
         // 티켓 가치 변경 시 페스 테이블만 재렌더링
         this._subscriptions.push(
             this.model.ticketValue.subscribe(() => {
                 if (!this.isInitializing) {
+                    this.save();
                     this.renderFesTable();
                 }
             })

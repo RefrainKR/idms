@@ -17,7 +17,8 @@ export const PAYMENT_CONFIG = {
         EXCHANGE_RATE:    { value: 950, min: 0, max: 9999 },
         JPY_DISCOUNT_RATE: { value: 0,   min: 0, max: 100 },
         KRW_DISCOUNT_RATE: { value: 0,   min: 0, max: 100 },
-        TICKET_VALUE:     { value: 250,  min: 0, max: 250 }  // 티켓 1장 가치 (무료돌 250당 기준, 1회 가챠 = 250돌)
+        FREE_GEM_VALUE:   { value: 100,  min: 0, max: 100 },  // 유료돌 100당 무료돌 가치 (100 = 1:1)
+        TICKET_VALUE:     { value: 250,  min: 0, max: 250 }   // 티켓 1장 가치 (무료돌 250당 기준, 1회 가챠 = 250돌)
     }
 };
 
@@ -66,13 +67,14 @@ export const PACKAGES = {
         },
 
         // 상시 패키지
+        // paidGems: 유료돌 (타 플랫폼과 동일), freeGems: 추가 무료돌 (ASOBI 특典)
         NORMAL: {
-            'A': { name: 'A팩', price: 160, paidGems: 85 },
-            'B': { name: 'B팩', price: 480, paidGems: 380 },
-            'C': { name: 'C팩', price: 1000, paidGems: 820 },
-            'D': { name: 'D팩', price: 3200, paidGems: 2700, rainbow: 15 },
-            'E': { name: 'E팩', price: 5000, paidGems: 4410, rainbow: 25 },
-            'F': { name: 'F팩', price: 10000, paidGems: 8875, rainbow: 50 }
+            'A': { name: 'A팩', price: 160,   paidGems: 80,   freeGems: 5   },
+            'B': { name: 'B팩', price: 480,   paidGems: 360,  freeGems: 20  },
+            'C': { name: 'C팩', price: 1000,  paidGems: 780,  freeGems: 40  },
+            'D': { name: 'D팩', price: 3200,  paidGems: 2570, freeGems: 130, rainbow: 15 },
+            'E': { name: 'E팩', price: 5000,  paidGems: 4200, freeGems: 210, rainbow: 25 },
+            'F': { name: 'F팩', price: 10000, paidGems: 8450, freeGems: 425, rainbow: 50 }
         }
     },
 

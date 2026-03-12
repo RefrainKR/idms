@@ -647,6 +647,11 @@ footer {
     margin-bottom: 0;
 }
 
+.subsection-group.no-title {
+    margin-top: 8px;
+    padding-top: 12px;
+}
+
 .subsection-title {
     font-size: 0.95rem;
     color: var(--primary-color);

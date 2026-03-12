@@ -19,9 +19,10 @@ export class PaymentView {
         if (!pkg) return 1; // 기준 패키지가 없으면 1 반환
 
         const currency = packageData[baseline.platform]?.currency;
-        const paidGems = pkg.paidGems || 0;
+        const freeGemValue = model.freeGemValue?.value ?? 100;
+        const effectiveGems = (pkg.paidGems || 0) + (pkg.freeGems || 0) * (freeGemValue / 100);
 
-        if (paidGems === 0) return 1;
+        if (effectiveGems === 0) return 1;
 
         // 항상 돌/100엔 기준으로 계산 (실제 결제 통화의 할인만 적용)
         if (currency === 'KRW') {
@@ -29,12 +30,12 @@ export class PaymentView {
             const basePriceKRW = pkg.price;
             const discountedPriceKRW = model.applyKRWDiscount(basePriceKRW);
             const discountedPriceJPY = Math.round((discountedPriceKRW / model.exchangeRate.value) * 100);
-            return discountedPriceJPY > 0 ? paidGems / discountedPriceJPY : 0;
+            return discountedPriceJPY > 0 ? effectiveGems / discountedPriceJPY : 0;
         } else {
             // ASOBI, Android: 엔화 결제 (엔화 할인만 적용)
             const basePriceJPY = pkg.price;
             const discountedPriceJPY = model.applyJPYDiscount(basePriceJPY);
-            return discountedPriceJPY > 0 ? paidGems / discountedPriceJPY : 0;
+            return discountedPriceJPY > 0 ? effectiveGems / discountedPriceJPY : 0;
         }
     }
 
@@ -115,7 +116,9 @@ export class PaymentView {
         let html = '';
 
         // 카테고리 구분 행 (viewMode에 따라 colspan 조정)
-        const colspan = viewMode === 'simple' ? '10' : '16';
+        // all:    1(pkg) + 1(공통) + 5(ASOBI) + 4(Android) + 4(iOS) + 1(차이값) = 16
+        // simple: 1(pkg) + 1(공통) + 2(ASOBI) + 2(Android) + 2(iOS) + 1(차이값) = 9
+        const colspan = viewMode === 'simple' ? '9' : '16';
         html += `<tr class="category-separator">`;
         html += `<td colspan="${colspan}">${categoryName}</td>`;
         html += `</tr>`;
@@ -136,40 +139,47 @@ export class PaymentView {
         const jpyHeader = efficiencyMode === 'price-per-gem' ? '¥/돌' : '돌/¥';
         const krwHeader = efficiencyMode === 'price-per-gem' ? '₩/돌' : '돌/₩';
 
-        // Simple 모드에서는 colspan 조정
-        const colspan = viewMode === 'simple' ? '3' : '5';
         const simpleClass = viewMode === 'simple' ? ' hide-simple' : '';
+
+        // 공통 유료돌: 1열 (항상 표시)
+        // ASOBI: 가격, 무료돌, 기타, 효율, 배수 = 5열 (all) / 2열 (simple: 기타 hidden)
+        // Android/iOS: 가격, 기타, 효율, 배수 = 4열 (all) / 2열 (simple)
+        // 차이값: 1열 (항상 표시, rowspan=2)
+        const asobiColspan = viewMode === 'simple' ? '2' : '5';
+        const otherColspan = viewMode === 'simple' ? '2' : '4';
 
         return `
             <thead>
                 <tr>
                     <th rowspan="2" class="header-package">패키지</th>
-                    <th colspan="${colspan}" class="header-platform">ASOBI</th>
-                    <th colspan="${colspan}" class="header-platform">Android</th>
-                    <th colspan="${colspan}" class="header-platform">iOS</th>
+                    <th colspan="1" class="header-platform">공통</th>
+                    <th colspan="${asobiColspan}" class="header-platform">ASOBI</th>
+                    <th colspan="${otherColspan}" class="header-platform">Android</th>
+                    <th colspan="${otherColspan}" class="header-platform">iOS</th>
+                    <th rowspan="2" class="header-attr">차이값</th>
                 </tr>
                 <tr>
+                    <!-- 공통 -->
+                    <th class="header-attr">유료돌</th>
                     <!-- 아소비 -->
                     <th class="header-attr currency-jpy${simpleClass}">가격(¥)</th>
                     <th class="header-attr currency-krw hide-krw${simpleClass}">가격(₩)</th>
-                    <th class="header-attr${simpleClass}">유료돌</th>
-                    <th class="header-attr">기타</th>
+                    <th class="header-attr${simpleClass}">무료돌</th>
+                    <th class="header-attr${simpleClass}">기타</th>
                     <th class="header-attr currency-jpy">${jpyHeader}</th>
                     <th class="header-attr currency-krw hide-krw">${krwHeader}</th>
                     <th class="header-attr">효율(x배)</th>
                     <!-- Android -->
                     <th class="header-attr currency-jpy${simpleClass}">가격(¥)</th>
                     <th class="header-attr currency-krw hide-krw${simpleClass}">가격(₩)</th>
-                    <th class="header-attr${simpleClass}">유료돌</th>
-                    <th class="header-attr">기타</th>
+                    <th class="header-attr${simpleClass}">기타</th>
                     <th class="header-attr currency-jpy">${jpyHeader}</th>
                     <th class="header-attr currency-krw hide-krw">${krwHeader}</th>
                     <th class="header-attr">효율(x배)</th>
                     <!-- iOS -->
                     <th class="header-attr currency-krw hide-krw${simpleClass}">가격(₩)</th>
                     <th class="header-attr currency-jpy${simpleClass}">가격(¥)</th>
-                    <th class="header-attr${simpleClass}">유료돌</th>
-                    <th class="header-attr">기타</th>
+                    <th class="header-attr${simpleClass}">기타</th>
                     <th class="header-attr currency-krw hide-krw">${krwHeader}</th>
                     <th class="header-attr currency-jpy">${jpyHeader}</th>
                     <th class="header-attr">효율(x배)</th>
@@ -185,6 +195,7 @@ export class PaymentView {
     _renderPackageRow(pkgId, category, packageData, model, efficiencyMode, baselineEfficiency, viewMode) {
         const platforms = ['ASOBI', 'ANDROID', 'IOS'];
         const simpleClass = viewMode === 'simple' ? ' hide-simple' : '';
+        const freeGemValue = model.freeGemValue?.value ?? 100;
 
         let html = '<tr>';
 
@@ -194,6 +205,13 @@ export class PaymentView {
                          packageData.IOS?.[category]?.[pkgId];
 
         html += `<td class="cell-package">${firstPkg?.name || pkgId}</td>`;
+
+        // 공통 유료돌 (all 플랫폼 동일) — Android/iOS 기준 (ASOBI 무료돌 제외)
+        const commonPaidGems = packageData.ANDROID?.[category]?.[pkgId]?.paidGems
+                            ?? packageData.IOS?.[category]?.[pkgId]?.paidGems
+                            ?? packageData.ASOBI?.[category]?.[pkgId]?.paidGems
+                            ?? 0;
+        html += `<td class="cell-number">${commonPaidGems ? commonPaidGems.toLocaleString() + '돌' : '-'}</td>`;
 
         // 각 플랫폼별 데이터
         platforms.forEach(platform => {
@@ -208,6 +226,9 @@ export class PaymentView {
 
             if (pkg) {
                 const paidGems = pkg.paidGems || 0;
+                const freeGems = pkg.freeGems || 0;
+                // 효율 계산에 사용할 실질 돌 수 (무료돌 가치 반영)
+                const effectiveGems = paidGems + freeGems * (freeGemValue / 100);
                 const extras = this._formatExtras(pkg);
 
                 // 선택 상태 클래스
@@ -219,31 +240,24 @@ export class PaymentView {
                     // iOS: 원화만 결제 가능 (원화 할인 → 엔화로 환산)
                     const basePriceKRW = pkg.price;
                     const discountedPriceKRW = model.applyKRWDiscount(basePriceKRW);
-                    // 엔화는 원화의 환산값 (할인 전/후 모두 환산)
                     const basePriceJPY = Math.round((basePriceKRW / model.exchangeRate.value) * 100);
                     const discountedPriceJPY = Math.round((discountedPriceKRW / model.exchangeRate.value) * 100);
 
-                    // 효율 계산 (모드에 따라 다름)
                     let krwEfficiency, yenEfficiency;
                     if (efficiencyMode === 'price-per-gem') {
-                        // 원/돌, 엔/돌
-                        krwEfficiency = paidGems > 0 ? discountedPriceKRW / paidGems : 0;
-                        yenEfficiency = paidGems > 0 ? discountedPriceJPY / paidGems : 0;
+                        krwEfficiency = effectiveGems > 0 ? discountedPriceKRW / effectiveGems : 0;
+                        yenEfficiency = effectiveGems > 0 ? discountedPriceJPY / effectiveGems : 0;
                     } else {
-                        // 돌/원, 돌/엔
-                        krwEfficiency = discountedPriceKRW > 0 ? paidGems / discountedPriceKRW : 0;
-                        yenEfficiency = discountedPriceJPY > 0 ? paidGems / discountedPriceJPY : 0;
+                        krwEfficiency = discountedPriceKRW > 0 ? effectiveGems / discountedPriceKRW : 0;
+                        yenEfficiency = discountedPriceJPY > 0 ? effectiveGems / discountedPriceJPY : 0;
                     }
 
-                    // 효율 배수 계산 (항상 돌/100엔 기준)
-                    const currentEfficiency = discountedPriceJPY > 0 ? paidGems / discountedPriceJPY : 0;
+                    const currentEfficiency = discountedPriceJPY > 0 ? effectiveGems / discountedPriceJPY : 0;
                     const efficiencyMultiplier = baselineEfficiency > 0 ? currentEfficiency / baselineEfficiency : 0;
 
-                    // 단위 추가 (단위만 표시)
                     const krwUnit = efficiencyMode === 'price-per-gem' ? '₩' : '돌';
                     const yenUnit = efficiencyMode === 'price-per-gem' ? '¥' : '돌';
 
-                    // 할인 표시
                     const priceKRWDisplay = discountedPriceKRW < basePriceKRW
                         ? `<s>${basePriceKRW.toLocaleString()}₩</s> ${discountedPriceKRW.toLocaleString()}₩`
                         : `${discountedPriceKRW.toLocaleString()}₩`;
@@ -251,10 +265,10 @@ export class PaymentView {
                         ? `<s>${basePriceJPY.toLocaleString()}¥</s> ${discountedPriceJPY.toLocaleString()}¥`
                         : `${discountedPriceJPY.toLocaleString()}¥`;
 
+                    // iOS: 유료돌 열 없음 (공통 열로 통합)
                     html += `<td class="cell-number platform-cell${selectedClass}${firstClass} currency-krw hide-krw${simpleClass}" data-platform="${platform}" data-category="${category}" data-package="${pkgId}">${priceKRWDisplay}</td>`;
                     html += `<td class="cell-number platform-cell${selectedClass} currency-jpy${simpleClass}" data-platform="${platform}" data-category="${category}" data-package="${pkgId}">${priceJPYDisplay}</td>`;
-                    html += `<td class="cell-number platform-cell${selectedClass}${simpleClass}" data-platform="${platform}" data-category="${category}" data-package="${pkgId}">${paidGems.toLocaleString()}돌</td>`;
-                    html += `<td class="cell-extras platform-cell${selectedClass}" data-platform="${platform}" data-category="${category}" data-package="${pkgId}">${extras}</td>`;
+                    html += `<td class="cell-extras platform-cell${selectedClass}${simpleClass}" data-platform="${platform}" data-category="${category}" data-package="${pkgId}">${extras}</td>`;
                     html += `<td class="cell-efficiency platform-cell${selectedClass} currency-krw hide-krw" data-platform="${platform}" data-category="${category}" data-package="${pkgId}">${krwEfficiency.toFixed(FORMAT.DECIMAL_PLACES.EFFICIENCY)}${krwUnit}</td>`;
                     html += `<td class="cell-efficiency platform-cell${selectedClass} currency-jpy" data-platform="${platform}" data-category="${category}" data-package="${pkgId}">${yenEfficiency.toFixed(FORMAT.DECIMAL_PLACES.EFFICIENCY)}${yenUnit}</td>`;
                     html += `<td class="cell-multiplier platform-cell${selectedClass}${lastClass}" data-platform="${platform}" data-category="${category}" data-package="${pkgId}">${efficiencyMultiplier.toFixed(FORMAT.DECIMAL_PLACES.EFFICIENCY)}배</td>`;
@@ -262,31 +276,24 @@ export class PaymentView {
                     // ASOBI, Android: 엔화만 결제 가능 (엔화 할인 → 원화로 환산)
                     const basePriceJPY = pkg.price;
                     const discountedPriceJPY = model.applyJPYDiscount(basePriceJPY);
-                    // 원화는 엔화의 환산값 (할인 전/후 모두 환산)
                     const basePriceKRW = Math.round((basePriceJPY / 100) * model.exchangeRate.value);
                     const discountedPriceKRW = Math.round((discountedPriceJPY / 100) * model.exchangeRate.value);
 
-                    // 효율 계산 (모드에 따라 다름)
                     let yenEfficiency, krwEfficiency;
                     if (efficiencyMode === 'price-per-gem') {
-                        // 엔/돌, 원/돌
-                        yenEfficiency = paidGems > 0 ? discountedPriceJPY / paidGems : 0;
-                        krwEfficiency = paidGems > 0 ? discountedPriceKRW / paidGems : 0;
+                        yenEfficiency = effectiveGems > 0 ? discountedPriceJPY / effectiveGems : 0;
+                        krwEfficiency = effectiveGems > 0 ? discountedPriceKRW / effectiveGems : 0;
                     } else {
-                        // 돌/엔, 돌/원
-                        yenEfficiency = discountedPriceJPY > 0 ? paidGems / discountedPriceJPY : 0;
-                        krwEfficiency = discountedPriceKRW > 0 ? paidGems / discountedPriceKRW : 0;
+                        yenEfficiency = discountedPriceJPY > 0 ? effectiveGems / discountedPriceJPY : 0;
+                        krwEfficiency = discountedPriceKRW > 0 ? effectiveGems / discountedPriceKRW : 0;
                     }
 
-                    // 효율 배수 계산 (항상 돌/100엔 기준)
-                    const currentEfficiency = discountedPriceJPY > 0 ? paidGems / discountedPriceJPY : 0;
+                    const currentEfficiency = discountedPriceJPY > 0 ? effectiveGems / discountedPriceJPY : 0;
                     const efficiencyMultiplier = baselineEfficiency > 0 ? currentEfficiency / baselineEfficiency : 0;
 
-                    // 단위 추가 (단위만 표시)
                     const yenUnit = efficiencyMode === 'price-per-gem' ? '¥' : '돌';
                     const krwUnit = efficiencyMode === 'price-per-gem' ? '₩' : '돌';
 
-                    // 할인 표시
                     const priceJPYDisplay = discountedPriceJPY < basePriceJPY
                         ? `<s>${basePriceJPY.toLocaleString()}¥</s> ${discountedPriceJPY.toLocaleString()}¥`
                         : `${discountedPriceJPY.toLocaleString()}¥`;
@@ -296,18 +303,41 @@ export class PaymentView {
 
                     html += `<td class="cell-number platform-cell${selectedClass}${firstClass} currency-jpy${simpleClass}" data-platform="${platform}" data-category="${category}" data-package="${pkgId}" data-currency="jpy">${priceJPYDisplay}</td>`;
                     html += `<td class="cell-number platform-cell${selectedClass} currency-krw hide-krw${simpleClass}" data-platform="${platform}" data-category="${category}" data-package="${pkgId}" data-currency="krw">${priceKRWDisplay}</td>`;
-                    html += `<td class="cell-number platform-cell${selectedClass}${simpleClass}" data-platform="${platform}" data-category="${category}" data-package="${pkgId}">${paidGems.toLocaleString()}돌</td>`;
-                    html += `<td class="cell-extras platform-cell${selectedClass}" data-platform="${platform}" data-category="${category}" data-package="${pkgId}">${extras}</td>`;
+                    // ASOBI만 무료돌 열 추가
+                    if (platform === 'ASOBI') {
+                        html += `<td class="cell-number platform-cell${selectedClass}${simpleClass}" data-platform="${platform}" data-category="${category}" data-package="${pkgId}">${freeGems ? freeGems.toLocaleString() + '돌' : '-'}</td>`;
+                    }
+                    html += `<td class="cell-extras platform-cell${selectedClass}${simpleClass}" data-platform="${platform}" data-category="${category}" data-package="${pkgId}">${extras}</td>`;
                     html += `<td class="cell-efficiency platform-cell${selectedClass} currency-jpy" data-platform="${platform}" data-category="${category}" data-package="${pkgId}">${yenEfficiency.toFixed(FORMAT.DECIMAL_PLACES.EFFICIENCY)}${yenUnit}</td>`;
                     html += `<td class="cell-efficiency platform-cell${selectedClass} currency-krw hide-krw" data-platform="${platform}" data-category="${category}" data-package="${pkgId}">${krwEfficiency.toFixed(FORMAT.DECIMAL_PLACES.EFFICIENCY)}${krwUnit}</td>`;
                     html += `<td class="cell-multiplier platform-cell${selectedClass}${lastClass}" data-platform="${platform}" data-category="${category}" data-package="${pkgId}">${efficiencyMultiplier.toFixed(FORMAT.DECIMAL_PLACES.EFFICIENCY)}배</td>`;
                 }
             } else {
                 // 해당 플랫폼에 패키지 없음 (viewMode에 따라 colspan 조정)
-                const emptyColspan = viewMode === 'simple' ? '3' : '5';
+                // ASOBI: 5열 (all) / 2열 (simple), Android/iOS: 4열 (all) / 2열 (simple)
+                const emptyColspan = viewMode === 'simple' ? '2' : (platform === 'ASOBI' ? '5' : '4');
                 html += `<td class="cell-empty" colspan="${emptyColspan}">-</td>`;
             }
         });
+
+        // 차이값: iOS 가격 - ASOBI 가격 (통화 토글 연동)
+        const asobiDiffPkg = packageData.ASOBI?.[category]?.[pkgId];
+        const iosDiffPkg = packageData.IOS?.[category]?.[pkgId];
+        if (asobiDiffPkg && iosDiffPkg) {
+            const asobiDiscJPY = model.applyJPYDiscount(asobiDiffPkg.price);
+            const asobiDiscKRW = Math.round(model.convertToKRW(asobiDiscJPY));
+            const iosDiscKRW = model.applyKRWDiscount(iosDiffPkg.price);
+            const iosDiscJPY = Math.round((iosDiscKRW / model.exchangeRate.value) * 100);
+            const diffJPY = iosDiscJPY - asobiDiscJPY;
+            const diffKRW = iosDiscKRW - asobiDiscKRW;
+            const fmtDiff = (val, sym) => {
+                const sign = val >= 0 ? '+' : '-';
+                return `${sign}${Math.abs(val).toLocaleString()}${sym}`;
+            };
+            html += `<td class="cell-number cell-diff"><span class="currency-jpy">${fmtDiff(diffJPY, '¥')}</span><span class="currency-krw hide-krw">${fmtDiff(diffKRW, '₩')}</span></td>`;
+        } else {
+            html += `<td class="cell-number cell-diff">-</td>`;
+        }
 
         html += '</tr>';
         return html;
