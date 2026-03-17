@@ -137,12 +137,13 @@ export class PaymentViewModel extends BaseViewModel {
             })
         );
 
-        // 티켓 가치 변경 시 페스 테이블만 재렌더링
+        // 티켓 가치 변경 시 페스 테이블 + 무돌 분석 재렌더링 (시즌 페스 무돌 계산에 사용)
         this._subscriptions.push(
             this.model.ticketValue.subscribe(() => {
                 if (!this.isInitializing) {
                     this.save();
                     this.renderFesTable();
+                    this.renderRainbowCrystalAnalysis();
                 }
             })
         );

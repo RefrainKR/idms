@@ -207,11 +207,18 @@ export class PaymentModel {
         const asobiDiscountedJPY = this.applyJPYDiscount(asobi.price);
         const asobiDiscountedKRW = this.convertToKRW(asobiDiscountedJPY);
 
-        // 정규화: iOS gem 단가 (무료돌 기준)
-        const iosGemPriceKRW = iosDiscountedKRW / ios.freeGems;
+        // 가치 설정
+        const freeGemValue = this.freeGemValue?.value ?? 100;
+        const ticketValue = this.ticketValue?.value ?? 250;
 
-        // ASOBI gem 정규화 가치
-        const asobiNormalizedGemValueKRW = asobi.freeGems * iosGemPriceKRW;
+        // 정규화: iOS 유효 gem 환산 (무료돌 + 티켓 가치 포함)
+        // 티켓 가치는 ticketValue 설정 (무료돌 환산), 무료돌은 freeGemValue 비율 적용
+        const iosEffectiveGems = (ios.freeGems + (ios.ticket || 0) * ticketValue) * (freeGemValue / 100);
+        const iosGemPriceKRW = iosDiscountedKRW / iosEffectiveGems;
+
+        // ASOBI gem 정규화 가치 (동일 기준 적용)
+        const asobiEffectiveGems = (asobi.freeGems + (asobi.ticket || 0) * ticketValue) * (freeGemValue / 100);
+        const asobiNormalizedGemValueKRW = asobiEffectiveGems * iosGemPriceKRW;
 
         // 15개 무돌 총 가치
         const rainbowTotalValueKRW = asobiDiscountedKRW - asobiNormalizedGemValueKRW;

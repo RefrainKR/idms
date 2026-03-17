@@ -566,9 +566,10 @@ export class PaymentView {
         const summaryEl = document.getElementById('paymentSummary');
         if (summaryEl) {
             summaryEl.innerHTML = `
-                <p class="reference-info">※ 동일 패키지의 ASOBI와 iOS 가격 차이를 통해 무돌의 가치를 역산합니다.</p>
-                <p class="reference-info">※ 정규화(유료돌 차이에 의한 계산)를 통해 순수한 무돌의 가치만 추출합니다.</p>
-                <p class="reference-info">※ 시즌: 시즌 페스 ASOBI(¥1,960/2,250돌/165개)와 iOS(₩17,000/2,000돌/150개) 차이, 무료돌 단가 정규화 기준.</p>
+                <p class="reference-info">※ 공통: 동일 패키지의 ASOBI와 iOS 가격 차이를 통해 무돌의 가치를 역산합니다.</p>
+                <p class="reference-info">※ 정규화: ASOBI의 추가 무료돌·가챠 티켓을 iOS 유료돌 단가 기준으로 환산하여 차감 후 잔액이 무돌 가격이 됩니다.</p>
+                <p class="reference-info">※ 패키지: ASOBI(¥, +무료돌) 와 iOS(₩) 의 차이</p>
+                <p class="reference-info">※ 시즌 페스: ASOBI(¥1,960 / +250무료돌)와 iOS(₩17,000) 차이</p>
             `;
         }
     }

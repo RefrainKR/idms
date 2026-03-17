@@ -4,6 +4,29 @@
 
 ---
 
+## v1.10.0.1 (2026-03-17) - 무돌 분석 버그 수정
+
+### 버그 수정
+
+- **시즌 페스 무돌 계산에 freeGemValue/ticketValue 미반영**: `calculateSeasonFesRainbowPrice`가 무료돌 가치 비율과 티켓 가치를 무시하고 고정값으로 계산하던 문제 수정
+- **ticketValue 변경 시 무돌 분석 미갱신**: 티켓 가치 변경 시 페스 테이블만 재렌더링되고 무돌 분석 테이블은 갱신되지 않던 문제 수정
+- **무돌 분석 설명 텍스트 개선**: 설명을 공통/정규화/패키지/시즌페스 4줄 구조로 개편, 논리적으로 부정확한 "상쇄" 표현 제거
+
+### 문서
+
+- `docs/PAYMENT.md`: ASOBI 상시 패키지 유료돌/무료돌 수치 분리 표기, 전체 "돌" → "유료돌"/"무료돌" 구분 표기
+- `docs/PAYMENT_NOTES.md` 신규: iOS 무돌 전용 패키지 미확인 데이터, 시즌 페스 순환 의존성 문제 및 향후 개선 방향 기록
+
+### 파일 변경
+
+- `js/model/payment/PaymentModel.js`: `calculateSeasonFesRainbowPrice`에 `freeGemValue`/`ticketValue` 반영
+- `js/viewmodel/payment/PaymentViewModel.js`: `ticketValue` 구독에 `renderRainbowCrystalAnalysis()` 추가
+- `js/view/payment/PaymentView.js`: 무돌 분석 설명 텍스트 개선
+- `docs/PAYMENT.md`: 유료돌/무료돌 표기 분리
+- `docs/PAYMENT_NOTES.md`: 신규 생성
+
+---
+
 ## v1.10.0 (2026-03-12) - 과금 패키지 비교표 전면 개편
 
 ### 새로운 기능
