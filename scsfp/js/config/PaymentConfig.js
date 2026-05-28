@@ -123,10 +123,10 @@ export const PACKAGES = {
         NORMAL: {
             'A': { name: 'A팩', price: 1100, paidGems: 80 },
             'B': { name: 'B팩', price: 4400, paidGems: 360 },
-            'C': { name: 'C팩', price: 8800, paidGems: 780 },
-            'D': { name: 'D팩', price: 29000, paidGems: 2570 },
-            'E': { name: 'E팩', price: 44000, paidGems: 4200 },
-            'F': { name: 'F팩', price: 88000, paidGems: 8450 }
+            'C': { name: 'C팩', price: 9900, paidGems: 780 },
+            'D': { name: 'D팩', price: 33000, paidGems: 2570 },
+            'E': { name: 'E팩', price: 49000, paidGems: 4200 },
+            'F': { name: 'F팩', price: 99000, paidGems: 8450 }
         }
     }
 };
@@ -141,7 +141,7 @@ export const FES_PACKAGES = {
         platforms: {
             ASOBI:   { price: 1000, currency: 'JPY', freeGems: 2750, rainbow: 0, ticket: 0, medal: 25 },
             ANDROID: { price: 1000, currency: 'JPY', freeGems: 2500, rainbow: 0, ticket: 0, medal: 25 },
-            IOS:     { price: 8800, currency: 'KRW', freeGems: 2500, rainbow: 0, ticket: 0, medal: 25 }
+            IOS:     { price: 9900, currency: 'KRW', freeGems: 2500, rainbow: 0, ticket: 0, medal: 25 }
         }
     },
     SEASON: {
@@ -149,7 +149,7 @@ export const FES_PACKAGES = {
         platforms: {
             ASOBI:   { price: 1960, currency: 'JPY', freeGems: 2250, rainbow: 165, ticket: 4, medal: 75 },
             ANDROID: { price: 1960, currency: 'JPY', freeGems: 2000, rainbow: 150, ticket: 4, medal: 75 },
-            IOS:     { price: 17000, currency: 'KRW', freeGems: 2000, rainbow: 150, ticket: 4, medal: 75 }
+            IOS:     { price: 19000, currency: 'KRW', freeGems: 2000, rainbow: 150, ticket: 4, medal: 75 }
         }
     }
 };
