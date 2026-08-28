@@ -44,7 +44,7 @@ export const VERSION_CONFIG = {
 export const GACHA_RULES = {
     STAR3: {
         STEPUP_CYCLE: 40,              // Step4가 나오는 주기 (40회마다)
-        SHARED_SELECT_REWARD_INTERVAL: 200 // Normal+Step-up 공유 선택 보상
+        SHARED_SELECT_REWARD_INTERVAL: 200 // 일반+스탭업 공유 천장
     },
     STAR2: {
         HIGH_RATE_INTERVAL: 10,        // 95% 보정 주기 (일반 가챠)

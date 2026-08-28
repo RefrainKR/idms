@@ -49,12 +49,12 @@ The useful questions are not merely:
 > If the pickup probability is X%, what is the chance after N pulls?
 
 The real questions include:
-- How much better is paid Step-up than Normal for a particular target?
+- How much better is paid 스탭업 than 일반 for a particular target?
 - Does the advantage change between sniping one target and collecting all pickups?
 - How many total pulls are needed for a chosen success probability?
-- What happens after a limited Step-up is exhausted and the user must continue on Normal?
-- How much practical value does paid currency obtain through access to Step-up?
-- How much does narrowing the 2-star pool through a Step-up group improve sniping?
+- What happens after a limited 스탭업 is exhausted and the user must continue on 일반?
+- How much practical value does paid currency obtain through access to 스탭업?
+- How much does narrowing the 2-star pool through a 스탭업 group improve sniping?
 
 This is why the DP/CDF/state-transition behavior is central to the project.
 
@@ -64,27 +64,27 @@ This is why the DP/CDF/state-transition behavior is central to the project.
 
 ### 4.1 Ordinary 3-star banners
 
-Normal and Step-up:
+일반 and 스탭업:
 - have different pull rules;
 - share the same 200 stack;
 - at 200 total shared stack, a pickup can be selected.
 
 Example:
-- 120 Normal + 80 Step-up = 200 -> select reward.
+- 120 일반 + 80 스탭업 = 200 -> 천장.
 
-Ordinary Step-up:
+Ordinary 스탭업:
 - uses paid currency;
 - contains per-step bonuses/guarantees depending on banner type;
 - cannot necessarily be repeated forever;
 - has a maximum number of loops.
 
-Once the Step-up allowance is exhausted, a user who continues pulling must use Normal.
+Once the 스탭업 allowance is exhausted, a user who continues pulling must use 일반.
 
 This limit is an important game/economic constraint, not merely a UI limit.
 
 ### 4.2 Loop rewards
 
-Some ordinary 3-star Step-ups add loop rewards.
+Some ordinary 3-star 스탭업 banners add loop rewards.
 
 Examples discussed:
 - a banner capped at two loops can award a random pickup ticket at the second loop;
@@ -94,42 +94,42 @@ Examples discussed:
 
 Random and selectable tickets have very different collection value and must remain separate in the model.
 
-### 4.3 Collaboration/special 3-star Step-up
+### 4.3 Collaboration/special 3-star 스탭업
 
-Some collaboration/special banners use a different Step-up pattern.
+Some collaboration/special banners use a different 스탭업 pattern.
 
 Possible structure:
 - mainly increased pickup probability;
 - not necessarily the ordinary Step1-4 reward pattern;
-- Step-up can be repeatable without a meaningful loop cap;
-- Normal and Step-up still share the 200 stack.
+- 스탭업 can be repeatable without a meaningful loop cap;
+- 일반 and 스탭업 still share the 200 stack.
 
-The current large numeric collaboration Step-up limit (for example `9999`) should be understood as an implementation of practical infinity if the code confirms this.
+The current large numeric collaboration 스탭업 limit (for example `9999`) should be understood as an implementation of practical infinity if the code confirms this.
 
-### 4.4 2-star Normal
+### 4.4 2-star 일반
 
-Normal 2-star:
+일반 2-star:
 - includes all pickup targets;
 - total pickup probability is distributed among the whole pickup pool;
 - has a 100-stack selectable reward.
 
 If total pickup probability is 28% and there are 28 equal pickup targets, an individual target is approximately 1%.
 
-### 4.5 2-star Step-up
+### 4.5 2-star 스탭업
 
-2-star Step-up is not simply "Normal with better step bonuses".
+2-star 스탭업 is not simply "일반 with better step bonuses".
 
 The pickup pool is divided into smaller selectable groups based on in-game affiliations.
 
 This matters for sniping.
 
 Example:
-- Normal: 28% / 28 targets ≈ 1% each.
-- Selected Step-up group: 28% / 7 targets ≈ 4% each.
+- 일반: 28% / 28 targets ≈ 1% each.
+- Selected 스탭업 group: 28% / 7 targets ≈ 4% each.
 
-2-star Step-up:
+2-star 스탭업:
 - uses its own 50-stack selectable reward;
-- does not share this stack with the 100-stack Normal banner.
+- does not share this stack with the 100-stack 일반 banner.
 
 This difference from 3-star shared stacking is critical.
 
@@ -158,26 +158,28 @@ Example with four pickups:
 
 Do not merge these modes.
 
-### 5.3 Normal vs Step-up progress comparison
+### 5.3 일반 vs 스탭업 진행 비교
 
 A graph already compares progress for:
-- Normal-only;
-- a Step-up strategy.
+- 일반;
+- 스탭업.
 
-The current comparison contract records the Step-up strategy explicitly:
+The UI intentionally uses these short Korean labels instead of implementation-oriented strategy names. The detailed strategy remains explicit in code and documentation: finite 3-star and birthday 스탭업 uses the available 스탭업 pulls first and then falls back to 일반.
 
-For finite 3-star and birthday Step-up it represents `stepupFirst`:
-1. use Step-up until the allowed maximum;
-2. continue excess pulls on Normal;
+The current comparison contract records the 스탭업 strategy explicitly:
+
+For finite 3-star and birthday 스탭업 it represents `stepupFirst`:
+1. use 스탭업 until the allowed maximum;
+2. continue excess pulls on 일반;
 3. retain the shared 200-stack logic.
 
 For 2-star selected groups and collaboration within the current chart range it represents `stepupOnly`.
 
-The shared result fields are `normalOnlyData` and `comparedStrategyData`; `comparedStrategyKind` prevents the renderer from guessing which Step-up strategy the second dataset means.
+The shared result fields are `normalOnlyData` and `comparedStrategyData`; `comparedStrategyKind` prevents the renderer from guessing which 스탭업 strategy the second dataset means.
 
 ### 5.4 Target probability -> required pulls
 
-The project already calculates the first pull count at which a chosen target probability is reached for Normal and the Step-up-first strategy.
+The project already calculates the first pull count at which a chosen target probability is reached for 일반 and the compared 스탭업 strategy.
 
 This is an important existing feature and should not be reinvented as a new feature.
 
@@ -186,10 +188,10 @@ This is an important existing feature and should not be reinvented as a new feat
 The progress graph's `best` and `worst` concepts are meaningful.
 
 They correspond approximately to:
-- Best: probability of the desired complete target state;
-- Worst: probability of obtaining none of the targets.
+- `Best (성공)`: probability of the desired complete target state;
+- `Worst (폭사)`: probability of obtaining none of the targets.
 
-Do not rename them merely because the terms are mathematically broad. The UI concept is useful. If needed, clarify their meaning through labels or comments.
+Do not replace the concise UI labels with longer refactoring descriptions. Preserve their exact mathematical meaning in comments and documentation.
 
 ### 5.6 Total acquisition count
 
@@ -212,10 +214,10 @@ Its label and documentation should make the assumption explicit if the current U
 The intended refactor is **semantic cleanup**.
 
 The first behavior-preserving naming pass has separated:
-- Normal-only data from the compared strategy data;
+- all-일반 data from the compared strategy data;
 - `stepupFirst` from `stepupOnly`;
-- shared stack selection rewards from Step-up loop select tickets;
-- random tickets from guaranteed selection rewards;
+- shared stack ceilings from 스탭업 loop select tickets;
+- random tickets from guaranteed acquisitions;
 - collection-state DP from duplicate-inclusive total-acquisition DP;
 - semantic View/ViewModel context fields from tight mathematical `N`/`M` internals.
 
@@ -234,18 +236,18 @@ Continue to treat unclear game rules and analytical counterfactual toggles as ve
 
 | Current name | Meaning |
 |---|---|
-| `normalOnlyData` | Normal for the whole comparison range |
+| `normalOnlyData` | 비교 범위 전체를 일반으로 진행한 결과 |
 | `comparedStrategyData` | Data for the strategy identified by `comparedStrategyKind` |
-| `comparedStrategyKind: stepupFirst` | Step-up through its limit, then Normal |
-| `comparedStrategyKind: stepupOnly` | Step-up for the whole comparison range |
-| `normalOnlyCompletionCdf` | Normal-only goal-completion probability by Pull count |
+| `comparedStrategyKind: stepupFirst` | 스탭업 한도 소진 후 일반으로 전환하는 전략 |
+| `comparedStrategyKind: stepupOnly` | 비교 범위 전체를 스탭업으로 진행하는 전략 |
+| `normalOnlyCompletionCdf` | 일반의 Pull 수별 목표 완료 확률 |
 | `comparedStrategyCompletionCdf` | Compared-strategy goal-completion probability by Pull count |
-| `normalOnlyRequiredPulls` | First Pull count reaching the target probability under Normal-only |
+| `normalOnlyRequiredPulls` | 일반에서 목표 확률에 처음 도달하는 Pull 수 |
 | `comparedStrategyRequiredPulls` | First Pull count reaching the target probability under the compared strategy |
-| `maxStepupPulls` | Maximum available Step-up Pulls before Normal fallback |
-| `normalPullsAfterStepup` | Normal Pulls after Step-up exhaustion |
-| `stepupSelectTicketCount` | Select tickets earned from Step-up loop rewards |
-| `sharedCeilingSelectCount` | Select rewards earned from the shared 200 stack |
+| `maxStepupPulls` | 일반 전환 전까지 이용 가능한 최대 스탭업 Pull 수 |
+| `normalPullsAfterStepup` | 스탭업 소진 후 진행하는 일반 Pull 수 |
+| `stepupSelectTicketCount` | 스탭업 주회 보상으로 얻는 셀렉 티켓 수 |
+| `sharedCeilingSelectCount` | 공유 200스택 천장 횟수 |
 | `totalGuaranteedSelectCount` | Current combined guaranteed-useful selection transitions |
 
 `N` / `M`:
@@ -254,7 +256,12 @@ Continue to treat unclear game rules and analytical counterfactual toggles as ve
 
 `best` / `worst`:
 - not a priority rename;
-- UI meaning is useful.
+- display as `Best (성공)` / `Worst (폭사)`.
+
+User-facing strategy labels:
+- display `일반` / `스탭업` and `일반 vs 스탭업`;
+- keep `normalOnly...`, `stepupFirst`, and `stepupOnly` only as internal identifiers that explain calculation behavior;
+- display a stack-based selectable reward as `천장`, while retaining `셀렉 티켓` for a distinct 스탭업 loop reward.
 
 ---
 

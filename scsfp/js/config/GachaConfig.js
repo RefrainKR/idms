@@ -196,8 +196,8 @@ export const TOGGLE_STATES = {
         { name: PROBABILITY_MODE.CUMULATIVE_MORE, text: '누적(이상)', isActive: true }
     ],
     CEILING: [
-        { name: 'included', text: '선택 보상', isActive: true },
-        { name: 'excluded', text: '선택 보상', isActive: false }
+        { name: 'included', text: '천장', isActive: true },
+        { name: 'excluded', text: '천장', isActive: false }
     ],
     RANDOM: [
         { name: 'included', text: '랜덤 티켓', isActive: true },
@@ -216,8 +216,8 @@ export const TOGGLE_STATES = {
         { name: 'excluded', text: '2/SR확정', isActive: false }
     ],
     EFFICIENCY: [
-        { name: 'best', text: 'Best (목표 달성)', isActive: true },
-        { name: 'worst', text: 'Worst (0명 획득)', isActive: false }
+        { name: 'best', text: 'Best (성공)', isActive: true },
+        { name: 'worst', text: 'Worst (폭사)', isActive: false }
     ],
     EFFICIENCY_MODE: [
         { name: 'comparison', text: '비교', isActive: true },

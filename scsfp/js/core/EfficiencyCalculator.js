@@ -3,7 +3,7 @@ import { GACHA_RULES } from '../config/GachaConfig.js';
 import { CHART_RANGE } from '../config/UIConfig.js';
 
 /**
- * 비교 그래프에서 Normal-only와 대조하는 Step-up 전략의 실제 의미.
+ * 비교 그래프에서 일반과 대조하는 스탭업 전략의 실제 의미.
  */
 export const STEPUP_STRATEGY_KIND = Object.freeze({
     STEPUP_FIRST: 'stepupFirst',
@@ -108,7 +108,7 @@ export class EfficiencyCalculator {
 
     /**
      * 생일/콜라보의 확률 증가형 Step-up 전략을 시뮬레이션한다.
-     * 유한 한도에서는 한도 이후 Normal, 실질적 무제한에서는 Step-up-only로 동작한다.
+     * 유한 한도에서는 한도 이후 일반, 실질적 무제한에서는 스탭업만 진행한다.
      */
     static _simulateRateBoostStepupStrategies(pulls, {
         targetCount,
@@ -169,7 +169,7 @@ export class EfficiencyCalculator {
     }
 
     /**
-     * 3성 Normal-only와 Step-up-first 전략 비교 데이터.
+     * 3성 일반과 스탭업 우선 전략 비교 데이터.
      */
     static calculate3StarComparison({
         pickupCount,
@@ -223,7 +223,7 @@ export class EfficiencyCalculator {
     }
 
     /**
-     * 2성 Normal-only와 선택 그룹 Step-up-only 전략 비교 데이터.
+     * 2성 일반과 선택 그룹 스탭업 전략 비교 데이터.
      */
     static calculate2StarComparison({
         groupPickupCount,
@@ -363,7 +363,7 @@ export class EfficiencyCalculator {
     }
 
     /**
-     * 생일/콜라보 타입의 Normal-only와 해당 Step-up 전략 비교 데이터.
+     * 생일/콜라보 타입의 일반과 해당 스탭업 전략 비교 데이터.
      */
     static calculateRateBoostStepupComparison({
         normalPickupRate,

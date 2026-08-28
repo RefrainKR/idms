@@ -276,7 +276,7 @@ export class Star3GachaViewModel extends BaseGachaViewModel {
             }
         }
 
-        // 공유 200스택 선택 보상과 Step-up 주회 셀렉 티켓은 서로 다른 출처다.
+        // 공유 200스택 천장과 스탭업 주회 셀렉 티켓은 서로 다른 출처다.
         // 현재 분석 토글은 두 종류를 함께 포함/제외한다(동작 보존).
         const sharedCeilingSelectCount = Math.floor(
             (normalPulls + stepPulls) / GACHA_RULES.STAR3.SHARED_SELECT_REWARD_INTERVAL

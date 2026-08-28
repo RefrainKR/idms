@@ -107,7 +107,7 @@ For 3-star efficiency and required-pull curves, `comparedStrategyKind: stepupFir
 - Step-up divides pickups into A-D groups, uses group-sized pools, has guaranteed pickup positions at pull 5 and every 10 pulls afterward, and has a separate 50-pull selectable reward stack.
 - Normal and Step-up stacks are not shared.
 - The direct combined calculation currently derives Step-up rewards from `floor(totalStepPulls / 50)`, where `totalStepPulls` is summed across A-D inputs. Confirm the exact in-game sharing boundary among group banners before changing this behavior or its wording.
-- The 2-star efficiency comparison is Normal-only versus Step-up-only for one selected group and reports `comparedStrategyKind: stepupOnly`.
+- The 2-star efficiency comparison is an all-Normal strategy versus an all-Step-up strategy for one selected group and reports `comparedStrategyKind: stepupOnly`.
 
 ### Best and Worst
 
@@ -116,7 +116,7 @@ In efficiency data:
 - `best` is the probability of reaching the requested complete collection state (`collectionDp[targetCount]`);
 - `worst` is the probability of obtaining none of the targets (`collectionDp[0]`).
 
-These names support the current UI concept. Do not rename them automatically. Prefer clarifying labels/comments such as “Best (goal completed)” and “Worst (0 targets obtained)” if needed.
+These internal names support the current UI concept. Keep the concise user-facing labels `Best (성공)` and `Worst (폭사)` unless the user requests another presentation.
 
 ## Calculation safety and unresolved rule boundaries
 
@@ -159,10 +159,19 @@ Short mathematical `N`/`M` variables are acceptable inside tight DP routines. Pu
 
 During cleanup, it is acceptable to clarify labels, reorder existing information, or move secondary analysis into a more appropriate existing section. Do not add new calculations or derived metrics in this phase.
 
+Use concise Korean game terminology in the user interface. Internal identifiers and strategy metadata may remain English, but do not expose those implementation-oriented identifiers or detailed strategy descriptions to users. Use:
+
+- `일반` for the Normal comparison series;
+- `스탭업` for the compared Step-up series, while documenting fallback behavior outside the short UI label;
+- `일반 vs 스탭업` for comparison tabs;
+- `천장` for stack-based selectable rewards;
+- `셀렉 티켓` for a separate Step-up loop reward so it is not confused with the stack ceiling;
+- `Best (성공)` and `Worst (폭사)` for the efficiency-mode toggle.
+
 Current conceptual priority is:
 
 1. collection probability;
-2. Normal versus the applicable Step-up strategy;
+2. 일반 versus the applicable 스탭업 strategy;
 3. target probability to required pulls;
 4. Any/Snipe and 2-star group targeting;
 5. total acquisition, duplicate-resource expectation, and counterfactual supporting analyses.

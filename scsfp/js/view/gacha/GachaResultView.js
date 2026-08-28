@@ -62,7 +62,7 @@ export class GachaResultView extends GachaBaseView {
         const summaryFn = () => `
             타겟(${targetCount}종) 총 획득 기대 수: 약 <strong>${expected.toFixed(FORMAT.DECIMAL_PLACES.PROBABILITY)}개</strong>
             <p class="reference-info">※ 유효 픽업 ${targetCount}종의 중복 포함 획득 개수 합계입니다.</p>
-            <p class="reference-caution">※ 선택 보상 버튼이 활성화되어 있는지 확인하세요.</p>
+            <p class="reference-caution">※ 천장 버튼이 활성화되어 있는지 확인하세요.</p>
         `;
 
         this.renderTotalCount(totalAcquisitionDp, viewMode,
@@ -135,7 +135,7 @@ export class GachaResultView extends GachaBaseView {
             return () => `
                 <strong>결과</strong> (${pickupCount}픽업 중 ${modeLabel})<br>
                 - 가챠 횟수 : ${context.totalPulls}회 (일반 ${context.normalPulls} + 스탭업 ${context.stepPulls})<br>
-                - 확정 선택 보상 : ${context.totalGuaranteedSelectCount}회 (공유 200스택 ${context.sharedCeilingSelectCount} + Step-up 셀렉 티켓 ${context.loopSelectTicketCount})<br>
+                - 확정 획득 : ${context.totalGuaranteedSelectCount}회 (공유 200스택 천장 ${context.sharedCeilingSelectCount} + 스탭업 셀렉 티켓 ${context.loopSelectTicketCount})<br>
                 - ${modeLabel} 확률 : <strong>${Formatter.probabilityFraction(collectionDp[targetCount])}</strong>
             `;
         } else if (gachaType === 'birthday') {
@@ -145,7 +145,7 @@ export class GachaResultView extends GachaBaseView {
             return () => `
                 <strong>생일 가챠 결과</strong><br>
                 - 가챠 횟수: ${context.totalPulls}회 (일반 ${context.normalPulls} + 스탭업 ${context.stepPulls})<br>
-                - 공유 200스택 선택 보상: ${context.sharedSelectRewardCount}회<br>
+                - 공유 200스택 천장: ${context.sharedSelectRewardCount}회<br>
                 - 획득 확률: <strong>${Formatter.probabilityFraction(collectionDp[targetCount])}</strong>
                 ${guaranteedMsg}
             `;
@@ -153,13 +153,13 @@ export class GachaResultView extends GachaBaseView {
             return () => `
                 <strong>콜라보 가챠 결과</strong> (전체 ${pickupCount}종 중 ${targetCount}종)<br>
                 - 가챠 횟수: ${context.totalPulls}회 (일반 ${context.normalPulls} + 스탭업 ${context.stepPulls})<br>
-                - 공유 200스택 선택 보상: ${context.sharedSelectRewardCount}회<br>
+                - 공유 200스택 천장: ${context.sharedSelectRewardCount}회<br>
                 - 목표(${targetCount}종) 올컴플릿 확률: <strong>${Formatter.probabilityFraction(collectionDp[targetCount])}</strong>
             `;
         } else if (gachaType === 'star2') {
             return () => `
                 <strong>결과</strong> (${pickupCount}픽업 중 ${targetCount}픽업)<br>
-                - 가챠 횟수 : ${context.totalPulls}회 / 선택 보상 : ${context.totalGuaranteedSelectCount}회 (Normal ${context.normalSelectRewardCount} + Step-up ${context.stepupSelectRewardCount})<br>
+                - 가챠 횟수 : ${context.totalPulls}회 / 천장 : ${context.totalGuaranteedSelectCount}회 (일반 ${context.normalSelectRewardCount} + 스탭업 ${context.stepupSelectRewardCount})<br>
                 - 목표(${targetCount}종) 올컴플릿 확률 : <strong>${Formatter.probabilityFraction(collectionDp[targetCount])}</strong>
             `;
         }
@@ -194,9 +194,9 @@ export class GachaResultView extends GachaBaseView {
             </div>
             <div class="section-content logic-view">
                 <ul class="logic-list">
-                    <li>Step-up 일반 구간 개별 ${ctx.individualPickupRatePercent}% (${ctx.regularStepupPullCount}회), Step4 개별 ${Formatter.probabilityBounded(ctx.step4PickupTotalRatePercent/ctx.pickupCount/100, 3)} (${ctx.step4PullCount}회)</li>
+                    <li>스탭업 일반 구간 개별 ${ctx.individualPickupRatePercent}% (${ctx.regularStepupPullCount}회), Step4 개별 ${Formatter.probabilityBounded(ctx.step4PickupTotalRatePercent/ctx.pickupCount/100, 3)} (${ctx.step4PullCount}회)</li>
                     <li>주회 보상: ${rewardHistory}</li>
-                    <li>랜덤 픽업 티켓 ${ctx.randomTicketCount}회, 확정 선택 보상 ${ctx.totalGuaranteedSelectCount}회 (공유 200스택 ${ctx.sharedCeilingSelectCount} + Step-up 셀렉 티켓 ${ctx.loopSelectTicketCount})</li>
+                    <li>랜덤 픽업 티켓 ${ctx.randomTicketCount}회, 확정 획득 ${ctx.totalGuaranteedSelectCount}회 (공유 200스택 천장 ${ctx.sharedCeilingSelectCount} + 스탭업 셀렉 티켓 ${ctx.loopSelectTicketCount})</li>
                     <li>알고리즘: DP (Coupon Collector)</li>
                 </ul>
             </div>`;
@@ -218,7 +218,7 @@ export class GachaResultView extends GachaBaseView {
                     <li><strong>스탭업 가챠:</strong> ${ctx.stepRate}% (${ctx.stepPulls}회)
                         ${ctx.guaranteedTargetCount ? ` <strong style="color:${CHART_COLORS.STEPUP};">[30회 확정 획득!]</strong>` : ''}
                     </li>
-                    <li><strong>공유 200스택 선택 보상:</strong> ${strike(`${ctx.sharedSelectRewardCount}회`, isCeilingOff)}</li>
+                    <li><strong>공유 200스택 천장:</strong> ${strike(`${ctx.sharedSelectRewardCount}회`, isCeilingOff)}</li>
                     <li>알고리즘: DP (단일 픽업)</li>
                 </ul>
             </div>`;
@@ -264,8 +264,8 @@ export class GachaResultView extends GachaBaseView {
                     <li><strong>확률 적용(스탭업):</strong> 일반 (${totalStepNormal}회), 확정 (${totalStepGuar}회)
                         <ul style="padding-left: 20px; margin-top: 5px; list-style-type: none;">${groupDetails}</ul>
                     </li>
-                    <li><strong>Normal 100스택 선택 보상(${ctx.normalSelectRewardCount}회):</strong> ${strike("100회당 1개", isCeilingOff)}</li>
-                    <li><strong>Step-up 50스택 선택 보상(${ctx.stepupSelectRewardCount}회):</strong> ${strike("50회당 1개", isCeilingOff)}</li>
+                    <li><strong>일반 100스택 천장(${ctx.normalSelectRewardCount}회):</strong> ${strike("100회당 1개", isCeilingOff)}</li>
+                    <li><strong>스탭업 50스택 천장(${ctx.stepupSelectRewardCount}회):</strong> ${strike("50회당 1개", isCeilingOff)}</li>
                     <li>알고리즘: Convolution + DP</li>
                 </ul>
             </div>`;
@@ -278,18 +278,15 @@ export class GachaResultView extends GachaBaseView {
         const {
             labels,
             normalOnlyData,
-            comparedStrategyData,
-            comparedStrategyKind
+            comparedStrategyData
         } = data;
 
         const modeKey = isWorst ? 'worst' : 'best';
         const comparedStrategyValues = comparedStrategyData.map(value => parseFloat(value[modeKey]));
         const normalOnlyValues = normalOnlyData.map(value => parseFloat(value[modeKey]));
         const comparedStrategyLabel = groupName
-            ? `Step-up-only (${groupName})`
-            : comparedStrategyKind === 'stepupFirst'
-                ? 'Step-up 우선 → 이후 Normal'
-                : 'Step-up-only';
+            ? `스탭업 (${groupName} 그룹)`
+            : '스탭업';
 
         const getPointRadius = (ctx) => {
             return isStar2
@@ -321,7 +318,7 @@ export class GachaResultView extends GachaBaseView {
                 borderWidth: 2
             },
             {
-                label: 'Normal-only',
+                label: '일반',
                 data: normalOnlyValues,
                 borderColor: CHART_COLORS.NORMAL,
                 borderDash: CHART.LINE_DASH,
@@ -376,7 +373,7 @@ export class GachaResultView extends GachaBaseView {
             });
 
             datasets.push({
-                label: `Normal-only 목표지점 (${targetProbability}%)`,
+                label: `일반 목표지점 (${targetProbability}%)`,
                 data: normalOnlyMarkerData,
                 borderColor: CHART_COLORS.NORMAL,
                 backgroundColor: CHART_COLORS.NORMAL,
@@ -413,7 +410,7 @@ export class GachaResultView extends GachaBaseView {
                 ctx2.lineTo(xAxis.right, yPos);
                 ctx2.stroke();
 
-                // 세로 점선 (비교 Step-up 전략)
+                // 세로 점선 (비교 스탭업 전략)
                 if (state.comparedStrategyRequiredPulls !== null) {
                     const xPosS = xAxis.getPixelForValue(state.comparedStrategyRequiredPulls);
                     ctx2.strokeStyle = state.mainColor;
@@ -423,7 +420,7 @@ export class GachaResultView extends GachaBaseView {
                     ctx2.stroke();
                 }
 
-                // 세로 점선 (Normal-only)
+                // 세로 점선 (일반)
                 if (state.normalOnlyRequiredPulls !== null) {
                     const xPosN = xAxis.getPixelForValue(state.normalOnlyRequiredPulls);
                     ctx2.strokeStyle = CHART_COLORS.NORMAL;
@@ -539,7 +536,7 @@ export class GachaResultView extends GachaBaseView {
                 summaryEl.innerHTML = `
                     <strong>목표 달성 확률 ${targetProbability}% (목표 ${totalTargetCount}명)</strong><br>
                     <span style="color:${mainColor}; font-weight:bold;">${comparedStrategyLabel}:</span> 약 <strong>${comparedStrategyRequiredPulls}회</strong> 필요 (실제 ${comparedProbabilityText})<br>
-                    <span style="color:${CHART_COLORS.NORMAL}; font-weight:bold;">Normal-only:</span> 약 <strong>${normalOnlyRequiredPulls}회</strong> 필요 (실제 ${normalProbabilityText})
+                    <span style="color:${CHART_COLORS.NORMAL}; font-weight:bold;">일반:</span> 약 <strong>${normalOnlyRequiredPulls}회</strong> 필요 (실제 ${normalProbabilityText})
                 `;
             } else {
                 const comparedValue = comparedStrategyValues[limit];
@@ -549,10 +546,10 @@ export class GachaResultView extends GachaBaseView {
                 const modeText = isWorst ? '실패(폭사) 확률' : '성공(졸업) 확률';
                 const compText = isWorst ? '낮아' : '높아';
                 summaryEl.innerHTML = `
-                    <strong>${groupName ? `Group ${groupName} ` : ''}${modeText} 분석 (목표 ${totalTargetCount}명)</strong><br>
-                    ${limit}회 기준 ${comparedStrategyLabel} 전략이 Normal-only보다 ${modeText}이
+                    <strong>${groupName ? `${groupName} 그룹 ` : ''}${modeText} 분석 (목표 ${totalTargetCount}명)</strong><br>
+                    ${limit}회 기준 ${comparedStrategyLabel}이 일반보다 ${modeText}이
                     <span style="color:${mainColor}; font-weight:bold;">${compText} 유리합니다.</span><br>
-                    <span style="font-size:0.85rem; color:#666;">(${comparedStrategyLabel} ${comparedValueText} vs Normal-only ${normalValueText})</span>
+                    <span style="font-size:0.85rem; color:#666;">(${comparedStrategyLabel} ${comparedValueText} vs 일반 ${normalValueText})</span>
                 `;
             }
         }

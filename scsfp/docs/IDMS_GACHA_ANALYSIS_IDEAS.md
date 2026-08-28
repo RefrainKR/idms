@@ -18,14 +18,14 @@ Required order:
 
 ---
 
-# 1. Highest-value candidate: Step-up checkpoint marginal value
+# 1. Highest-value candidate: 스탭업 checkpoint marginal value
 
 The current probability engine already calculates progression across pull counts.
 
 Use that existing result to extract game-significant checkpoints rather than creating a new probability engine.
 
 Examples:
-- 40 pulls: one Step-up loop
+- 40 pulls: one 스탭업 loop
 - 80 pulls: two loops / possible random pickup ticket
 - 120 pulls: PJ third loop / possible select ticket
 - 200 total shared stack: select ceiling
@@ -43,9 +43,9 @@ Numbers above are examples only.
 
 ### Why this is useful
 It answers:
-> If I pay for Step-up, where is the next meaningful stopping point?
+> If I pay for 스탭업, where is the next meaningful stopping point?
 
-This is more actionable than only knowing that Step-up is better overall.
+This is more actionable than only knowing that 스탭업 is better overall.
 
 ### Implementation preference
 Reuse existing DP/CDF progression data.
@@ -53,26 +53,26 @@ Do not introduce a second simulation engine.
 
 ---
 
-# 2. Normal-equivalent pull count
+# 2. 일반-equivalent pull count
 
-For a given Step-up checkpoint:
+For a given 스탭업 checkpoint:
 
 1. calculate its target-completion probability;
-2. find the earliest Normal-only pull count that reaches the same probability.
+2. find the earliest 일반 pull count that reaches the same probability.
 
 Example:
 
 ```text
-Step-up-first at 80 pulls
+스탭업 at 80 pulls
 completion probability = 72.4%
 
-Normal-only reaches 72.4% at 137 pulls
+일반 reaches 72.4% at 137 pulls
 
-=> Step-up 80-pull result ≈ Normal 137-pull result
-=> +57 Normal pulls of probability effect
+=> 스탭업 80-pull result ≈ 일반 137-pull result
+=> +57 일반 pulls of probability effect
 ```
 
-This is an intuitive way to describe Step-up value.
+This is an intuitive way to describe 스탭업 value.
 
 ### Important limitation
 This is **not a universal exchange rate**.
@@ -92,18 +92,18 @@ The UI/documentation must present it as a conditional equivalence.
 
 # 3. Free-currency equivalent effect
 
-This is derived from the Normal-equivalent pull count.
+This is derived from the 일반-equivalent pull count.
 
-If one Normal pull costs 250 free currency:
+If one 일반 pull costs 250 free currency:
 
 ```text
-Normal-equivalent bonus = 57 pulls
+일반-equivalent bonus = 57 pulls
 57 × 250 = 14,250 free currency
 ```
 
 Possible wording:
 
-> Under the current target and banner conditions, the Step-up bonuses provide approximately the same collection-probability effect as 14,250 additional free currency spent on Normal pulls.
+> Under the current target and banner conditions, the 스탭업 bonuses provide approximately the same collection-probability effect as 14,250 additional free currency spent on 일반 pulls.
 
 ### Do not present this as
 - a fixed paid/free currency exchange rate;
@@ -122,7 +122,7 @@ Extend the presentation to show several useful thresholds at once.
 
 Example:
 
-| Target probability | Normal only | Step-up first | Pull difference |
+| Target probability | 일반 | 스탭업 | Pull difference |
 |---|---:|---:|---:|
 | 50% | 78 | 54 | 24 |
 | 70% | 126 | 86 | 40 |
@@ -133,7 +133,7 @@ Example:
 Numbers are examples only.
 
 ### Benefit
-A user can see how Step-up value changes depending on how much certainty they want, without repeatedly changing a single target-probability input.
+A user can see how 스탭업 value changes depending on how much certainty they want, without repeatedly changing a single target-probability input.
 
 ### Implementation preference
 Reuse the existing CDF arrays and threshold search.
@@ -149,8 +149,8 @@ Possible inputs:
 - current free currency.
 
 Possible calculation:
-1. use paid currency for the available Step-up path;
-2. after Step-up is exhausted or paid currency is insufficient, use Normal where applicable;
+1. use paid currency for the available 스탭업 path;
+2. after 스탭업 is exhausted or paid currency is insufficient, use 일반 where applicable;
 3. include shared ceilings and tickets;
 4. report final collection probability.
 
@@ -161,8 +161,8 @@ Paid currency: ...
 Free currency: ...
 
 Possible path:
-Step-up 80 pulls
-+ Normal 128 pulls
+스탭업 80 pulls
++ 일반 128 pulls
 + one shared 200-stack select
 
 Target 1 acquired: 91.2%
@@ -235,8 +235,8 @@ Interpretation:
 - Worst: zero target acquisitions / failure extreme.
 
 Possible UI clarification:
-- `Best (목표 달성)`
-- `Worst (0종 획득)`
+- `Best (성공)`
+- `Worst (폭사)`
 
 Worst can be interpreted as "폭사 위험", which is meaningful to users deciding whether to spend.
 
@@ -244,11 +244,11 @@ Worst can be interpreted as "폭사 위험", which is meaningful to users decidi
 
 # 10. Possible future risk metric: failure-risk reduction
 
-This is optional and lower priority than Normal-equivalent pulls.
+This is optional and lower priority than 일반-equivalent pulls.
 
 Example:
-- Normal completion: 70% -> failure 30%
-- Step-up completion: 85% -> failure 15%
+- 일반 completion: 70% -> failure 30%
+- 스탭업 completion: 85% -> failure 15%
 - failure risk reduced by 50%
 
 This can be more informative than raw `+15%p` in some cases.
@@ -280,7 +280,7 @@ Reasons:
 Prefer:
 - actual probability;
 - required pulls;
-- Normal-equivalent pulls;
+- 일반-equivalent pulls;
 - optionally failure-risk reduction.
 
 ## 11.2 Monte Carlo as a user-facing probability engine
@@ -299,7 +299,7 @@ The best choice depends on:
 - free currency holdings;
 - willingness to pay;
 - desired certainty;
-- banner-specific Step-up rules.
+- banner-specific 스탭업 rules.
 
 The tool should primarily expose accurate numbers so the user can decide.
 
@@ -308,7 +308,7 @@ The tool should primarily expose accurate numbers so the user can decide.
 Do not claim:
 > 1 paid currency = X free currency
 
-based only on Step-up probability advantage.
+based only on 스탭업 probability advantage.
 
 Any equivalence derived from the gacha engine is conditional on the current banner/goal and should be labeled accordingly.
 
@@ -316,8 +316,8 @@ Any equivalence derived from the gacha engine is conditional on the current bann
 
 # 12. Suggested feature priority after cleanup
 
-1. Step-up checkpoint marginal-value table
-2. Normal-equivalent pull count
+1. 스탭업 checkpoint marginal-value table
+2. 일반-equivalent pull count
 3. Free-currency equivalent effect
 4. Multi-threshold target-probability summary
 5. UI placement/clarification of secondary analyses
@@ -335,7 +335,7 @@ Prefer derived views over new engines.
 The project already has:
 - collection DP;
 - total-acquisition DP;
-- Step-up state progression;
+- 스탭업 state progression;
 - ceiling/ticket handling;
 - CDF/progress arrays.
 
