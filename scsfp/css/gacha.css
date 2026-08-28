@@ -1,5 +1,5 @@
 /* ========================================
-   1. Mode Tag Button (저격/아무나 inline toggle)
+   Mode Tag Button (저격/아무나 inline toggle)
    ======================================== */
 
 .mode-tag-btn {
@@ -17,7 +17,7 @@
     user-select: none;
 }
 .mode-tag-btn[data-mode="snipe"] { background: var(--secondary); color: white; }
-.mode-tag-btn[data-mode="any"]   { background: var(--primary-color); color: white; }
+.mode-tag-btn[data-mode="any"]   { background: var(--primary); color: white; }
 .mode-tag-btn:hover { filter: brightness(1.1); }
 
 .label-with-btn {
@@ -27,28 +27,28 @@
 }
 
 /* ========================================
-   2. Gacha-Specific Subsection Styles
+   Gacha-Specific Subsection Styles
    ======================================== */
 
 /* 그룹 레이아웃 요소는 전체 너비 사용 */
-.subsection-group .group-row {
+.subsection-group .stepup-group-row {
     grid-column: 1 / -1;
 }
 
 /* 2성 가챠용 block 레이아웃 */
-.subsection-group-block {
+.subsection-group--block {
     display: block;
 }
 
-.subsection-group-block .input-row-half {
+.subsection-group--block .input-grid--two-columns {
     margin-bottom: 10px;
 }
 
 /* ========================================
-   3. Gacha-Specific Input Styles
+   Gacha-Specific Input Styles
    ======================================== */
 
-.input-row-half {
+.input-grid--two-columns {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 20px;
@@ -56,11 +56,11 @@
 }
 
 /* ========================================
-   4. Group Inputs (2성 스탭업)
+   Group Inputs (2성 스탭업)
    ======================================== */
 
 .loop-rewards-container,
-.group-row {
+.stepup-group-row {
     background-color: var(--primary-light);
     padding: 10px;
     border-radius: 10px;
@@ -75,7 +75,7 @@
     gap: 5px;
 }
 
-.group-row {
+.stepup-group-row {
     display: flex;
     align-items: center;
     gap: 15px;
@@ -112,7 +112,7 @@
 .group-label {
     min-width: 80px;
     font-weight: bold;
-    color: var(--primary-color);
+    color: var(--primary);
     font-size: 0.9rem;
     white-space: nowrap;
 }
@@ -128,12 +128,6 @@
     flex: 1;
 }
 
-/* ========================================
-   5. Gacha-Specific Buttons
-   ======================================== */
-
-button { font-family: inherit; }
-
 /* Reset & Preset Area */
 .reset-area {
     display: flex;
@@ -148,12 +142,7 @@ button { font-family: inherit; }
 }
 
 /* ========================================
-   6. Toggle Buttons
-   ======================================== */
-
-
-/* ========================================
-   8. Charts & Results
+   Charts & Results
    ======================================== */
 
 .chart-row {
@@ -176,7 +165,7 @@ button { font-family: inherit; }
     height: 350px;
 }
 
-.chart-container.chart-full {
+.chart-container--full {
     width: 100%;
     flex: none;
 }
@@ -288,52 +277,8 @@ button { font-family: inherit; }
     -webkit-overflow-scrolling: touch;
 }
 
-.rainbow-card {
-    background: var(--surface-medium);
-    border: 1px solid var(--border-light);
-    border-radius: 10px;
-    padding: 14px 18px;
-}
-
-.rainbow-card-title {
-    font-size: 0.85rem;
-    color: var(--text-secondary);
-    margin-bottom: 4px;
-}
-
-.rainbow-card-value {
-    font-size: 1.6rem;
-    font-weight: bold;
-    color: var(--text-primary);
-    line-height: 1.2;
-}
-
-.rainbow-unit {
-    font-size: 1rem;
-    font-weight: normal;
-    color: var(--text-secondary);
-    margin-left: 4px;
-}
-
-.rainbow-card-sub {
-    font-size: 0.8rem;
-    color: var(--text-secondary);
-    margin-top: 4px;
-    line-height: 1.5;
-}
-
-.rainbow-card-note {
-    font-size: 0.75rem;
-    color: var(--text-secondary);
-}
-
-.rainbow-card-total {
-    border-color: var(--primary);
-    background: var(--surface-hover);
-}
-
-.rainbow-card-total .rainbow-card-value {
-    color: var(--primary);
+.rainbow-probability-table {
+    font-size: 0.82rem;
 }
 
 @media (max-width: 600px) {
@@ -343,18 +288,19 @@ button { font-family: inherit; }
 }
 
 /* ========================================
-   9. Summary & Logic Detail
+   Summary & Logic Detail
    ======================================== */
 
 
 .logic-detail {
+    display: none;
     padding: 5px 15px;
     border-radius: 8px;
     font-size: 0.95rem;
     margin-bottom: 10px;
 
     background-color: var(--primary-light);
-    border-left: 5px solid var(--info-color);
+    border-left: 5px solid var(--info);
     line-height: 1.6;
     color: #444;
 }
@@ -362,7 +308,7 @@ button { font-family: inherit; }
 .logic-title {
     font-size: 1rem;
     font-weight: bold;
-    color: var(--info-color);
+    color: var(--info);
     margin-bottom: 8px;
     padding-bottom: 5px;
     display: block;
@@ -414,43 +360,15 @@ button { font-family: inherit; }
 }
 
 /* ========================================
-   10. Mobile Responsive
+   Mobile Responsive
    ======================================== */
 
 @media (max-width: 650px) {
-    /* 모바일 폰트 크기 조정 */
-
-    .main-tab-nav .tab-button {
-        font-size: 0.85rem;
-        padding: 7px 10px;
-        min-width: 70px;
-    }
-
-    .section-title {
-        font-size: 1rem;
-    }
-
-    .subsection-title {
-        font-size: 0.85rem;
-    }
-
-    .input-item label,
     .loop-reward-item label {
         font-size: 0.8rem;
     }
 
-    .sub-tab-nav .tab-button {
-        font-size: 0.8rem;
-    }
-
-    .view-toggle-btn {
-        font-size: 0.8rem;
-    }
-
-    /* 레이아웃 조정 */
-    .section-content,
-    .loop-rewards-container,
-    .subsection-group {
+    .loop-rewards-container {
         grid-template-columns: 1fr;
     }
 
@@ -462,27 +380,18 @@ button { font-family: inherit; }
         flex: none;
     }
 
-    .input-item,
     .loop-reward-item { gap: 5px; }
 
-    .input-item label,
     .loop-reward-item label {
         width: auto;
         flex: 1;
     }
 
-    input[type="number"], select {
-        width: 100px;
-        flex-shrink: 0;
-        font-size: 0.8rem;
-    }
-
-    .group-row,
     .group-inputs-container {
         grid-template-columns: 1fr 1fr;
     }
 
-    .group-row {
+    .stepup-group-row {
         flex-direction: column;
         align-items: flex-start;
         gap: 10px;
@@ -493,7 +402,7 @@ button { font-family: inherit; }
         gap: 8px;
     }
 
-    .input-row-half {
+    .input-grid--two-columns {
         grid-template-columns: 1fr;
     }
 

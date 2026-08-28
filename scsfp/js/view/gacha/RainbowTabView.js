@@ -128,7 +128,7 @@ export class RainbowTabView {
 
         return `
             <div class="table-scroll">
-                <table class="data-table" style="font-size:0.82rem;">
+                <table class="data-table rainbow-probability-table">
                     <thead>
                         <tr>
                             <th>구간</th>

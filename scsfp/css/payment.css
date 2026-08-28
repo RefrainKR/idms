@@ -31,89 +31,12 @@
     border-color: var(--secondary-dark);
 }
 
-/* 통화별 열 숨김 */
-.payment-comparison-table .hide-krw {
+/* 간단히 보기에서 세부 열 숨김 */
+.is-hidden-in-compact {
     display: none;
-}
-
-.payment-comparison-table .hide-jpy {
-    display: none;
-}
-
-/* Simple 모드 - 가격과 유료돌 숨김 */
-.payment-comparison-table .hide-simple {
-    display: none;
-}
-
-/* 계산하기 버튼 */
-.calculate-btn {
-    width: 100%;
-    padding: 12px 24px;
-    background: var(--primary);
-    color: white;
-    border: none;
-    border-radius: 8px;
-    font-size: 1rem;
-    font-weight: 600;
-    cursor: pointer;
-}
-
-.calculate-btn:hover {
-    background: var(--primary-dark);
-}
-
-.calculate-btn:active {
-    transform: scale(0.98);
-}
-
-/* 과금 효율 테이블 */
-.payment-table {
-    background: var(--bg-card);
-    border-radius: 8px;
-    overflow: hidden;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-}
-
-.payment-table th {
-    font-weight: 600;
-    color: var(--text-primary);
-    border-bottom: 2px solid var(--border-color);
-}
-
-.payment-table td {
-    color: var(--text-primary);
-}
-
-.payment-table tbody tr:hover {
-    background: var(--bg-hover);
-}
-
-/* 플랫폼 테이블 컨테이너 */
-.platform-table {
-    margin-bottom: 30px;
-}
-
-/* 손익분기점 분석 */
-.breakeven-analysis h5 {
-    color: var(--secondary);
-    font-size: 1rem;
-    margin-bottom: 10px;
-}
-
-.breakeven-analysis p {
-    margin: 5px 0;
-    font-size: 0.9rem;
-}
-
-/* 엑셀 스타일 테이블 */
-.payment-payment-comparison-table {
-    margin-bottom: 10px;
 }
 
 /* payment-comparison-table: common.css의 .data-table 상속 */
-.payment-comparison-table {
-    /* .data-table 기본 스타일 상속 */
-}
 
 .payment-comparison-table .header-package {
     background: var(--primary);
@@ -125,17 +48,23 @@
     font-size: 0.9rem;
 }
 
-.payment-comparison-table .header-attr {
+.payment-comparison-table .header-attr,
+.fes-comparison-table .header-attr {
     background: var(--secondary);
     font-size: 0.8rem;
+}
+
+.payment-comparison-table .header-attr {
     min-width: 75px;
 }
 
 /* 바디 스타일: .data-table 기본 스타일 상속 */
 
 /* 셀 타입별 스타일: .data-table 기본 스타일 상속 + 추가 스타일 */
-.payment-comparison-table .cell-package {
-    text-align: center; /* 기본 .data-table의 left 대신 center */
+.payment-comparison-table .cell-package,
+.fes-comparison-table .cell-package,
+.rainbow-crystal-table .cell-package {
+    text-align: center;
 }
 
 .payment-comparison-table .cell-number {
@@ -153,13 +82,15 @@
     color: var(--text-secondary);
 }
 
-.payment-comparison-table .cell-efficiency {
+.payment-comparison-table .cell-efficiency,
+.fes-comparison-table .cell-efficiency {
     text-align: right;
     font-weight: 600;
     color: var(--accent-blue);
 }
 
-.payment-comparison-table .cell-multiplier {
+.payment-comparison-table .cell-multiplier,
+.fes-comparison-table .cell-multiplier {
     text-align: center;
     font-weight: 700;
     color: var(--primary);
@@ -176,29 +107,29 @@
     position: relative;
 }
 
-/* JavaScript로 추가되는 hover-group 클래스 */
-.platform-cell.hover-group {
-    background: var(--secondary-light) !important;
+/* JavaScript로 추가되는 그룹 hover 상태 */
+.platform-cell.is-group-hovered {
+    background: var(--secondary-light);
 }
 
 /* 선택된 플랫폼 그룹 */
-.platform-cell.selected {
-    background: var(--secondary-light) !important;
+.platform-cell.is-selected {
+    background: var(--secondary-light);
     font-weight: 600;
 }
 
-/* 선택된 그룹 외곽선 - 플랫폼별 첫 번째 셀 (좌측) */
-.platform-cell.selected.platform-first {
+/* 선택된 그룹 외곽선 시작 */
+.platform-cell.is-selected.selection-start {
     box-shadow: inset 2px 0 0 0 var(--secondary), inset 0 2px 0 0 var(--secondary), inset 0 -2px 0 0 var(--secondary);
 }
 
 /* 선택된 그룹 외곽선 - 중간 셀들 */
-.platform-cell.selected:not(.platform-first):not(.platform-last) {
+.platform-cell.is-selected:not(.selection-start):not(.selection-end) {
     box-shadow: inset 0 2px 0 0 var(--secondary), inset 0 -2px 0 0 var(--secondary);
 }
 
-/* 선택된 그룹 외곽선 - 플랫폼별 마지막 셀 (우측) */
-.platform-cell.selected.platform-last {
+/* 선택된 그룹 외곽선 끝 */
+.platform-cell.is-selected.selection-end {
     box-shadow: inset -2px 0 0 0 var(--secondary), inset 0 2px 0 0 var(--secondary), inset 0 -2px 0 0 var(--secondary);
 }
 
@@ -215,60 +146,18 @@
 }
 
 /* 페스 패키지 비교표 */
-.fes-comparison-table .hide-krw {
-    display: none;
-}
-
-.fes-comparison-table .hide-jpy {
-    display: none;
-}
-
 .fes-comparison-table .header-package {
     background: var(--primary);
     width: 60px;
-}
-
-.fes-comparison-table .header-attr {
-    background: var(--secondary);
-    font-size: 0.8rem;
-}
-
-.fes-comparison-table .cell-package {
-    text-align: center;
 }
 
 .fes-comparison-table .cell-number {
     white-space: nowrap;
 }
 
-.fes-comparison-table .cell-efficiency {
-    text-align: right;
-    font-weight: 600;
-    color: var(--accent-blue);
-}
-
-.fes-comparison-table .cell-multiplier {
-    text-align: center;
-    font-weight: 700;
-    color: var(--primary);
-}
-
 /* 무돌(虹の結晶) 가격 분석 테이블 */
-/* rainbow-crystal-table: common.css의 .data-table 상속 + 추가 스타일 */
-.rainbow-crystal-table {
-    /* font-size: 0.85rem (기본 .data-table과 동일) */
-}
-
-.rainbow-crystal-table tbody tr:hover:not(.row-average) {
-    background: var(--primary-light);
-}
-
-.rainbow-crystal-table .cell-package {
-    text-align: center; /* 기본 .data-table의 left 대신 center */
-}
-
 .rainbow-crystal-table .cell-number {
-    text-align: center; /* 기본 .data-table의 right 대신 center */
+    text-align: center;
 }
 
 .rainbow-crystal-table .cell-recommendation {
@@ -279,7 +168,7 @@
 
 /* 음수 가격 스타일 */
 .rainbow-crystal-table .price-negative {
-    color: var(--error-red);
+    color: var(--danger);
     font-weight: 700;
 }
 
@@ -289,21 +178,18 @@
         padding: 15px;
     }
 
-    .payment-table {
-        font-size: 0.8rem;
-    }
-
-    .payment-table th,
-    .payment-table td {
-        padding: 6px !important;
-    }
-
-    .payment-comparison-table {
+    .payment-comparison-table,
+    .fes-comparison-table,
+    .rainbow-crystal-table {
         font-size: 0.75rem;
     }
 
     .payment-comparison-table th,
-    .payment-comparison-table td {
+    .payment-comparison-table td,
+    .fes-comparison-table th,
+    .fes-comparison-table td,
+    .rainbow-crystal-table th,
+    .rainbow-crystal-table td {
         padding: 6px 4px;
     }
 
@@ -316,34 +202,12 @@
         font-size: 0.75rem;
     }
 
-    .payment-comparison-table .header-attr {
-        font-size: 0.7rem;
-        min-width: 70px;
-    }
-
-    .fes-comparison-table {
-        font-size: 0.75rem;
-    }
-
-    .fes-comparison-table th,
-    .fes-comparison-table td {
-        padding: 6px 4px;
-    }
-
+    .payment-comparison-table .header-attr,
     .fes-comparison-table .header-attr {
         font-size: 0.7rem;
     }
 
-    .rainbow-crystal-table {
-        font-size: 0.75rem;
-    }
-
-    .rainbow-crystal-table th,
-    .rainbow-crystal-table td {
-        padding: 6px 4px;
-    }
-
-    .breakeven-analysis > div[style*="grid"] {
-        grid-template-columns: 1fr !important;
+    .payment-comparison-table .header-attr {
+        min-width: 70px;
     }
 }

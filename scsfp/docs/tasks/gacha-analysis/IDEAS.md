@@ -1,4 +1,4 @@
-# IDMS_GACHA_ANALYSIS_IDEAS.md
+# IDEAS.md
 
 Date: 2026-08-28
 

@@ -10,14 +10,14 @@ This is an established application, not a greenfield project. Major features alr
 
 ## Current phase and work order
 
-The current phase is behavior-preserving semantic cleanup.
+The behavior-preserving semantic cleanup was completed for the v1.11.0 release. The current active phase is planning and selecting any future gacha-analysis work.
 
 1. Inspect the current Git state and preserve unrelated or in-progress user changes.
-2. Read the current project context and verify it against the source.
-3. Confirm game-rule meaning before changing names that encode domain behavior.
-4. Clean up naming, UI wording, comments/JSDoc, and documentation drift.
-5. Verify calculations and UI behavior are unchanged.
-6. Only after that, review `scsfp/docs/IDMS_GACHA_ANALYSIS_IDEAS.md` and implement only ideas explicitly selected by the user.
+2. Read `scsfp/docs/tasks/BOARD.md` and the relevant active task documents.
+3. For gacha-analysis planning, verify each candidate against the current source and game rules.
+4. Record Sol decisions and acceptance criteria before implementation.
+5. Move to Terra implementation only after the user selects an idea and the task reaches `ready-for-terra`.
+6. Keep behavior-changing work separate from completed v1.11.0 cleanup history.
 
 Do not implement ideas merely because they appear in the ideas document. Keep behavior-changing work separate from naming/documentation-only work.
 
@@ -55,7 +55,7 @@ Read these before substantial work, selecting only the references relevant to th
 
 1. repository-root `AGENTS.md`;
 2. current conversation/task and Git diff;
-3. `scsfp/docs/IDMS_CODEX_HANDOFF.md`;
+3. `scsfp/docs/tasks/BOARD.md` and the relevant active task directory;
 4. `scsfp/docs/game/GACHA_SYSTEM.md` and `scsfp/docs/game/GAME_RULES.md`;
 5. relevant current source files.
 
@@ -63,13 +63,32 @@ The game/payment documents currently live under `scsfp/docs/game/`, not directly
 
 The former `scsfp/CLAUDE.md`, `scsfp/REFACTORING.md`, and `scsfp/README.md` were removed because they were stale historical material. Do not recreate or rely on them. Useful legacy-path cautions retained from that review include:
 
-- the former `docs/UPDATE.md` is now historical material at `docs/archive/UPDATE.md`, while current game rules live under `docs/game/`;
+- `docs/UPDATE.md` is the maintained developer- and AI-facing historical changelog, while current game rules live under `docs/game/`;
 - `js/core/SharedSettings.js` instead of `js/model/SharedSettings.js`;
 - `js/utils/ChartAdapter.js` instead of `js/view/ChartAdapter.js`;
 - `js/view/component/InputBinder.js` instead of `js/component/InputBinder.js`;
 - old names including `GachaConstants.js`, `GachaTypeConfig.js`, `PaymentConstants.js`, and `css/style.css` instead of the current files.
 
-`scsfp/docs/IDMS_CODEX_HANDOFF.md` is a recent review handoff, but it is still secondary to the current game docs and code. Treat its banner examples and statements marked as possible/appearing as items to verify.
+Preserve `scsfp/docs/UPDATE.md` as a long-term record of completed project changes and the context behind earlier decisions. Old paths, names, and implementation descriptions inside dated entries are historical evidence, not documentation drift to rewrite. Consult it when the reason for an existing design is unclear, but verify the current state against source and active documents. Add concise entries for material completed changes when maintaining release/change history; do not use it as a transient task log or as authority over current code.
+
+Use `scsfp/docs/tasks/` for active, substantial task documents. A task document does not authorize implementation by itself. After its work is completed, verified, and reflected in current code or durable documentation, move it to `scsfp/docs/tasks/finish/` rather than deleting it. Finished task documents are historical context and are not part of the default authoritative reading set. Put other obsolete or superseded Markdown documents under `scsfp/docs/old/` when that directory is needed; do not mix the maintained `UPDATE.md` or active task documents into `old/`.
+
+## Sol-Terra task protocol
+
+Treat Sol and Terra as repository workflow roles rather than permanent model-version assumptions:
+
+- Sol role: idea analysis, domain-rule interpretation, scope and acceptance decisions, and final review;
+- Terra role: implementation, mechanical refactoring, targeted tests, and implementation reporting within an approved task specification;
+- Sol review remains responsible for comparing the actual diff and verification evidence against the task decisions;
+- Terra must record an unresolved question and return the task to Sol rather than guessing about game rules, probability behavior, or material scope changes.
+
+For substantial work, use one directory under `scsfp/docs/tasks/` containing `TASK.md`, `DECISIONS.md`, `HANDOFF.md`, and `RESULT.md`. Track its current phase in `BOARD.md` with one of these states:
+
+`planning` → `ready-for-terra` → `implementing` → `ready-for-sol-review` → `changes-requested` → `done`
+
+Update `HANDOFF.md` before switching roles. It must state the completed work, exact remaining work, changed files, verification already run, unresolved questions, current branch, and next role. Do not rely on private reasoning state surviving a model switch.
+
+Sol and Terra must not modify the same files concurrently in one working tree. Prefer sequential ownership on one task branch. If the user explicitly requests truly concurrent implementation, use separate branches and separate Git worktrees, define non-overlapping file ownership first, and merge only after review. Do not create branches, worktrees, commits, or merges unless the user authorizes those Git operations.
 
 ## Verified calculation model
 
@@ -151,7 +170,7 @@ The first semantic naming pass is complete. Current cross-layer contracts use:
 - separate names for shared stack rewards, Step-up loop select tickets, and random tickets;
 - `pickupCount` and `targetCount` in public APIs and context objects.
 
-Future cleanup should focus only on verified residual drift: old historical names outside `docs/archive/`, unclear analytical toggle wording, and banner-specific rule evidence. Do not churn tight mathematical variables merely for stylistic uniformity.
+Future cleanup should focus only on verified residual drift outside designated historical locations such as `docs/tasks/finish/` and `docs/old/`, unclear analytical toggle wording, and banner-specific rule evidence. Do not churn tight mathematical variables merely for stylistic uniformity.
 
 Short mathematical `N`/`M` variables are acceptable inside tight DP routines. Public APIs, context objects, view rendering, and cross-file boundaries should prefer `pickupCount`, `targetCount`, and similarly semantic names.
 
@@ -182,7 +201,7 @@ Clearly distinguish actual game configuration from analytical on/off counterfact
 
 - There is currently no package/build/test harness in the repository. Use a local static server and browser checks when runtime verification is needed, plus targeted deterministic calculation comparisons for probability refactors.
 - Do not create commits, push, or open pull requests unless the user explicitly requests it.
-- Preserve user changes. The current documentation move from `scsfp/docs/*.md` to `scsfp/docs/game/*.md`, with historical update notes in `scsfp/docs/archive/`, may appear in Git as deleted tracked files plus untracked replacements until the user stages it; do not revert or duplicate it.
+- Preserve user changes. Documentation moves among `scsfp/docs/game/`, `scsfp/docs/tasks/`, `scsfp/docs/tasks/finish/`, and `scsfp/docs/old/` may appear in Git as deleted tracked files plus untracked replacements until the user stages them; do not revert or duplicate them.
 - Do not use `AGENTS.md` as a running task log. Put durable project/domain rules here and temporary progress in the conversation or a task-specific note requested by the user.
 
 ## Model-switch recovery
@@ -190,10 +209,11 @@ Clearly distinguish actual game configuration from analytical on/off counterfact
 After a model switch, do not assume private reasoning state was transferred and do not restart a full audit automatically. Recover in this order:
 
 1. read `AGENTS.md`;
-2. inspect the current conversation/task;
-3. inspect Git status/diff and modified files;
-4. read the relevant handoff and game docs;
-5. identify completed and remaining work;
-6. continue from the first incomplete step.
+2. read `scsfp/docs/tasks/BOARD.md` and the relevant task's `TASK.md`, `DECISIONS.md`, and `HANDOFF.md`;
+3. inspect the current conversation/task;
+4. inspect Git status/diff and modified files;
+5. read the relevant game docs and source files;
+6. identify completed and remaining work;
+7. continue only from the documented next role and first incomplete step.
 
 Perform a new full repository audit only if the state cannot be reconstructed, rules materially changed, changes conflict, or the user explicitly requests it.

@@ -292,12 +292,12 @@ export class PaymentViewModel extends BaseViewModel {
 
         if (currency === 'KRW') {
             // 원화 표시, 엔화 숨김
-            jpyCells.forEach(cell => cell.classList.add('hide-jpy'));
-            krwCells.forEach(cell => cell.classList.remove('hide-krw'));
+            jpyCells.forEach(cell => cell.classList.add('is-hidden'));
+            krwCells.forEach(cell => cell.classList.remove('is-hidden'));
         } else {
             // 엔화 표시, 원화 숨김
-            jpyCells.forEach(cell => cell.classList.remove('hide-jpy'));
-            krwCells.forEach(cell => cell.classList.add('hide-krw'));
+            jpyCells.forEach(cell => cell.classList.remove('is-hidden'));
+            krwCells.forEach(cell => cell.classList.add('is-hidden'));
         }
     }
 
@@ -352,11 +352,11 @@ export class PaymentViewModel extends BaseViewModel {
         const krwCells = document.querySelectorAll('.fes-comparison-table .currency-krw');
 
         if (currency === 'KRW') {
-            jpyCells.forEach(cell => cell.classList.add('hide-jpy'));
-            krwCells.forEach(cell => cell.classList.remove('hide-krw'));
+            jpyCells.forEach(cell => cell.classList.add('is-hidden'));
+            krwCells.forEach(cell => cell.classList.remove('is-hidden'));
         } else {
-            jpyCells.forEach(cell => cell.classList.remove('hide-jpy'));
-            krwCells.forEach(cell => cell.classList.add('hide-krw'));
+            jpyCells.forEach(cell => cell.classList.remove('is-hidden'));
+            krwCells.forEach(cell => cell.classList.add('is-hidden'));
         }
     }
 
@@ -389,15 +389,15 @@ export class PaymentViewModel extends BaseViewModel {
             const platformKey = cell.dataset.platform;
             if (fesKey && platformKey) {
                 container.querySelectorAll(`.platform-cell[data-fes="${fesKey}"][data-platform="${platformKey}"]`)
-                    .forEach(c => c.classList.add('hover-group'));
+                    .forEach(c => c.classList.add('is-group-hovered'));
             }
         });
 
         container.addEventListener('mouseout', (event) => {
             const cell = event.target.closest('.platform-cell');
             if (!cell) return;
-            container.querySelectorAll('.platform-cell.hover-group')
-                .forEach(c => c.classList.remove('hover-group'));
+            container.querySelectorAll('.platform-cell.is-group-hovered')
+                .forEach(c => c.classList.remove('is-group-hovered'));
         });
 
         this._fesClickHandlerBound = true;
@@ -445,7 +445,7 @@ export class PaymentViewModel extends BaseViewModel {
                 // 같은 행(패키지)의 같은 플랫폼 셀들 찾기
                 const row = cell.closest('tr');
                 const platformCells = row.querySelectorAll(`.platform-cell[data-platform="${platform}"][data-category="${category}"][data-package="${packageId}"]`);
-                platformCells.forEach(c => c.classList.add('hover-group'));
+                platformCells.forEach(c => c.classList.add('is-group-hovered'));
             }
         });
 
@@ -453,9 +453,9 @@ export class PaymentViewModel extends BaseViewModel {
             const cell = event.target.closest('.platform-cell');
             if (!cell) return;
 
-            // 모든 hover-group 클래스 제거
-            const allCells = container.querySelectorAll('.platform-cell.hover-group');
-            allCells.forEach(c => c.classList.remove('hover-group'));
+            // 모든 그룹 hover 상태 제거
+            const allCells = container.querySelectorAll('.platform-cell.is-group-hovered');
+            allCells.forEach(c => c.classList.remove('is-group-hovered'));
         });
 
         this._clickHandlerBound = true;

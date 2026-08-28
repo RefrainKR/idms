@@ -75,8 +75,6 @@ export class BirthdayGachaViewModel extends BaseGachaViewModel {
                 const el = document.getElementById(input.id);
                 if (el) {
                     el.disabled = true;
-                    el.style.backgroundColor = 'var(--gray-100)';
-                    el.style.cursor = 'not-allowed';
                 }
             });
     }

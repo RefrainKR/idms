@@ -121,7 +121,7 @@ export class Star2GachaViewModel extends BaseGachaViewModel {
         if (totalPickupCount !== groupedPickupCount) {
             const star2Config = getGachaConfig('star2');
             const summaryId = star2Config ? star2Config.summary.element : 'gachaSummary';
-            document.getElementById(summaryId).innerHTML = `<b style="color:red">오류: 픽업 합계 불일치 (${totalPickupCount} vs ${groupedPickupCount})</b>`;
+            document.getElementById(summaryId).innerHTML = `<span class="validation-error">오류: 픽업 합계 불일치 (${totalPickupCount} vs ${groupedPickupCount})</span>`;
             return;
         }
 

@@ -1,6 +1,5 @@
 /* ========================================
-   샤니송 픽업 확률 계산기 - 스타일시트
-   v1.9.0 - 사이드바 네비게이션, 생일/콜라보 분리
+   샤니송 유틸리티 - 공통 스타일
    ======================================== */
 
 :root {
@@ -11,24 +10,14 @@
     --secondary: #00796b;
     --secondary-dark: #004d40;
     --secondary-light: #e0f2f1;
-    --accent: #f57c00;
-
     /* Neutral Colors */
     --gray-50: #fafbfc;
     --gray-100: #f3f5f7;
     --gray-200: #e5e9ed;
     --gray-300: #d1d8dd;
-    --gray-400: #9fa8b3;
-    --gray-500: #6b7684;
-    --gray-600: #4a5568;
-    --gray-700: #2d3748;
-    --gray-800: #1a202c;
 
     /* Semantic Colors */
-    --success: #45a247;
-    --warning: #ff9800;
     --danger: #dc3545;
-    --error-red: #dc3545;
     --info: #283c86;
     --accent-blue: #2196f3;
 
@@ -37,7 +26,6 @@
     --bg-card: #ffffff;
     --bg-input: #ffffff;
     --bg-hover: #f0f0f0;
-    --bg-secondary: #f8f9fa;
     --surface-light: #fafafa;
     --surface-medium: #f8f9fa;
 
@@ -52,16 +40,10 @@
     --border-light: #eee;
     --border-dark: #ddd;
     --border-radius-sm: 6px;
-    --border-radius-md: 8px;
-    --border-radius-lg: 12px;
-    --border-radius-top-sm: 6px 6px 0 0;
     --border-radius-top-md: 8px 8px 0 0;
-    --border-radius-top-lg: 12px 12px 0 0;
 
     /* Shadows */
     --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
-    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
-    --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.2);
 
     /* State Colors (2성 그룹) */
     --state-group-a: #e91e63;
@@ -69,21 +51,6 @@
     --state-group-c: #ff9800;
     --state-group-d: #9c27b0;
 
-    /* Legacy Support (하위 호환성) */
-    --primary-color: var(--primary);
-    --accent-color: var(--secondary);
-    --info-color: var(--info);
-    --text-color: var(--text-primary);
-    --bg-color: var(--bg-app);
-    --card-bg: var(--bg-card);
-    --input-bg: var(--bg-input);
-    --btn-gray-bg: var(--bg-hover);
-    --btn-active-bg: var(--gray-600);
-    --state-danger: var(--danger);
-    --tab-inactive-bg: var(--gray-200);
-    --btn-preset-bg: var(--secondary-light);
-    --btn-preset-border: var(--secondary);
-    --surface-blue: var(--primary-light);
 }
 
 /* ========================================
@@ -273,16 +240,16 @@ ul, ol {
 }
 
 /* ========================================
-   1. Base Layout
+   Base Layout
    ======================================== */
 
 body {
     font-family: 'Noto Sans KR', sans-serif;
-    background-color: var(--bg-color);
+    background-color: var(--bg-app);
     min-height: 100vh;
     display: flex;
     flex-direction: column;
-    color: var(--text-color);
+    color: var(--text-primary);
     line-height: 1.6;
 }
 
@@ -296,14 +263,9 @@ body {
     justify-content: flex-end; /* 햄버거 메뉴를 우측에 배치 */
 }
 
-/* Mobile Navigation Toggle (햄버거 메뉴) - 미사용 */
-.mobile-only {
-    display: none;
-}
-
 /* Main Content Container */
 .container {
-    background: var(--card-bg);
+    background: var(--bg-card);
     padding: 20px;
     max-width: 900px;
     width: 100%;
@@ -339,7 +301,7 @@ body {
 /* Main Navigation Tabs */
 .main-tab-nav {
     margin-bottom: 15px;
-    border-bottom: 2px solid var(--primary-color);
+    border-bottom: 2px solid var(--primary);
 }
 
 .main-tab-nav .tab-button {
@@ -355,14 +317,14 @@ body {
 
 .main-tab-nav .tab-button:hover {
     background: var(--primary-light);
-    border-color: var(--primary-color);
+    border-color: var(--primary);
     border-bottom: none;
-    color: var(--primary-color);
+    color: var(--primary);
     box-shadow: 0 4px 8px rgba(0,0,0,0.1);
 }
 
 .main-tab-nav .tab-button.active {
-    background: var(--primary-color);
+    background: var(--primary);
     color: white;
     border-color: var(--primary-dark);
     box-shadow: 0 4px 12px rgba(40, 60, 134, 0.3);
@@ -430,7 +392,7 @@ footer {
 }
 
 /* ========================================
-   3. Common Buttons
+   Common Buttons
    ======================================== */
 
 /* 공통 버튼 기본 스타일 */
@@ -510,7 +472,7 @@ footer {
 .view-toggle-btn[data-state="cumulative_more"] {
     background-color: var(--gray-200);
     border-color: var(--gray-300);
-    color: var(--text-color);
+    color: var(--text-primary);
 }
 
 /* 2성 그룹별 색상 */
@@ -526,8 +488,8 @@ footer {
     flex-wrap: wrap;
 }
 
-.left-group { justify-content: flex-start; }
-.right-group {
+.option-button-group--start { justify-content: flex-start; }
+.option-button-group--end {
     justify-content: flex-end;
     margin-left: auto;
 }
@@ -544,7 +506,7 @@ footer {
 }
 
 /* ========================================
-   4. Common Section Components
+   Common Section Components
    ======================================== */
 
 /* Tab Content */
@@ -607,7 +569,7 @@ footer {
 
 .section-title {
     font-size: 1.1rem;
-    color: var(--primary-color);
+    color: var(--primary);
     margin: 0;
     font-weight: bold;
 }
@@ -616,7 +578,7 @@ footer {
     background: none;
     border: none;
     font-size: 1.2rem;
-    color: var(--primary-color);
+    color: var(--primary);
     cursor: pointer;
     padding: 0 5px;
 }
@@ -627,7 +589,7 @@ footer {
     gap: 10px;
 }
 
-.section-content.force-block { display: block; }
+.section-content--block { display: block; }
 
 /* Subsection Groups */
 .subsection-group {
@@ -647,14 +609,14 @@ footer {
     margin-bottom: 0;
 }
 
-.subsection-group.no-title {
+.subsection-group--untitled {
     margin-top: 8px;
     padding-top: 12px;
 }
 
 .subsection-title {
     font-size: 0.95rem;
-    color: var(--primary-color);
+    color: var(--primary);
     font-weight: bold;
     margin: 0;
     grid-column: 1 / -1;
@@ -665,15 +627,6 @@ footer {
     padding: 0 8px;
 }
 
-/* 카테고리 제목 (패키지 비교표 등) */
-.category-title {
-    font-size: 1rem;
-    color: var(--primary);
-    font-weight: bold;
-    margin-bottom: 10px;
-    margin-top: 0;
-}
-
 /* Input Elements */
 input[type="number"], select {
     width: 120px;
@@ -682,19 +635,19 @@ input[type="number"], select {
     border-radius: 5px;
     font-size: 0.9rem;
     text-align: right;
-    background-color: var(--input-bg);
+    background-color: var(--bg-input);
     font-family: inherit;
 }
 
 input:focus, select:focus {
     outline: none;
-    border-color: var(--primary-color);
+    border-color: var(--primary);
     background-color: #fff;
     box-shadow: 0 0 5px rgba(40, 60, 134, 0.2);
 }
 
 input:disabled {
-    background-color: #f5f5f5;
+    background-color: var(--gray-100);
     color: #999;
     cursor: not-allowed;
 }
@@ -744,65 +697,81 @@ body {
     display: block;
 }
 
+/* Reusable visibility and feedback states */
+.is-hidden {
+    display: none;
+}
+
+.empty-message {
+    padding: 20px;
+    text-align: center;
+    color: var(--text-secondary);
+}
+
+.empty-message--compact {
+    padding: 0;
+}
+
+.validation-error {
+    color: #ff0000;
+    font-weight: bold;
+}
+
 /* ========================================
    Mobile Responsive - Sidebar
    ======================================== */
 
 /* Tablet & Mobile (≤768px) */
 @media (max-width: 768px) {
-    /* Body margin 제거 */
     body {
-        margin-left: 0 !important;
+        margin-left: 0;
     }
 
-    /* 사이드바를 상단에 배치 (스크롤 시 같이 움직임) */
     #main-sidebar {
-        position: static !important;
-        width: 100% !important;
+        position: static;
+        width: 100%;
         background: var(--bg-card);
-        border-right: none !important;
+        border-right: none;
         border-bottom: 2px solid var(--border-color);
         box-shadow: var(--shadow-sm);
     }
 
     .sidebar-nav {
-        flex-direction: row !important;
-        padding: 0 !important;
+        flex-direction: row;
+        padding: 0;
     }
 
     .sidebar-item {
-        flex: 1 !important;
-        padding: 10px 8px !important;
-        border-left: none !important;
+        flex: 1;
+        padding: 10px 8px;
+        border-left: none;
         border-bottom: 3px solid transparent;
         justify-content: center;
-        flex-direction: row !important; /* 아이콘-텍스트 가로 배치 */
-        gap: 8px !important;
+        flex-direction: row;
+        gap: 8px;
     }
 
     .sidebar-item.active {
-        border-left: none !important;
+        border-left: none;
         border-bottom-color: var(--primary);
         background: var(--primary-light);
     }
 
     .sidebar-icon {
-        font-size: 1.1rem !important;
+        font-size: 1.1rem;
     }
 
     .sidebar-text {
-        font-size: 0.9rem !important;
-        display: block !important; /* 항상 표시 */
+        font-size: 0.9rem;
+        display: block;
     }
-}
 
-@media (max-width: 768px) {
     .option-button-container {
         flex-direction: column;
         align-items: flex-start;
     }
 
-    .right-group {
+    .option-button-group--end {
         margin-left: 0;
         width: 100%;
     }
@@ -811,18 +780,53 @@ body {
 /* Small Mobile (≤650px): 태블릿과 동일하게 가로 배치, 가운데 정렬 */
 @media (max-width: 650px) {
     .sidebar-item {
-        padding: 10px 6px !important;
-        flex-direction: row !important; /* 가로 배치 */
-        gap: 6px !important;
-        justify-content: center !important; /* 가운데 정렬 */
-    }
-
-    .sidebar-icon {
-        font-size: 1.1rem !important;
+        padding: 10px 6px;
+        gap: 6px;
     }
 
     .sidebar-text {
-        font-size: 0.8rem !important;
+        font-size: 0.8rem;
+    }
+
+    .main-tab-nav .tab-button {
+        min-width: 70px;
+        padding: 7px 10px;
+        font-size: 0.85rem;
+    }
+
+    .section-title {
+        font-size: 1rem;
+    }
+
+    .subsection-title {
+        font-size: 0.85rem;
+    }
+
+    .sub-tab-nav .tab-button,
+    .view-toggle-btn,
+    .input-item label {
+        font-size: 0.8rem;
+    }
+
+    .section-content,
+    .subsection-group {
+        grid-template-columns: 1fr;
+    }
+
+    .input-item {
+        gap: 5px;
+    }
+
+    .input-item label {
+        width: auto;
+        flex: 1;
+    }
+
+    input[type="number"],
+    select {
+        width: 100px;
+        flex-shrink: 0;
+        font-size: 0.8rem;
     }
 }
 
@@ -865,7 +869,7 @@ body {
     border-radius: 8px;
     margin-bottom: 10px;
     background-color: var(--surface-medium);
-    border-left: 5px solid var(--accent-color);
+    border-left: 5px solid var(--secondary);
 }
 
 /* 참고 정보 (범용) - font only */
@@ -879,7 +883,7 @@ body {
 .reference-caution {    
     font-size: 0.90rem;
     line-height: 1.5;
-    color: var(--error-red);
+    color: var(--danger);
 }
 
 /* ========================================
@@ -909,10 +913,6 @@ body {
     text-align: center;
     font-weight: 600;
     border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-/* Table Body */
-.data-table tbody tr {
 }
 
 .data-table tbody tr:nth-child(even) {

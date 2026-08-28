@@ -1,6 +1,20 @@
-# IDMS_CODEX_HANDOFF.md
+# HANDOFF.md
 
 Date: 2026-08-28
+
+## Current workflow checkpoint — 2026-08-29
+
+- Status: `done`
+- Current branch: `v.1.11.X`
+- Next role: none
+- Completed: semantic naming pass, concise Korean UI wording, CSS responsibility/state cleanup, active documentation path cleanup, and Sol-Terra task workflow setup
+- Changed areas: `AGENTS.md`, `scsfp/css/`, `scsfp/index.html`, relevant gacha/payment View and ViewModel files, and `scsfp/docs/`
+- Verification completed: JavaScript syntax checks, payment rendered-class contract, currency transition checks, CSS variable/class consumer scan, CSS brace balance, `git diff --check`, and representative v1.10.0.1-to-v1.11.0 gacha result comparisons
+- Verification limitation: automated Chromium visual checking could not run because the local headless browser GPU process failed during startup
+- Sol review result: accepted for the v1.11.0 release; automated visual checking remains unavailable in this environment but is not a release blocker after static and deterministic verification
+- Unresolved domain rules listed later in this document remain unchanged; no feature from `../gacha-analysis/IDEAS.md` was implemented
+
+---
 
 ## 1. Purpose of this handoff
 
@@ -14,7 +28,7 @@ It is deliberately focused on:
 - what should be cleaned up first.
 
 **Feature additions and feature modifications are intentionally not specified here.**
-Those belong in `IDMS_GACHA_ANALYSIS_IDEAS.md` and must be considered only after the naming/documentation refactor is complete.
+Those belong in `../gacha-analysis/IDEAS.md` and must be considered only after the naming/documentation refactor is complete.
 
 ---
 
@@ -314,7 +328,7 @@ The handoff may guide:
 
 These are organization/clarity changes, not new analytical features.
 
-Any actual new calculation, new derived metric, new user-input strategy engine, or changed probability behavior belongs in `IDMS_GACHA_ANALYSIS_IDEAS.md` and should wait until the initial cleanup is complete.
+Any actual new calculation, new derived metric, new user-input strategy engine, or changed probability behavior belongs in `../gacha-analysis/IDEAS.md` and should wait until the initial cleanup is complete.
 
 ---
 
@@ -346,7 +360,7 @@ Perform behavior-preserving changes only.
 Verify that probability outputs and UI behavior are unchanged except for intended wording/organization.
 
 ### Phase 6 — Ideas
-Only now read `IDMS_GACHA_ANALYSIS_IDEAS.md` as the feature/improvement backlog.
+Only now read `../gacha-analysis/IDEAS.md` as the feature/improvement backlog.
 
 The user chooses which ideas to implement.
 
