@@ -196,28 +196,28 @@ export const TOGGLE_STATES = {
         { name: PROBABILITY_MODE.CUMULATIVE_MORE, text: '누적(이상)', isActive: true }
     ],
     CEILING: [
-        { name: 'included', text: '천장', isActive: true },
-        { name: 'excluded', text: '천장', isActive: false }
+        { name: 'included', text: '선택 보상', isActive: true },
+        { name: 'excluded', text: '선택 보상', isActive: false }
     ],
     RANDOM: [
-        { name: 'included', text: '랜덤', isActive: true },
-        { name: 'excluded', text: '랜덤', isActive: false }
+        { name: 'included', text: '랜덤 티켓', isActive: true },
+        { name: 'excluded', text: '랜덤 티켓', isActive: false }
     ],
     STEP4: [
-        { name: 'included', text: 'Step4', isActive: true },
-        { name: 'excluded', text: 'Step4', isActive: false }
+        { name: 'included', text: 'Step4 확률', isActive: true },
+        { name: 'excluded', text: 'Step4 확률', isActive: false }
     ],
-    STEP3: [
-        { name: 'included', text: 'Step3', isActive: true },
-        { name: 'excluded', text: 'Step3', isActive: false }
+    GUARANTEED_TARGET: [
+        { name: 'included', text: '30회 확정', isActive: true },
+        { name: 'excluded', text: '30회 확정', isActive: false }
     ],
     RAINBOW_10TH: [
         { name: 'included', text: '2/SR확정', isActive: true },
         { name: 'excluded', text: '2/SR확정', isActive: false }
     ],
     EFFICIENCY: [
-        { name: 'best', text: 'Best', isActive: true },
-        { name: 'worst', text: 'Worst', isActive: false }
+        { name: 'best', text: 'Best (목표 달성)', isActive: true },
+        { name: 'worst', text: 'Worst (0명 획득)', isActive: false }
     ],
     EFFICIENCY_MODE: [
         { name: 'comparison', text: '비교', isActive: true },

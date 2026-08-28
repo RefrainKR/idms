@@ -1,6 +1,5 @@
 ﻿import { GachaBaseView } from './GachaBaseView.js';
 import { Formatter } from '../../utils/Formatter.js';
-import { ChartAdapter } from '../ChartAdapter.js';
 import { ChartUtils } from '../ChartUtils.js';
 import { getGachaConfig, getActiveSubTab } from './GachaViewConfig.js';
 import { FORMAT, CHART, CHART_RANGE, CHART_COLORS } from '../../config/UIConfig.js';
@@ -21,28 +20,28 @@ export class GachaResultView extends GachaBaseView {
         if (!activeSubTab) return;
 
         const viewMode = model.viewMode.value;
-        const { N, M, dp, dpTotal } = result;
+        const { targetCount, collectionDp, totalAcquisitionDp } = result;
 
         // 수집 확률 (Pie Chart)
         if (activeSubTab === config.subTabs.collection) {
-            this._renderCollectionTab(gachaType, config, M, dp, viewMode, context, charts);
+            this._renderCollectionTab(gachaType, config, targetCount, collectionDp, viewMode, context, charts);
         }
         // 총 획득 수 (Bar Chart)
         else if (activeSubTab === config.subTabs.total) {
-            this._renderTotalTab(gachaType, config, M, dpTotal, viewMode, context, charts);
+            this._renderTotalTab(gachaType, config, targetCount, totalAcquisitionDp, viewMode, context, charts);
         }
         // 효율 비교 (Line Chart) + CDF 역추적 통합
         else if (activeSubTab === config.subTabs.efficiency) {
-            this._renderEfficiencyTab(gachaType, config, M, context, model, charts);
+            this._renderEfficiencyTab(gachaType, config, targetCount, context, model, charts);
         }
     }
 
     // 수집 확률 탭 렌더링
-    static _renderCollectionTab(gachaType, config, M, dp, viewMode, context, charts) {
-        const summaryFn = this._getCollectionSummary(gachaType, context, M, dp);
+    static _renderCollectionTab(gachaType, config, targetCount, collectionDp, viewMode, context, charts) {
+        const summaryFn = this._getCollectionSummary(gachaType, context, targetCount, collectionDp);
         const logicFn = this._getLogic(gachaType, context);
 
-        this.renderCollection(M, dp, viewMode,
+        this.renderCollection(targetCount, collectionDp, viewMode,
             {
                 chart: config.charts.collection.canvas,
                 legend: config.charts.collection.legend,
@@ -58,15 +57,15 @@ export class GachaResultView extends GachaBaseView {
     }
 
     // 총 획득 수 탭 렌더링
-    static _renderTotalTab(gachaType, config, M, dpTotal, viewMode, context, charts) {
-        const expected = dpTotal.reduce((acc, p, i) => acc + i * p, 0);
+    static _renderTotalTab(gachaType, config, targetCount, totalAcquisitionDp, viewMode, context, charts) {
+        const expected = totalAcquisitionDp.reduce((acc, probability, count) => acc + count * probability, 0);
         const summaryFn = () => `
-            타겟(${M}종) 총 획득 기대 수: 약 <strong>${expected.toFixed(FORMAT.DECIMAL_PLACES.PROBABILITY)}개</strong>
-            <p class="reference-info">※ 유효 픽업 ${M}종의 획득 개수 합계입니다.</p>
-            <p class="reference-caution">※ 천장 포함 버튼이 활성화 되어있는지 확인하세요.</p>
+            타겟(${targetCount}종) 총 획득 기대 수: 약 <strong>${expected.toFixed(FORMAT.DECIMAL_PLACES.PROBABILITY)}개</strong>
+            <p class="reference-info">※ 유효 픽업 ${targetCount}종의 중복 포함 획득 개수 합계입니다.</p>
+            <p class="reference-caution">※ 선택 보상 버튼이 활성화되어 있는지 확인하세요.</p>
         `;
 
-        this.renderTotalCount(dpTotal, viewMode,
+        this.renderTotalCount(totalAcquisitionDp, viewMode,
             {
                 chart: config.charts.total.canvas,
                 summary: config.summary.element,
@@ -78,86 +77,90 @@ export class GachaResultView extends GachaBaseView {
     }
 
     // 효율 비교 탭 렌더링
-    static _renderEfficiencyTab(gachaType, config, M, context, model, charts) {
-        if (!context.efficiencyData) return;
+    static _renderEfficiencyTab(gachaType, config, targetCount, context, model, charts) {
+        if (!context.strategyComparison) return;
 
-        let xLimit, targetM, targetLabel, showMultipleLines;
+        let xLimit, comparedTargetCount, targetLabel, useStar2PointStyle;
 
         if (gachaType === 'star3') {
-            xLimit = context.efficiencyLimit;
-            targetM = M;
+            xLimit = context.strategyComparisonLimit;
+            comparedTargetCount = targetCount;
             targetLabel = '';
-            showMultipleLines = false;
+            useStar2PointStyle = false;
         } else if (gachaType === 'birthday') {
             xLimit = CHART_RANGE.EFFICIENCY_X_LIMIT.BIRTHDAY;
-            targetM = M;
+            comparedTargetCount = targetCount;
             targetLabel = '';
-            showMultipleLines = false;
+            useStar2PointStyle = false;
         } else if (gachaType === 'collab') {
             xLimit = CHART_RANGE.EFFICIENCY_X_LIMIT.COLLAB;
-            targetM = M;
+            comparedTargetCount = targetCount;
             targetLabel = '';
-            showMultipleLines = false;
+            useStar2PointStyle = false;
         } else if (gachaType === 'star2') {
             xLimit = CHART_RANGE.EFFICIENCY_X_LIMIT.STAR2;
-            targetM = context.targetGroupInfo ? context.targetGroupInfo.M : M;
+            comparedTargetCount = context.targetGroupInfo
+                ? context.targetGroupInfo.targetCount
+                : targetCount;
             targetLabel = context.targetGroupInfo ? context.targetGroupInfo.id : '';
-            showMultipleLines = true;
+            useStar2PointStyle = true;
         }
 
         this.renderEfficiencyChart(
-            context.efficiencyData,
+            context.strategyComparison,
             config.charts.efficiency.canvas,
             model.efficiencyMode.value === 'worst',
             charts.efficiency,
             xLimit,
-            targetM,
+            comparedTargetCount,
             targetLabel,
-            showMultipleLines,
+            useStar2PointStyle,
             config.summary.element,
             config.summary.logic,
-            context.cdfData || null,
+            context.completionCdf || null,
             model.targetProbability ? model.targetProbability.value : null,
-            M
+            targetCount
         );
     }
 
     // 가챠 타입별 수집 요약 생성
-    static _getCollectionSummary(gachaType, context, M, dp) {
-        const N = context.N || M;
+    static _getCollectionSummary(gachaType, context, targetCount, collectionDp) {
+        const pickupCount = context.pickupCount || targetCount;
 
         if (gachaType === 'star3') {
             const tMode = context.targetMode;
-            const modeLabel = tMode === 'any' ? `아무나 ${M}픽업 이상` : `${M}픽업 저격`;
+            const modeLabel = tMode === 'any'
+                ? `아무나 ${targetCount}픽업 이상`
+                : `${targetCount}픽업 저격`;
             return () => `
-                <strong>결과</strong> (${N}픽업 중 ${modeLabel})<br>
+                <strong>결과</strong> (${pickupCount}픽업 중 ${modeLabel})<br>
                 - 가챠 횟수 : ${context.totalPulls}회 (일반 ${context.normalPulls} + 스탭업 ${context.stepPulls})<br>
-                - 천장 교환 : ${context.totalCeilingCount}회 (통합 ${context.normalCeiling} + 스탭업 ${context.selectRewardCount})<br>
-                - ${modeLabel} 확률 : <strong>${Formatter.probabilityFraction(dp[M])}</strong>
+                - 확정 선택 보상 : ${context.totalGuaranteedSelectCount}회 (공유 200스택 ${context.sharedCeilingSelectCount} + Step-up 셀렉 티켓 ${context.loopSelectTicketCount})<br>
+                - ${modeLabel} 확률 : <strong>${Formatter.probabilityFraction(collectionDp[targetCount])}</strong>
             `;
         } else if (gachaType === 'birthday') {
-            const guaranteedMsg = context.stepGuaranteed > 0
-                ? `<br><span style="color:${CHART_COLORS.STEPUP};">✅ Step3 확정 ${context.stepGuaranteed}회 획득!</span>`
+            const guaranteedMsg = context.guaranteedTargetCount > 0
+                ? `<br><span style="color:${CHART_COLORS.STEPUP};">✅ Step3 확정 ${context.guaranteedTargetCount}회 획득!</span>`
                 : '';
             return () => `
                 <strong>생일 가챠 결과</strong><br>
                 - 가챠 횟수: ${context.totalPulls}회 (일반 ${context.normalPulls} + 스탭업 ${context.stepPulls})<br>
-                - 천장 교환: ${context.ceilingCount}회<br>
-                - 획득 확률: <strong>${Formatter.probabilityFraction(dp[M])}</strong>
+                - 공유 200스택 선택 보상: ${context.sharedSelectRewardCount}회<br>
+                - 획득 확률: <strong>${Formatter.probabilityFraction(collectionDp[targetCount])}</strong>
                 ${guaranteedMsg}
             `;
         } else if (gachaType === 'collab') {
             return () => `
-                <strong>콜라보 가챠 결과</strong> (전체 ${N}종 중 ${M}종)<br>
+                <strong>콜라보 가챠 결과</strong> (전체 ${pickupCount}종 중 ${targetCount}종)<br>
                 - 가챠 횟수: ${context.totalPulls}회 (일반 ${context.normalPulls} + 스탭업 ${context.stepPulls})<br>
-                - 천장 교환: ${context.ceilingCount}회<br>
-                - 목표(${M}종) 올컴플릿 확률: <strong>${Formatter.probabilityFraction(dp[M])}</strong>
+                - 공유 200스택 선택 보상: ${context.sharedSelectRewardCount}회<br>
+                - 목표(${targetCount}종) 올컴플릿 확률: <strong>${Formatter.probabilityFraction(collectionDp[targetCount])}</strong>
             `;
         } else if (gachaType === 'star2') {
             return () => `
-                <strong>결과</strong> (${N}픽업 중 ${M}픽업)<br>
-                - 가챠 횟수 : ${context.totalPulls}회 / 천장 : ${context.totalCeil}회<br>
-                - 목표(${M}종) 올컴플릿 확률 : <strong>${Formatter.probabilityFraction(dp[M])}</strong>
+                <strong>결과</strong> (${pickupCount}픽업 중 ${targetCount}픽업)<br>
+                - 가챠 횟수 : ${context.totalPulls}회 / 선택 보상 : ${context.totalGuaranteedSelectCount}회 (Normal ${context.normalSelectRewardCount} + Step-up ${context.stepupSelectRewardCount})<br>
+                - 목표(${targetCount}종) 올컴플릿 확률 : <strong>${Formatter.probabilityFraction(collectionDp[targetCount])}</strong>
             `;
         }
     }
@@ -191,9 +194,9 @@ export class GachaResultView extends GachaBaseView {
             </div>
             <div class="section-content logic-view">
                 <ul class="logic-list">
-                    <li>기본 ${ctx.p_indiv}% (${ctx.countNormal}회), Step4 개별 ${Formatter.probabilityBounded(ctx.p_step4_total/ctx.N/100, 3)} (${ctx.countStep4}회)</li>
+                    <li>Step-up 일반 구간 개별 ${ctx.individualPickupRatePercent}% (${ctx.regularStepupPullCount}회), Step4 개별 ${Formatter.probabilityBounded(ctx.step4PickupTotalRatePercent/ctx.pickupCount/100, 3)} (${ctx.step4PullCount}회)</li>
                     <li>주회 보상: ${rewardHistory}</li>
-                    <li>랜덤 교환(${ctx.randomRewardCount}회), 천장 교환(${ctx.totalCeilingCount}회)</li>
+                    <li>랜덤 픽업 티켓 ${ctx.randomTicketCount}회, 확정 선택 보상 ${ctx.totalGuaranteedSelectCount}회 (공유 200스택 ${ctx.sharedCeilingSelectCount} + Step-up 셀렉 티켓 ${ctx.loopSelectTicketCount})</li>
                     <li>알고리즘: DP (Coupon Collector)</li>
                 </ul>
             </div>`;
@@ -213,9 +216,9 @@ export class GachaResultView extends GachaBaseView {
                 <ul class="logic-list">
                     <li><strong>일반 가챠:</strong> ${ctx.normalRate}% (${ctx.normalPulls}회)</li>
                     <li><strong>스탭업 가챠:</strong> ${ctx.stepRate}% (${ctx.stepPulls}회)
-                        ${ctx.stepGuaranteed ? ` <strong style="color:${CHART_COLORS.STEPUP};">[30회 확정 획득!]</strong>` : ''}
+                        ${ctx.guaranteedTargetCount ? ` <strong style="color:${CHART_COLORS.STEPUP};">[30회 확정 획득!]</strong>` : ''}
                     </li>
-                    <li><strong>천장:</strong> ${strike(`${ctx.ceilingCount}회 (200회당 1개)`, isCeilingOff)}</li>
+                    <li><strong>공유 200스택 선택 보상:</strong> ${strike(`${ctx.sharedSelectRewardCount}회`, isCeilingOff)}</li>
                     <li>알고리즘: DP (단일 픽업)</li>
                 </ul>
             </div>`;
@@ -231,23 +234,23 @@ export class GachaResultView extends GachaBaseView {
         for (let i = 1; i <= ctx.normalPulls; i++) {
             if (i % 10 === 0) normalHigh++; else normalBase++;
         }
-        const pNorm = Formatter.probabilityBounded(ctx.rateTotal / ctx.N, 3);
-        const pHigh = Formatter.probabilityBounded(0.95 / ctx.N, 3);
+        const pNorm = Formatter.probabilityBounded(ctx.totalPickupRate / ctx.pickupCount, 3);
+        const pHigh = Formatter.probabilityBounded(0.95 / ctx.pickupCount, 3);
 
         // 2. 스탭업 그룹별 통계
         let groupDetails = "";
         let totalStepNormal = 0, totalStepGuar = 0;
 
-        ctx.groups.forEach(g => {
+        ctx.groups.forEach(group => {
             let gNormal = 0, gGuar = 0;
-            for (let i = 1; i <= g.pulls; i++) {
+            for (let i = 1; i <= group.stepupPulls; i++) {
                 if (i === 5 || (i > 5 && (i - 5) % 10 === 0)) gGuar++; else gNormal++;
             }
             totalStepNormal += gNormal;
             totalStepGuar += gGuar;
-            const pIndiv = Formatter.probabilityBounded(ctx.rateTotal / g.N, 3);
-            const pGuar = Formatter.probabilityBounded(1 / g.N, 3);
-            groupDetails += `<li>그룹 ${g.id} (${g.N}종): 개별 ${pIndiv} (${gNormal}회), 확정 ${pGuar} (${gGuar}회)</li>`;
+            const pIndiv = Formatter.probabilityBounded(ctx.totalPickupRate / group.pickupCount, 3);
+            const pGuar = Formatter.probabilityBounded(1 / group.pickupCount, 3);
+            groupDetails += `<li>그룹 ${group.id} (${group.pickupCount}종): 개별 ${pIndiv} (${gNormal}회), 확정 ${pGuar} (${gGuar}회)</li>`;
         });
 
         return `
@@ -261,8 +264,8 @@ export class GachaResultView extends GachaBaseView {
                     <li><strong>확률 적용(스탭업):</strong> 일반 (${totalStepNormal}회), 확정 (${totalStepGuar}회)
                         <ul style="padding-left: 20px; margin-top: 5px; list-style-type: none;">${groupDetails}</ul>
                     </li>
-                    <li><strong>일반 천장(${Math.floor(ctx.normalPulls/100)}회):</strong> ${strike("100회당 1개", isCeilingOff)}</li>
-                    <li><strong>스탭업 천장(${Math.floor(ctx.totalStepPulls/50)}회):</strong> ${strike("50회당 1개", isCeilingOff)}</li>
+                    <li><strong>Normal 100스택 선택 보상(${ctx.normalSelectRewardCount}회):</strong> ${strike("100회당 1개", isCeilingOff)}</li>
+                    <li><strong>Step-up 50스택 선택 보상(${ctx.stepupSelectRewardCount}회):</strong> ${strike("50회당 1개", isCeilingOff)}</li>
                     <li>알고리즘: Convolution + DP</li>
                 </ul>
             </div>`;
@@ -271,12 +274,22 @@ export class GachaResultView extends GachaBaseView {
     // ==========================================
     // 공통: 효율 그래프 렌더링 (CDF 통합 버전)
     // ==========================================
-    static renderEfficiencyChart(data, canvasId, isWorst, chartRef, limit, M, groupName = '', isStar2 = false, summaryId = 'gachaSummary', logicId = 'gachaLogic', cdfData = null, targetProb = 0, totalM = M) {
-        const { labels, normalData, stepupData } = data;
+    static renderEfficiencyChart(data, canvasId, isWorst, chartRef, limit, targetCount, groupName = '', isStar2 = false, summaryId = 'gachaSummary', logicId = 'gachaLogic', completionCdf = null, targetProbability = 0, totalTargetCount = targetCount) {
+        const {
+            labels,
+            normalOnlyData,
+            comparedStrategyData,
+            comparedStrategyKind
+        } = data;
 
         const modeKey = isWorst ? 'worst' : 'best';
-        const finalStep = stepupData.map(v => parseFloat(v[modeKey]));
-        const finalNorm = normalData.map(v => parseFloat(v[modeKey]));
+        const comparedStrategyValues = comparedStrategyData.map(value => parseFloat(value[modeKey]));
+        const normalOnlyValues = normalOnlyData.map(value => parseFloat(value[modeKey]));
+        const comparedStrategyLabel = groupName
+            ? `Step-up-only (${groupName})`
+            : comparedStrategyKind === 'stepupFirst'
+                ? 'Step-up 우선 → 이후 Normal'
+                : 'Step-up-only';
 
         const getPointRadius = (ctx) => {
             return isStar2
@@ -294,8 +307,8 @@ export class GachaResultView extends GachaBaseView {
 
         const datasets = [
             {
-                label: groupName ? `스탭업(${groupName})` : '스탭업 가챠',
-                data: finalStep,
+                label: comparedStrategyLabel,
+                data: comparedStrategyValues,
                 borderColor: mainColor,
                 backgroundColor: subColor,
                 fill: true,
@@ -308,8 +321,8 @@ export class GachaResultView extends GachaBaseView {
                 borderWidth: 2
             },
             {
-                label: '일반 가챠',
-                data: finalNorm,
+                label: 'Normal-only',
+                data: normalOnlyValues,
                 borderColor: CHART_COLORS.NORMAL,
                 borderDash: CHART.LINE_DASH,
                 tension: 0.1,
@@ -321,29 +334,38 @@ export class GachaResultView extends GachaBaseView {
         ];
 
         // CDF 목표 지점 마커 추가
-        let targetPullsStepup = null;
-        let targetPullsNormal = null;
-        if (cdfData && targetProb > 0 && targetProb <= 100) {
-            const { labels: cdfLabels, cdfDataStepup, cdfDataNormal } = cdfData;
+        let comparedStrategyRequiredPulls = null;
+        let normalOnlyRequiredPulls = null;
+        if (completionCdf && targetProbability > 0 && targetProbability <= 100) {
+            const {
+                labels: cdfLabels,
+                comparedStrategyCompletionCdf,
+                normalOnlyCompletionCdf,
+                comparedStrategyRequiredPulls: calculatedComparedRequiredPulls,
+                normalOnlyRequiredPulls: calculatedNormalRequiredPulls
+            } = completionCdf;
 
-            // 목표 확률 도달 지점 탐색
-            for (let i = 0; i < cdfDataStepup.length; i++) {
-                if (cdfDataStepup[i] >= targetProb) { targetPullsStepup = cdfLabels[i]; break; }
-            }
-            if (targetPullsStepup === null) targetPullsStepup = cdfLabels[cdfLabels.length - 1];
-
-            for (let i = 0; i < cdfDataNormal.length; i++) {
-                if (cdfDataNormal[i] >= targetProb) { targetPullsNormal = cdfLabels[i]; break; }
-            }
-            if (targetPullsNormal === null) targetPullsNormal = cdfLabels[cdfLabels.length - 1];
+            // 계산 범위 안에서 미달이면 기존 UI 동작대로 마지막 Pull 지점을 표시한다.
+            comparedStrategyRequiredPulls = calculatedComparedRequiredPulls
+                ?? cdfLabels[cdfLabels.length - 1];
+            normalOnlyRequiredPulls = calculatedNormalRequiredPulls
+                ?? cdfLabels[cdfLabels.length - 1];
 
             // efficiency labels 기준으로 마커 데이터 생성
-            const stepupMarkerData = labels.map(x => x === targetPullsStepup ? (finalStep[labels.indexOf(x)] ?? null) : null);
-            const normalMarkerData = labels.map(x => x === targetPullsNormal ? (finalNorm[labels.indexOf(x)] ?? null) : null);
+            const comparedStrategyMarkerData = labels.map(pulls =>
+                pulls === comparedStrategyRequiredPulls
+                    ? (comparedStrategyValues[labels.indexOf(pulls)] ?? null)
+                    : null
+            );
+            const normalOnlyMarkerData = labels.map(pulls =>
+                pulls === normalOnlyRequiredPulls
+                    ? (normalOnlyValues[labels.indexOf(pulls)] ?? null)
+                    : null
+            );
 
             datasets.push({
-                label: `스탭업 목표지점 (${targetProb}%)`,
-                data: stepupMarkerData,
+                label: `${comparedStrategyLabel} 목표지점 (${targetProbability}%)`,
+                data: comparedStrategyMarkerData,
                 borderColor: mainColor,
                 backgroundColor: mainColor,
                 pointRadius: 8,
@@ -354,8 +376,8 @@ export class GachaResultView extends GachaBaseView {
             });
 
             datasets.push({
-                label: `일반 목표지점 (${targetProb}%)`,
-                data: normalMarkerData,
+                label: `Normal-only 목표지점 (${targetProbability}%)`,
+                data: normalOnlyMarkerData,
                 borderColor: CHART_COLORS.NORMAL,
                 backgroundColor: CHART_COLORS.NORMAL,
                 pointRadius: 8,
@@ -370,9 +392,10 @@ export class GachaResultView extends GachaBaseView {
         const cdfLinePlugin = {
             id: 'cdfTargetLine',
             afterDatasetsDraw: (chart) => {
-                const state = chart._cdfState;
-                if (!state || state.targetProb <= 0 || state.targetProb > 100) return;
-                if (state.targetPullsStepup === null && state.targetPullsNormal === null) return;
+                const state = chart._completionCdfState;
+                if (!state || state.targetProbability <= 0 || state.targetProbability > 100) return;
+                if (state.comparedStrategyRequiredPulls === null
+                    && state.normalOnlyRequiredPulls === null) return;
 
                 const ctx2 = chart.ctx;
                 const xAxis = chart.scales.x;
@@ -383,16 +406,16 @@ export class GachaResultView extends GachaBaseView {
                 ctx2.lineWidth = 1.5;
 
                 // 가로 점선 (목표 확률 기준선)
-                const yPos = yAxis.getPixelForValue(state.targetProb);
+                const yPos = yAxis.getPixelForValue(state.targetProbability);
                 ctx2.strokeStyle = '#999';
                 ctx2.beginPath();
                 ctx2.moveTo(xAxis.left, yPos);
                 ctx2.lineTo(xAxis.right, yPos);
                 ctx2.stroke();
 
-                // 세로 점선 (스탭업)
-                if (state.targetPullsStepup !== null) {
-                    const xPosS = xAxis.getPixelForValue(state.targetPullsStepup);
+                // 세로 점선 (비교 Step-up 전략)
+                if (state.comparedStrategyRequiredPulls !== null) {
+                    const xPosS = xAxis.getPixelForValue(state.comparedStrategyRequiredPulls);
                     ctx2.strokeStyle = state.mainColor;
                     ctx2.beginPath();
                     ctx2.moveTo(xPosS, yAxis.top);
@@ -400,9 +423,9 @@ export class GachaResultView extends GachaBaseView {
                     ctx2.stroke();
                 }
 
-                // 세로 점선 (일반)
-                if (state.targetPullsNormal !== null) {
-                    const xPosN = xAxis.getPixelForValue(state.targetPullsNormal);
+                // 세로 점선 (Normal-only)
+                if (state.normalOnlyRequiredPulls !== null) {
+                    const xPosN = xAxis.getPixelForValue(state.normalOnlyRequiredPulls);
                     ctx2.strokeStyle = CHART_COLORS.NORMAL;
                     ctx2.beginPath();
                     ctx2.moveTo(xPosN, yAxis.top);
@@ -422,7 +445,12 @@ export class GachaResultView extends GachaBaseView {
             const chart = chartRef.current;
             chart.data.labels = labels;
             chart.data.datasets = datasets;
-            chart._cdfState = { targetProb, targetPullsStepup, targetPullsNormal, mainColor };
+            chart._completionCdfState = {
+                targetProbability,
+                comparedStrategyRequiredPulls,
+                normalOnlyRequiredPulls,
+                mainColor
+            };
             chart.update('none');
         } else {
             const ctx2 = canvas.getContext('2d');
@@ -478,37 +506,53 @@ export class GachaResultView extends GachaBaseView {
                 },
                 plugins: [cdfLinePlugin]
             });
-            chartRef.current._cdfState = { targetProb, targetPullsStepup, targetPullsNormal, mainColor };
+            chartRef.current._completionCdfState = {
+                targetProbability,
+                comparedStrategyRequiredPulls,
+                normalOnlyRequiredPulls,
+                mainColor
+            };
         }
 
         // 요약: CDF 결과 우선, 없으면 효율 비교
         const summaryEl = document.getElementById(summaryId);
         if (summaryEl) {
-            if (cdfData && targetProb > 0 && targetProb <= 100 && targetPullsStepup !== null) {
-                const { cdfDataStepup, cdfDataNormal } = cdfData;
-                const idxS = cdfData.labels.indexOf(targetPullsStepup);
-                const idxN = cdfData.labels.indexOf(targetPullsNormal);
-                const actualS = idxS >= 0 ? cdfDataStepup[idxS] : 0;
-                const actualN = idxN >= 0 ? cdfDataNormal[idxN] : 0;
-                const stepupProbText = Formatter.probabilityBounded(actualS / 100, FORMAT.DECIMAL_PLACES.EFFICIENCY);
-                const normalProbText = Formatter.probabilityBounded(actualN / 100, FORMAT.DECIMAL_PLACES.EFFICIENCY);
+            if (completionCdf && targetProbability > 0 && targetProbability <= 100
+                && comparedStrategyRequiredPulls !== null) {
+                const { comparedStrategyCompletionCdf, normalOnlyCompletionCdf } = completionCdf;
+                const comparedIndex = completionCdf.labels.indexOf(comparedStrategyRequiredPulls);
+                const normalIndex = completionCdf.labels.indexOf(normalOnlyRequiredPulls);
+                const comparedProbability = comparedIndex >= 0
+                    ? comparedStrategyCompletionCdf[comparedIndex]
+                    : 0;
+                const normalProbability = normalIndex >= 0
+                    ? normalOnlyCompletionCdf[normalIndex]
+                    : 0;
+                const comparedProbabilityText = Formatter.probabilityBounded(
+                    comparedProbability / 100,
+                    FORMAT.DECIMAL_PLACES.EFFICIENCY
+                );
+                const normalProbabilityText = Formatter.probabilityBounded(
+                    normalProbability / 100,
+                    FORMAT.DECIMAL_PLACES.EFFICIENCY
+                );
                 summaryEl.innerHTML = `
-                    <strong>목표 달성 확률 ${targetProb}% (목표 ${totalM}명)</strong><br>
-                    <span style="color:${mainColor}; font-weight:bold;">스탭업 가챠:</span> 약 <strong>${targetPullsStepup}회</strong> 필요 (실제 ${stepupProbText})<br>
-                    <span style="color:${CHART_COLORS.NORMAL}; font-weight:bold;">일반 가챠:</span> 약 <strong>${targetPullsNormal}회</strong> 필요 (실제 ${normalProbText})
+                    <strong>목표 달성 확률 ${targetProbability}% (목표 ${totalTargetCount}명)</strong><br>
+                    <span style="color:${mainColor}; font-weight:bold;">${comparedStrategyLabel}:</span> 약 <strong>${comparedStrategyRequiredPulls}회</strong> 필요 (실제 ${comparedProbabilityText})<br>
+                    <span style="color:${CHART_COLORS.NORMAL}; font-weight:bold;">Normal-only:</span> 약 <strong>${normalOnlyRequiredPulls}회</strong> 필요 (실제 ${normalProbabilityText})
                 `;
             } else {
-                const sVal = finalStep[limit];
-                const nVal = finalNorm[limit];
-                const sValText = Formatter.probabilityBounded(sVal / 100, 3);
-                const nValText = Formatter.probabilityBounded(nVal / 100, 3);
+                const comparedValue = comparedStrategyValues[limit];
+                const normalValue = normalOnlyValues[limit];
+                const comparedValueText = Formatter.probabilityBounded(comparedValue / 100, 3);
+                const normalValueText = Formatter.probabilityBounded(normalValue / 100, 3);
                 const modeText = isWorst ? '실패(폭사) 확률' : '성공(졸업) 확률';
                 const compText = isWorst ? '낮아' : '높아';
                 summaryEl.innerHTML = `
-                    <strong>${groupName ? `Group ${groupName} ` : ''}${modeText} 분석 (목표 ${totalM}명)</strong><br>
-                    ${limit}회 기준 스탭업이 일반보다 ${modeText}이
+                    <strong>${groupName ? `Group ${groupName} ` : ''}${modeText} 분석 (목표 ${totalTargetCount}명)</strong><br>
+                    ${limit}회 기준 ${comparedStrategyLabel} 전략이 Normal-only보다 ${modeText}이
                     <span style="color:${mainColor}; font-weight:bold;">${compText} 유리합니다.</span><br>
-                    <span style="font-size:0.85rem; color:#666;">(스탭업 ${sValText} vs 일반 ${nValText})</span>
+                    <span style="font-size:0.85rem; color:#666;">(${comparedStrategyLabel} ${comparedValueText} vs Normal-only ${normalValueText})</span>
                 `;
             }
         }

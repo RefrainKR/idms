@@ -84,8 +84,8 @@ export class Star2GachaViewModel extends BaseGachaViewModel {
     calculate() {
         if (this.isInitializing) return;
 
-        const rateTotal = this.model.pickupRate.value / 100;
-        const N_total = this.model.pickupCount.value;
+        const totalPickupRate = this.model.pickupRate.value / 100;
+        const totalPickupCount = this.model.pickupCount.value;
         const normalPulls = this.model.normalPulls.value;
 
         const targetInputs = ['A', 'B', 'C', 'D'].map(id => this.model[`targetCount${id}`].value);
@@ -94,102 +94,151 @@ export class Star2GachaViewModel extends BaseGachaViewModel {
         const viewGroup = this.model.viewTargetGroup.value; // 'ALL', 'A'...
 
         const groups = ['A', 'B', 'C', 'D'].map(id => {
-            const N = this.model[`countStep${id}`].value;
-            let M = this.model[`targetCount${id}`].value;
+            const pickupCount = this.model[`countStep${id}`].value;
+            let targetCount = this.model[`targetCount${id}`].value;
             
             // [핵심] ALL 모드가 아니고 내 그룹이 아니면 저격 수 0 처리
             if (viewGroup !== 'ALL' && viewGroup !== id) {
-                M = 0;
+                targetCount = 0;
             }
             if (isAllZero) {
-                // 전부 0이면 기존처럼 전체 수집(M=N)으로 동작
-                M = N;
+                // 전부 0이면 기존처럼 그룹 전체 수집으로 동작
+                targetCount = pickupCount;
             } else {
                 // 하나라도 입력된 게 있다면, 0은 0으로 처리 (보정만 수행)
-                if (M > N) M = N;
-                if (M < 0) M = 0;
+                if (targetCount > pickupCount) targetCount = pickupCount;
+                if (targetCount < 0) targetCount = 0;
             }
-            return { id, N, M, pulls: this.model[`pullsStep${id}`].value };
+            return {
+                id,
+                pickupCount,
+                targetCount,
+                stepupPulls: this.model[`pullsStep${id}`].value
+            };
         });
 
-        const sumN = groups.reduce((s, g) => s + g.N, 0);
-        if (N_total !== sumN) {
+        const groupedPickupCount = groups.reduce((sum, group) => sum + group.pickupCount, 0);
+        if (totalPickupCount !== groupedPickupCount) {
             const star2Config = getGachaConfig('star2');
             const summaryId = star2Config ? star2Config.summary.element : 'gachaSummary';
-            document.getElementById(summaryId).innerHTML = `<b style="color:red">오류: 픽업 합계 불일치 (${N_total} vs ${sumN})</b>`;
+            document.getElementById(summaryId).innerHTML = `<b style="color:red">오류: 픽업 합계 불일치 (${totalPickupCount} vs ${groupedPickupCount})</b>`;
             return;
         }
 
-        let dp = [1.0], dpTotal = [1.0];
-        let totalTargets = 0, totalStepPulls = 0;
+        let collectionDp = [1.0];
+        let totalAcquisitionDp = [1.0];
+        let totalTargetCount = 0;
+        let totalStepupPulls = 0;
 
-        groups.forEach(g => {
-            // [개선] ProbabilityEngine.calcStepupGroup으로 이동
-            const res = ProbabilityEngine.calcStepupGroup(g.N, g.M, g.pulls, rateTotal);
-            dp = ProbabilityEngine.convolve(dp, res.dp);
-            dpTotal = ProbabilityEngine.convolve(dpTotal, res.dpTotal);
+        groups.forEach(group => {
+            const groupResult = ProbabilityEngine.calcStepupGroup(
+                group.pickupCount,
+                group.targetCount,
+                group.stepupPulls,
+                totalPickupRate
+            );
+            collectionDp = ProbabilityEngine.convolve(collectionDp, groupResult.collectionDp);
+            totalAcquisitionDp = ProbabilityEngine.convolve(
+                totalAcquisitionDp,
+                groupResult.totalAcquisitionDp
+            );
             
-            totalTargets += g.M;
-            totalStepPulls += g.pulls;
+            totalTargetCount += group.targetCount;
+            totalStepupPulls += group.stepupPulls;
         });
 
-        const p_norm_one = rateTotal / N_total;
-        const p_high_one = GACHA_RULES.STAR2.HIGH_RATE_PROBABILITY / N_total;
+        const normalIndividualPickupRate = totalPickupRate / totalPickupCount;
+        const guaranteedSlotIndividualPickupRate = GACHA_RULES.STAR2.HIGH_RATE_PROBABILITY
+            / totalPickupCount;
         
-        // [개선] 중앙화된 확률 검증 사용
-        const p_norm_any = ProbabilityValidator.getTotalProb(p_norm_one, totalTargets);
-        const p_high_any = ProbabilityValidator.getTotalProb(p_high_one, totalTargets);
+        const anyNormalTargetRate = ProbabilityValidator.getTotalProb(
+            normalIndividualPickupRate,
+            totalTargetCount
+        );
+        const anyGuaranteedSlotTargetRate = ProbabilityValidator.getTotalProb(
+            guaranteedSlotIndividualPickupRate,
+            totalTargetCount
+        );
 
         for (let i = 1; i <= normalPulls; i++) {
             const isHigh = (i % GACHA_RULES.STAR2.HIGH_RATE_INTERVAL === 0);
-            dp = ProbabilityEngine.runSinglePull(dp, isHigh ? p_high_one : p_norm_one);
-            dpTotal = ProbabilityEngine.accumulateCountProb(dpTotal, isHigh ? p_high_any : p_norm_any);
+            collectionDp = ProbabilityEngine.runSinglePull(
+                collectionDp,
+                isHigh ? guaranteedSlotIndividualPickupRate : normalIndividualPickupRate
+            );
+            totalAcquisitionDp = ProbabilityEngine.accumulateCountProb(
+                totalAcquisitionDp,
+                isHigh ? anyGuaranteedSlotTargetRate : anyNormalTargetRate
+            );
         }
 
-        // 천장 처리
-        const totalCeil = Math.floor(normalPulls / GACHA_RULES.STAR2.NORMAL_CEILING_INTERVAL) + Math.floor(totalStepPulls / GACHA_RULES.STAR2.STEPUP_CEILING_INTERVAL);
+        // Normal 100스택과 Step-up 50스택은 서로 공유하지 않는다.
+        const normalSelectRewardCount = Math.floor(
+            normalPulls / GACHA_RULES.STAR2.NORMAL_SELECT_REWARD_INTERVAL
+        );
+        const stepupSelectRewardCount = Math.floor(
+            totalStepupPulls / GACHA_RULES.STAR2.STEPUP_SELECT_REWARD_INTERVAL
+        );
+        const totalGuaranteedSelectCount = normalSelectRewardCount + stepupSelectRewardCount;
         if (this.model.ceilingMode.value === 'included') {
-            for (let i = 0; i < totalCeil; i++) {
-                dp = ProbabilityEngine.runGuaranteedPull(dp);
-                dpTotal = ProbabilityEngine.accumulateCountGuaranteed(dpTotal);
+            for (let i = 0; i < totalGuaranteedSelectCount; i++) {
+                collectionDp = ProbabilityEngine.runGuaranteedPull(collectionDp);
+                totalAcquisitionDp = ProbabilityEngine.accumulateCountGuaranteed(totalAcquisitionDp);
             }
         }
 
         // 타겟 그룹 정보 설정
-        let gid = this.model.selectedGroup.value;
+        let gid = this.model.efficiencyTargetGroup.value;
         if (!gid || !['A', 'B', 'C', 'D'].includes(gid)) gid = 'A';
         
         const targetGroupInfo = { 
             id: gid, 
-            M: isAllZero ? this.model[`countStep${gid}`].value : this.model[`targetCount${gid}`].value
+            targetCount: isAllZero
+                ? this.model[`countStep${gid}`].value
+                : this.model[`targetCount${gid}`].value
         };
 
         const context = { 
-            groups, totalPulls: normalPulls + totalStepPulls, 
-            normalPulls, totalStepPulls, totalCeil, rateTotal,
-            efficiencyData: this._calculateEfficiencyData(isAllZero),
-            targetGroupInfo, N: N_total, M: totalTargets,
+            groups,
+            totalPulls: normalPulls + totalStepupPulls,
+            normalPulls,
+            totalStepupPulls,
+            normalSelectRewardCount,
+            stepupSelectRewardCount,
+            totalGuaranteedSelectCount,
+            totalPickupRate,
+            strategyComparison: this._calculateStrategyComparison(isAllZero),
+            targetGroupInfo,
+            pickupCount: totalPickupCount,
+            targetCount: totalTargetCount,
             ceilingMode: this.model.ceilingMode.value
         };
 
-        GachaResultView.render('star2', { N: N_total, M: totalTargets, dp, dpTotal }, context, this.model, this.chartRefs);
+        GachaResultView.render('star2', {
+            pickupCount: totalPickupCount,
+            targetCount: totalTargetCount,
+            collectionDp,
+            totalAcquisitionDp
+        }, context, this.model, this.chartRefs);
     }
 
-    _calculateEfficiencyData(isAllZero) {
+    _calculateStrategyComparison(isAllZero) {
         let gid = this.model.efficiencyTargetGroup.value || 'A';
-        const N_group = this.model[`countStep${gid}`].value;
+        const groupPickupCount = this.model[`countStep${gid}`].value;
 
-        let M_group = isAllZero ? N_group : this.model[`targetCount${gid}`].value;
-        if (M_group > N_group) M_group = N_group;
+        let groupTargetCount = isAllZero
+            ? groupPickupCount
+            : this.model[`targetCount${gid}`].value;
+        if (groupTargetCount > groupPickupCount) groupTargetCount = groupPickupCount;
 
-        const N_total = this.model.pickupCount.value;
-        const rateTotal = this.model.pickupRate.value / 100;
+        const totalPickupCount = this.model.pickupCount.value;
+        const totalPickupRate = this.model.pickupRate.value / 100;
 
-        return EfficiencyCalculator.calculate2Star({
-            N_group,
-            M_group,
-            N_total,
-            rateTotal,
+        return EfficiencyCalculator.calculate2StarComparison({
+            groupPickupCount,
+            groupTargetCount,
+            totalPickupCount,
+            totalPickupRate,
             ceilingMode: this.model.ceilingMode.value
         });
     }

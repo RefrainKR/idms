@@ -120,30 +120,30 @@ export class BaseGachaViewModel extends BaseViewModel {
     }
 
     /**
-     * targetCount → M 변환 유틸
-     * @param {number} N - 전체 픽업 수
-     * @param {number} targetVal - 목표 수집 수 (0이면 전체)
-     * @returns {number} 유효한 M 값
+     * 사용자 입력을 유효한 목표 수집 수로 변환한다. 0은 전체 수집을 뜻한다.
      */
-    resolveTargetCount(N, targetVal) {
-        let M = (targetVal === 0 || !targetVal) ? N : Number(targetVal);
-        if (M > N) M = N;
-        return M;
+    resolveTargetCount(pickupCount, targetCountInput) {
+        let targetCount = (targetCountInput === 0 || !targetCountInput)
+            ? pickupCount
+            : Number(targetCountInput);
+        if (targetCount > pickupCount) targetCount = pickupCount;
+        return targetCount;
     }
 
     /**
      * 단순 스탭업 가챠 공통 계산 (Birthday/Collab 타입)
      * @param {Object} params
      * @param {Object} params.rules - GACHA_RULES의 해당 타입 (BIRTHDAY 또는 COLLAB)
-     * @param {string} params.step3Mode - Step3 확정 모드 ('included'|'excluded')
-     * @param {number} params.stepupLimit - 스탭업 최대 횟수
-     * @param {number|null} params.stepupGuarantee - 확정 주기 (null이면 없음)
-     * @returns {Object} { N, M, dp, dpTotal, ceilingCount, stepGuaranteed }
+     * @param {string} params.guaranteedTargetMode - 확정 획득 반영 모드
+     * @param {number|null} params.guaranteedTargetPullInterval - 확정 획득 회차 간격
      */
-    _runSimpleStepupCalculation({ rules, step3Mode, stepupLimit, stepupGuarantee }) {
-        const N = this.model.pickupCount.value;
-        const targetVal = this.model.targetCount.value;
-        const M = this.resolveTargetCount(N, targetVal);
+    _runRateBoostStepupCalculation({
+        rules,
+        guaranteedTargetMode,
+        guaranteedTargetPullInterval
+    }) {
+        const pickupCount = this.model.pickupCount.value;
+        const targetCount = this.resolveTargetCount(pickupCount, this.model.targetCount.value);
 
         const normalRate = this.model.normalRate.value / 100;
         const stepRate = this.model.stepRate.value / 100;
@@ -151,82 +151,113 @@ export class BaseGachaViewModel extends BaseViewModel {
         const stepPulls = this.model.stepPulls.value;
         const totalPulls = normalPulls + stepPulls;
 
-        let dp = new Array(M + 1).fill(0);
-        dp[0] = 1.0;
-        let dpTotal = [1.0];
+        let collectionDp = new Array(targetCount + 1).fill(0);
+        collectionDp[0] = 1.0;
+        let totalAcquisitionDp = [1.0];
 
         // 1. 일반 가챠
-        const p_normal_any = ProbabilityValidator.getTotalProb(normalRate, M);
+        const p_normal_any = ProbabilityValidator.getTotalProb(normalRate, targetCount);
         for (let i = 0; i < normalPulls; i++) {
-            dp = ProbabilityEngine.runSinglePull(dp, normalRate);
-            dpTotal = ProbabilityEngine.accumulateCountProb(dpTotal, p_normal_any);
+            collectionDp = ProbabilityEngine.runSinglePull(collectionDp, normalRate);
+            totalAcquisitionDp = ProbabilityEngine.accumulateCountProb(totalAcquisitionDp, p_normal_any);
         }
 
         // 2. 스탭업 가챠
-        const p_step_any = ProbabilityValidator.getTotalProb(stepRate, M);
+        const p_step_any = ProbabilityValidator.getTotalProb(stepRate, targetCount);
         for (let i = 1; i <= stepPulls; i++) {
-            const isStep3 = stepupGuarantee && (i % stepupGuarantee === 0);
+            const isGuaranteedTargetPull = guaranteedTargetPullInterval
+                && i % guaranteedTargetPullInterval === 0;
 
-            if (isStep3 && step3Mode === 'included') {
-                dp = ProbabilityEngine.runGuaranteedPull(dp);
-                dpTotal = ProbabilityEngine.accumulateCountGuaranteed(dpTotal);
+            if (isGuaranteedTargetPull && guaranteedTargetMode === 'included') {
+                collectionDp = ProbabilityEngine.runGuaranteedPull(collectionDp);
+                totalAcquisitionDp = ProbabilityEngine.accumulateCountGuaranteed(totalAcquisitionDp);
             } else {
-                dp = ProbabilityEngine.runSinglePull(dp, stepRate);
-                dpTotal = ProbabilityEngine.accumulateCountProb(dpTotal, p_step_any);
+                collectionDp = ProbabilityEngine.runSinglePull(collectionDp, stepRate);
+                totalAcquisitionDp = ProbabilityEngine.accumulateCountProb(totalAcquisitionDp, p_step_any);
             }
         }
 
         // 3. 천장 처리
-        let ceilingCount = 0;
+        let sharedSelectRewardCount = 0;
         if (this.model.ceilingMode.value === 'included') {
-            ceilingCount = Math.floor(totalPulls / rules.CEILING_INTERVAL);
-            for (let i = 0; i < ceilingCount; i++) {
-                dp = ProbabilityEngine.runGuaranteedPull(dp);
-                dpTotal = ProbabilityEngine.accumulateCountGuaranteed(dpTotal);
+            sharedSelectRewardCount = Math.floor(totalPulls / rules.SHARED_SELECT_REWARD_INTERVAL);
+            for (let i = 0; i < sharedSelectRewardCount; i++) {
+                collectionDp = ProbabilityEngine.runGuaranteedPull(collectionDp);
+                totalAcquisitionDp = ProbabilityEngine.accumulateCountGuaranteed(totalAcquisitionDp);
             }
         }
 
-        const stepGuaranteed = (stepupGuarantee && step3Mode === 'included')
-            ? Math.floor(stepPulls / stepupGuarantee)
+        const guaranteedTargetCount = (guaranteedTargetPullInterval && guaranteedTargetMode === 'included')
+            ? Math.floor(stepPulls / guaranteedTargetPullInterval)
             : 0;
 
-        return { N, M, dp, dpTotal, normalPulls, stepPulls, totalPulls, ceilingCount, stepGuaranteed };
+        return {
+            pickupCount,
+            targetCount,
+            collectionDp,
+            totalAcquisitionDp,
+            normalPulls,
+            stepPulls,
+            totalPulls,
+            sharedSelectRewardCount,
+            guaranteedTargetCount
+        };
     }
 
     /**
      * 단순 스탭업 효율 데이터 계산 공통 메서드
      */
-    _getSimpleStepupEfficiency({ step3Mode, stepupLimit }) {
-        const N = this.model.pickupCount.value;
-        const M = this.resolveTargetCount(N, this.model.targetCount.value);
+    _calculateRateBoostStepupComparison({
+        rules,
+        guaranteedTargetMode,
+        guaranteedTargetPullInterval,
+        maxStepupPulls,
+        comparedStrategyKind
+    }) {
+        const targetCount = this.resolveTargetCount(
+            this.model.pickupCount.value,
+            this.model.targetCount.value
+        );
 
-        return EfficiencyCalculator.calculateSimpleStepup({
-            normalRate: this.model.normalRate.value / 100,
-            stepRate: this.model.stepRate.value / 100,
+        return EfficiencyCalculator.calculateRateBoostStepupComparison({
+            normalPickupRate: this.model.normalRate.value / 100,
+            stepupPickupRate: this.model.stepRate.value / 100,
             ceilingMode: this.model.ceilingMode.value,
-            step3Mode,
-            N,
-            M,
-            stepupLimit
+            guaranteedTargetMode,
+            guaranteedTargetPullInterval,
+            sharedSelectRewardInterval: rules.SHARED_SELECT_REWARD_INTERVAL,
+            targetCount,
+            maxStepupPulls,
+            comparedStrategyKind
         });
     }
 
     /**
      * 단순 스탭업 CDF 데이터 계산 공통 메서드
      */
-    _getSimpleStepupCDF({ step3Mode, stepupLimit }) {
-        const N = this.model.pickupCount.value;
-        const M = this.resolveTargetCount(N, this.model.targetCount.value);
-        const targetProb = this.model.targetProbability.value / 100;
+    _calculateRateBoostStepupCompletionCdf({
+        rules,
+        guaranteedTargetMode,
+        guaranteedTargetPullInterval,
+        maxStepupPulls,
+        comparedStrategyKind
+    }) {
+        const targetCount = this.resolveTargetCount(
+            this.model.pickupCount.value,
+            this.model.targetCount.value
+        );
 
-        return EfficiencyCalculator.calculateSimpleStepupCDF({
-            normalRate: this.model.normalRate.value / 100,
-            stepRate: this.model.stepRate.value / 100,
+        return EfficiencyCalculator.calculateRateBoostStepupCompletionCdf({
+            normalPickupRate: this.model.normalRate.value / 100,
+            stepupPickupRate: this.model.stepRate.value / 100,
             ceilingMode: this.model.ceilingMode.value,
-            step3Mode,
-            M,
-            targetProb,
-            stepupLimit
+            guaranteedTargetMode,
+            guaranteedTargetPullInterval,
+            sharedSelectRewardInterval: rules.SHARED_SELECT_REWARD_INTERVAL,
+            targetCount,
+            targetProbability: this.model.targetProbability.value / 100,
+            maxStepupPulls,
+            comparedStrategyKind
         });
     }
 

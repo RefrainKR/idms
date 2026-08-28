@@ -6,7 +6,7 @@
  * - PAYMENT_CONFIG: 저장 키 및 기본 설정
  * - PACKAGES: 플랫폼별 패키지 정보 (게임 데이터)
  *
- * 출처: CLAUDE.md - 유료돌 패키지 정보
+ * 출처: docs/game/PAYMENT.md - 유료돌 패키지 정보
  */
 
 export const PAYMENT_CONFIG = {

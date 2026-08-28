@@ -20,7 +20,6 @@ export class Star2GachaModel {
         this.viewMode = new Observable('individual');
 
         // 효율 탭 상태
-        this.selectedGroup = new Observable('A');
         this.efficiencyMode = new Observable('best');
 
         this.viewTargetGroup = new Observable('ALL');
@@ -56,7 +55,6 @@ export class Star2GachaModel {
             ceilingMode: this.ceilingMode.value,
             viewMode: this.viewMode.value,
             efficiencyMode: this.efficiencyMode.value,
-            selectedGroup: this.selectedGroup.value,
             viewTargetGroup: this.viewTargetGroup.value,
             efficiencyTargetGroup: this.efficiencyTargetGroup.value
         };
@@ -82,7 +80,6 @@ export class Star2GachaModel {
         if (data.ceilingMode !== undefined) this.ceilingMode.value = data.ceilingMode;
         if (data.viewMode !== undefined) this.viewMode.value = data.viewMode;
         if (data.efficiencyMode !== undefined) this.efficiencyMode.value = data.efficiencyMode;
-        if (data.selectedGroup !== undefined) this.selectedGroup.value = data.selectedGroup;
         if (data.viewTargetGroup !== undefined) this.viewTargetGroup.value = data.viewTargetGroup;
         if (data.efficiencyTargetGroup !== undefined) this.efficiencyTargetGroup.value = data.efficiencyTargetGroup;
     }

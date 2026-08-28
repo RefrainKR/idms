@@ -60,8 +60,8 @@ export class GachaBaseView {
 
     /**
      * 1. 수집 확률 (Pie Chart) 렌더링
-     * @param {number} M - 목표 수집 개수
-     * @param {Array} dp - 확률 분포 배열
+     * @param {number} targetCount - 목표 수집 개수
+     * @param {Array} collectionDp - 수집 상태 확률 분포
      * @param {string} mode - 뷰 모드 (individual, cumulative...)
      * @param {Object} elementIds - DOM ID 모음
      * @param {Object} htmlGenerator - HTML 생성 함수 모음
@@ -69,12 +69,12 @@ export class GachaBaseView {
      * - 그래프는 항상 '개별 확률' 고정
      * - 범례(Legend) 및 툴팁만 '모드'에 따라 수치 변경
      */
-    static renderCollection(M, dp, mode, elementIds, htmlGenerator, chartRef) {
+    static renderCollection(targetCount, collectionDp, mode, elementIds, htmlGenerator, chartRef) {
         // [핵심 1] 차트 조각(Slices) 데이터는 항상 '개별 확률' (합계 100%)
-        const chartDP = dp;
+        const chartDP = collectionDp;
 
         // [핵심 2] 범례(Legend) 및 툴팁용 데이터만 사용자가 선택한 모드로 변환
-        const listDP = ProbabilityEngine.transformData(dp, mode);
+        const listDP = ProbabilityEngine.transformData(collectionDp, mode);
 
         let chartLabels = [], chartData = [], colors = [];
         let listLabels = [], listData = [], tooltipVals = [];
@@ -83,7 +83,7 @@ export class GachaBaseView {
         if (mode === PROBABILITY_MODE.CUMULATIVE_LESS) suffix = " 이하";
         else if (mode === PROBABILITY_MODE.CUMULATIVE_MORE) suffix = " 이상";
 
-        for (let k = 0; k <= M; k++) {
+        for (let k = 0; k <= targetCount; k++) {
             // 차트용 레이블과 데이터 (순수 개별 확률)
             chartLabels.push(`${k}픽업`);
             chartData.push(parseFloat((chartDP[k] * 100).toFixed(3)));
@@ -94,7 +94,9 @@ export class GachaBaseView {
             tooltipVals.push(Formatter.probabilityFraction(listDP[k]));
 
             // 색상 강조
-            colors.push(k === M ? CHART_COLORS.STEPUP : `rgba(40, 60, 134, ${0.3 + 0.7 * (k / M)})`);
+            colors.push(k === targetCount
+                ? CHART_COLORS.STEPUP
+                : `rgba(40, 60, 134, ${0.3 + 0.7 * (k / targetCount)})`);
         }
 
         this._updateText(elementIds, htmlGenerator);
@@ -107,9 +109,12 @@ export class GachaBaseView {
      * 2. 총 획득 수 (Bar Chart) 렌더링
      * - 0.01% 미만 절삭 및 최대 15개 구간 표시 로직 포함
      */
-    static renderTotalCount(dp, mode, elementIds, htmlGenerator, chartRef) {
+    static renderTotalCount(totalAcquisitionDp, mode, elementIds, htmlGenerator, chartRef) {
         // [중요] 표시 범위 산정은 항상 '개별 확률(Individual)' 기준
-        const individualDP = ProbabilityEngine.transformData(dp, PROBABILITY_MODE.INDIVIDUAL);
+        const individualDP = ProbabilityEngine.transformData(
+            totalAcquisitionDp,
+            PROBABILITY_MODE.INDIVIDUAL
+        );
 
         // Peak(최빈값) 찾기
         let maxVal = -1, maxIndex = -1;
@@ -152,7 +157,7 @@ export class GachaBaseView {
         }
 
         // 실제 출력 데이터 변환 (사용자 선택 모드 적용)
-        const transformedDP = ProbabilityEngine.transformData(dp, mode);
+        const transformedDP = ProbabilityEngine.transformData(totalAcquisitionDp, mode);
 
         const labels = [], data = [], colors = [], tooltipVals = [];
         let suffix = "";

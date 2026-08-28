@@ -4,6 +4,7 @@ import { GachaResultView } from '../../view/gacha/GachaResultView.js';
 import { ToggleButton } from '../../component/ToggleButton.js';
 import { CONFIG, TOGGLE_STATES, GACHA_RULES } from '../../config/GachaConfig.js';
 import { getGachaConfig, applyTabVisibility } from '../../view/gacha/GachaViewConfig.js';
+import { STEPUP_STRATEGY_KIND } from '../../core/EfficiencyCalculator.js';
 
 export class CollabGachaViewModel extends BaseGachaViewModel {
     constructor() {
@@ -98,30 +99,42 @@ export class CollabGachaViewModel extends BaseGachaViewModel {
     calculate() {
         if (this.isInitializing) return;
 
-        const result = this._runSimpleStepupCalculation({
+        const result = this._runRateBoostStepupCalculation({
             rules: GACHA_RULES.COLLAB,
-            step3Mode: 'excluded',
-            stepupLimit: GACHA_RULES.COLLAB.STEPUP_LIMIT,
-            stepupGuarantee: null // 콜라보는 스탭업 확정 없음
+            guaranteedTargetMode: 'excluded',
+            guaranteedTargetPullInterval: null // 콜라보는 스탭업 확정 없음
         });
 
-        const params = { step3Mode: 'excluded', stepupLimit: GACHA_RULES.COLLAB.STEPUP_LIMIT };
+        const strategyOptions = {
+            rules: GACHA_RULES.COLLAB,
+            guaranteedTargetMode: 'excluded',
+            guaranteedTargetPullInterval: null,
+            maxStepupPulls: GACHA_RULES.COLLAB.PRACTICAL_STEPUP_PULL_LIMIT,
+            comparedStrategyKind: STEPUP_STRATEGY_KIND.STEPUP_ONLY
+        };
 
         const context = {
-            N: result.N, M: result.M,
+            pickupCount: result.pickupCount,
+            targetCount: result.targetCount,
             normalRate: this.model.normalRate.value,
             stepRate: this.model.stepRate.value,
             normalPulls: result.normalPulls,
             stepPulls: result.stepPulls,
             totalPulls: result.totalPulls,
-            ceilingCount: result.ceilingCount,
-            stepGuaranteed: 0,
-            efficiencyData: this._getSimpleStepupEfficiency(params),
-            cdfData: this._getSimpleStepupCDF(params)
+            ceilingMode: this.model.ceilingMode.value,
+            sharedSelectRewardCount: result.sharedSelectRewardCount,
+            guaranteedTargetCount: 0,
+            strategyComparison: this._calculateRateBoostStepupComparison(strategyOptions),
+            completionCdf: this._calculateRateBoostStepupCompletionCdf(strategyOptions)
         };
 
         GachaResultView.render('collab',
-            { N: result.N, M: result.M, dp: result.dp, dpTotal: result.dpTotal },
+            {
+                pickupCount: result.pickupCount,
+                targetCount: result.targetCount,
+                collectionDp: result.collectionDp,
+                totalAcquisitionDp: result.totalAcquisitionDp
+            },
             context, this.model, this.chartRefs
         );
     }

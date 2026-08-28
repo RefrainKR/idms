@@ -3,292 +3,468 @@ import { GACHA_RULES } from '../config/GachaConfig.js';
 import { CHART_RANGE } from '../config/UIConfig.js';
 
 /**
- * EfficiencyCalculator - 가챠 효율 계산 로직을 중앙화한 서비스 클래스
+ * 비교 그래프에서 Normal-only와 대조하는 Step-up 전략의 실제 의미.
+ */
+export const STEPUP_STRATEGY_KIND = Object.freeze({
+    STEPUP_FIRST: 'stepupFirst',
+    STEPUP_ONLY: 'stepupOnly'
+});
+
+/**
+ * 가챠 전략별 수집 완료 확률과 목표 확률 도달 횟수를 계산한다.
  *
- * 각 ViewModel에서 중복되던 효율 계산 로직을 분리하여 재사용성과 유지보수성을 향상시킵니다.
+ * `best`는 목표 수집 완료 확률, `worst`는 목표를 하나도 얻지 못할 확률이다.
+ * 계산식과 상태 전이는 ProbabilityEngine에 위임하고, 이 클래스는 전략 순서를 구성한다.
  */
 export class EfficiencyCalculator {
 
-    // ==========================================
-    // 내부 시뮬레이션 메서드
-    // ==========================================
-
     /**
-     * 3성 가챠 - 특정 pulls 수에 대해 일반/스탭업 DP를 시뮬레이션
-     * @returns {{ dpN: Array, dpS: Array, sSelectCnt: number }}
+     * 3성 전략을 특정 총 Pull 수까지 시뮬레이션한다.
+     *
+     * compared 전략은 Step-up을 한도까지 먼저 사용하고, 남은 Pull을 Normal로 진행한다.
+     * @returns {{ normalOnlyCollectionDp: Array, stepupFirstCollectionDp: Array, stepupSelectTicketCount: number }}
      */
-    static _simulate3Star(pulls, { N, M, p_indiv, p_step4_total, stepupLimit, loopRewards, ceilingMode, step4Mode, randomMode, targetMode = 'snipe' }) {
-        // 아무나 모드: capacity = N, 저격 모드: capacity = null (dp.length - 1 = M 기본값)
-        const cap = targetMode === 'any' ? N : null;
+    static _simulate3StarStrategies(pulls, {
+        pickupCount,
+        targetCount,
+        individualPickupRate,
+        step4PickupTotalRate,
+        maxStepupPulls,
+        loopRewards,
+        ceilingMode,
+        step4Mode,
+        randomTicketMode,
+        targetMode = 'snipe'
+    }) {
+        const collectionCapacity = targetMode === 'any' ? pickupCount : null;
 
-        // 일반 가챠
-        let dpN = new Array(M + 1).fill(0);
-        dpN[0] = 1.0;
-        for (let i = 0; i < pulls; i++) {
-            dpN = ProbabilityEngine.runSinglePull(dpN, p_indiv, cap);
+        let normalOnlyCollectionDp = new Array(targetCount + 1).fill(0);
+        normalOnlyCollectionDp[0] = 1.0;
+        for (let pull = 0; pull < pulls; pull++) {
+            normalOnlyCollectionDp = ProbabilityEngine.runSinglePull(
+                normalOnlyCollectionDp,
+                individualPickupRate,
+                collectionCapacity
+            );
         }
         if (ceilingMode === 'included') {
-            const nCeil = Math.floor(pulls / GACHA_RULES.STAR3.CEILING_INTERVAL);
-            for (let i = 0; i < nCeil; i++) {
-                dpN = ProbabilityEngine.runGuaranteedPull(dpN);
+            const sharedSelectRewardCount = Math.floor(
+                pulls / GACHA_RULES.STAR3.SHARED_SELECT_REWARD_INTERVAL
+            );
+            for (let reward = 0; reward < sharedSelectRewardCount; reward++) {
+                normalOnlyCollectionDp = ProbabilityEngine.runGuaranteedPull(normalOnlyCollectionDp);
             }
         }
 
-        // 스탭업 가챠
-        let dpS = new Array(M + 1).fill(0);
-        dpS[0] = 1.0;
-        let sSelectCnt = 0;
-        const actualStepPulls = Math.min(pulls, stepupLimit);
+        let stepupFirstCollectionDp = new Array(targetCount + 1).fill(0);
+        stepupFirstCollectionDp[0] = 1.0;
+        let stepupSelectTicketCount = 0;
+        const stepupPullsUsed = Math.min(pulls, maxStepupPulls);
 
-        for (let i = 1; i <= actualStepPulls; i++) {
-            const isStep4 = (i % GACHA_RULES.STAR3.STEPUP_CYCLE === 0);
-            const curLoop = Math.ceil(i / GACHA_RULES.STAR3.STEPUP_CYCLE);
-            const useStep4 = (isStep4 && i <= stepupLimit && step4Mode === 'included');
+        for (let pull = 1; pull <= stepupPullsUsed; pull++) {
+            const isStep4Pull = pull % GACHA_RULES.STAR3.STEPUP_CYCLE === 0;
+            const loopNumber = Math.ceil(pull / GACHA_RULES.STAR3.STEPUP_CYCLE);
+            const includesStep4Rate = isStep4Pull && step4Mode === 'included';
 
-            dpS = ProbabilityEngine.runSinglePull(dpS, useStep4 ? (p_step4_total / N) : p_indiv, cap);
+            stepupFirstCollectionDp = ProbabilityEngine.runSinglePull(
+                stepupFirstCollectionDp,
+                includesStep4Rate ? step4PickupTotalRate / pickupCount : individualPickupRate,
+                collectionCapacity
+            );
 
-            if (isStep4 && i <= stepupLimit) {
-                const reward = loopRewards[curLoop];
-                if (reward === 'random' && randomMode === 'included') {
-                    dpS = ProbabilityEngine.runRandomTicket(dpS, N, cap);
-                } else if (reward === 'select') {
-                    sSelectCnt++;
+            if (isStep4Pull) {
+                const loopReward = loopRewards[loopNumber];
+                if (loopReward === 'random' && randomTicketMode === 'included') {
+                    stepupFirstCollectionDp = ProbabilityEngine.runRandomTicket(
+                        stepupFirstCollectionDp,
+                        pickupCount,
+                        collectionCapacity
+                    );
+                } else if (loopReward === 'select') {
+                    stepupSelectTicketCount++;
                 }
             }
         }
 
-        // 스탭업 초과분은 일반 가챠로 처리
-        if (pulls > stepupLimit) {
-            const extraPulls = pulls - stepupLimit;
-            for (let i = 0; i < extraPulls; i++) {
-                dpS = ProbabilityEngine.runSinglePull(dpS, p_indiv, cap);
-            }
+        const normalPullsAfterStepup = Math.max(0, pulls - maxStepupPulls);
+        for (let pull = 0; pull < normalPullsAfterStepup; pull++) {
+            stepupFirstCollectionDp = ProbabilityEngine.runSinglePull(
+                stepupFirstCollectionDp,
+                individualPickupRate,
+                collectionCapacity
+            );
         }
 
         if (ceilingMode === 'included') {
-            const sCeil = sSelectCnt + Math.floor(pulls / GACHA_RULES.STAR3.CEILING_INTERVAL);
-            for (let i = 0; i < sCeil; i++) {
-                dpS = ProbabilityEngine.runGuaranteedPull(dpS);
+            const guaranteedSelectCount = stepupSelectTicketCount
+                + Math.floor(pulls / GACHA_RULES.STAR3.SHARED_SELECT_REWARD_INTERVAL);
+            for (let reward = 0; reward < guaranteedSelectCount; reward++) {
+                stepupFirstCollectionDp = ProbabilityEngine.runGuaranteedPull(stepupFirstCollectionDp);
             }
         }
 
-        return { dpN, dpS, sSelectCnt };
+        return { normalOnlyCollectionDp, stepupFirstCollectionDp, stepupSelectTicketCount };
     }
 
     /**
-     * 단순 스탭업 가챠 - 특정 pulls 수에 대해 일반/스탭업 DP를 시뮬레이션
-     * @returns {{ dpN: Array, dpS: Array }}
+     * 생일/콜라보의 확률 증가형 Step-up 전략을 시뮬레이션한다.
+     * 유한 한도에서는 한도 이후 Normal, 실질적 무제한에서는 Step-up-only로 동작한다.
      */
-    static _simulateSimpleStepup(pulls, { M, normalRate, stepRate, stepupLimit, ceilingMode, step3Mode }) {
-        // 일반 가챠
-        let dpN = new Array(M + 1).fill(0);
-        dpN[0] = 1.0;
-        for (let i = 0; i < pulls; i++) {
-            dpN = ProbabilityEngine.runSinglePull(dpN, normalRate);
+    static _simulateRateBoostStepupStrategies(pulls, {
+        targetCount,
+        normalPickupRate,
+        stepupPickupRate,
+        maxStepupPulls,
+        sharedSelectRewardInterval,
+        guaranteedTargetPullInterval,
+        guaranteedTargetMode,
+        ceilingMode
+    }) {
+        let normalOnlyCollectionDp = new Array(targetCount + 1).fill(0);
+        normalOnlyCollectionDp[0] = 1.0;
+        for (let pull = 0; pull < pulls; pull++) {
+            normalOnlyCollectionDp = ProbabilityEngine.runSinglePull(normalOnlyCollectionDp, normalPickupRate);
         }
         if (ceilingMode === 'included') {
-            const nCeil = Math.floor(pulls / GACHA_RULES.BIRTHDAY.CEILING_INTERVAL);
-            for (let i = 0; i < nCeil; i++) {
-                dpN = ProbabilityEngine.runGuaranteedPull(dpN);
+            const sharedSelectRewardCount = Math.floor(pulls / sharedSelectRewardInterval);
+            for (let reward = 0; reward < sharedSelectRewardCount; reward++) {
+                normalOnlyCollectionDp = ProbabilityEngine.runGuaranteedPull(normalOnlyCollectionDp);
             }
         }
 
-        // 스탭업 가챠
-        let dpS = new Array(M + 1).fill(0);
-        dpS[0] = 1.0;
-        const actualStepPulls = Math.min(pulls, stepupLimit);
+        let comparedStrategyCollectionDp = new Array(targetCount + 1).fill(0);
+        comparedStrategyCollectionDp[0] = 1.0;
+        const stepupPullsUsed = Math.min(pulls, maxStepupPulls);
 
-        for (let i = 1; i <= actualStepPulls; i++) {
-            const isStep3 = (i % GACHA_RULES.BIRTHDAY.STEPUP_GUARANTEE === 0);
+        for (let pull = 1; pull <= stepupPullsUsed; pull++) {
+            const isGuaranteedTargetPull = guaranteedTargetPullInterval
+                && pull % guaranteedTargetPullInterval === 0;
 
-            if (isStep3 && step3Mode === 'included') {
-                dpS = ProbabilityEngine.runGuaranteedPull(dpS);
+            if (isGuaranteedTargetPull && guaranteedTargetMode === 'included') {
+                comparedStrategyCollectionDp = ProbabilityEngine.runGuaranteedPull(comparedStrategyCollectionDp);
             } else {
-                dpS = ProbabilityEngine.runSinglePull(dpS, stepRate);
+                comparedStrategyCollectionDp = ProbabilityEngine.runSinglePull(
+                    comparedStrategyCollectionDp,
+                    stepupPickupRate
+                );
             }
         }
 
-        // 스탭업 초과분은 일반 가챠로 처리
-        if (pulls > stepupLimit) {
-            const extraPulls = pulls - stepupLimit;
-            for (let i = 0; i < extraPulls; i++) {
-                dpS = ProbabilityEngine.runSinglePull(dpS, normalRate);
-            }
+        const normalPullsAfterStepup = Math.max(0, pulls - maxStepupPulls);
+        for (let pull = 0; pull < normalPullsAfterStepup; pull++) {
+            comparedStrategyCollectionDp = ProbabilityEngine.runSinglePull(
+                comparedStrategyCollectionDp,
+                normalPickupRate
+            );
         }
 
         if (ceilingMode === 'included') {
-            const sCeil = Math.floor(pulls / GACHA_RULES.BIRTHDAY.CEILING_INTERVAL);
-            for (let i = 0; i < sCeil; i++) {
-                dpS = ProbabilityEngine.runGuaranteedPull(dpS);
+            const sharedSelectRewardCount = Math.floor(pulls / sharedSelectRewardInterval);
+            for (let reward = 0; reward < sharedSelectRewardCount; reward++) {
+                comparedStrategyCollectionDp = ProbabilityEngine.runGuaranteedPull(comparedStrategyCollectionDp);
             }
         }
 
-        return { dpN, dpS };
+        return { normalOnlyCollectionDp, comparedStrategyCollectionDp };
     }
 
-    // ==========================================
-    // 공개 API
-    // ==========================================
-
     /**
-     * 3성 가챠 효율 데이터 계산
-     * @returns {Object} { labels, normalData, stepupData }
+     * 3성 Normal-only와 Step-up-first 전략 비교 데이터.
      */
-    static calculate3Star({ N, M, p_indiv, p_step4_total, maxLoops, loopRewards, ceilingMode, step4Mode, randomMode, targetMode = 'snipe' }) {
+    static calculate3StarComparison({
+        pickupCount,
+        targetCount,
+        individualPickupRate,
+        step4PickupTotalRate,
+        maxLoops,
+        loopRewards,
+        ceilingMode,
+        step4Mode,
+        randomTicketMode,
+        targetMode = 'snipe'
+    }) {
         const labels = [];
-        const normalData = [];
-        const stepupData = [];
-        const stepupLimit = maxLoops * GACHA_RULES.STAR3.STEPUP_CYCLE;
-        const simParams = { N, M, p_indiv, p_step4_total, stepupLimit, loopRewards, ceilingMode, step4Mode, randomMode, targetMode };
+        const normalOnlyData = [];
+        const comparedStrategyData = [];
+        const maxStepupPulls = maxLoops * GACHA_RULES.STAR3.STEPUP_CYCLE;
+        const simulationOptions = {
+            pickupCount,
+            targetCount,
+            individualPickupRate,
+            step4PickupTotalRate,
+            maxStepupPulls,
+            loopRewards,
+            ceilingMode,
+            step4Mode,
+            randomTicketMode,
+            targetMode
+        };
 
         for (let pulls = 0; pulls <= CHART_RANGE.EFFICIENCY_MAX_PULLS; pulls++) {
             labels.push(pulls);
-            const { dpN, dpS } = this._simulate3Star(pulls, simParams);
-            normalData.push({ best: dpN[M] * 100, worst: dpN[0] * 100 });
-            stepupData.push({ best: dpS[M] * 100, worst: dpS[0] * 100 });
+            const { normalOnlyCollectionDp, stepupFirstCollectionDp } =
+                this._simulate3StarStrategies(pulls, simulationOptions);
+            normalOnlyData.push({
+                best: normalOnlyCollectionDp[targetCount] * 100,
+                worst: normalOnlyCollectionDp[0] * 100
+            });
+            comparedStrategyData.push({
+                best: stepupFirstCollectionDp[targetCount] * 100,
+                worst: stepupFirstCollectionDp[0] * 100
+            });
         }
 
-        return { labels, normalData, stepupData };
+        return {
+            labels,
+            normalOnlyData,
+            comparedStrategyData,
+            comparedStrategyKind: STEPUP_STRATEGY_KIND.STEPUP_FIRST
+        };
     }
 
     /**
-     * 2성 가챠 효율 데이터 계산
-     * @returns {Object} { labels, normalData, stepupData }
+     * 2성 Normal-only와 선택 그룹 Step-up-only 전략 비교 데이터.
      */
-    static calculate2Star({ N_group, M_group, N_total, rateTotal, ceilingMode }) {
+    static calculate2StarComparison({
+        groupPickupCount,
+        groupTargetCount,
+        totalPickupCount,
+        totalPickupRate,
+        ceilingMode
+    }) {
         const labels = [];
-        const normalData = [];
-        const stepupData = [];
+        const normalOnlyData = [];
+        const comparedStrategyData = [];
 
         for (let pulls = 0; pulls <= CHART_RANGE.EFFICIENCY_MAX_PULLS; pulls++) {
             labels.push(pulls);
 
-            // 일반 가챠 시뮬레이션
-            let dpN = new Array(M_group + 1).fill(0);
-            dpN[0] = 1.0;
-            for (let i = 1; i <= pulls; i++) {
-                dpN = ProbabilityEngine.runSinglePull(
-                    dpN,
-                    (i % GACHA_RULES.STAR2.HIGH_RATE_INTERVAL === 0 ? GACHA_RULES.STAR2.HIGH_RATE_PROBABILITY : rateTotal) / N_total
+            let normalOnlyCollectionDp = new Array(groupTargetCount + 1).fill(0);
+            normalOnlyCollectionDp[0] = 1.0;
+            for (let pull = 1; pull <= pulls; pull++) {
+                const pickupTotalRate = pull % GACHA_RULES.STAR2.HIGH_RATE_INTERVAL === 0
+                    ? GACHA_RULES.STAR2.HIGH_RATE_PROBABILITY
+                    : totalPickupRate;
+                normalOnlyCollectionDp = ProbabilityEngine.runSinglePull(
+                    normalOnlyCollectionDp,
+                    pickupTotalRate / totalPickupCount
                 );
             }
             if (ceilingMode === 'included') {
-                const ceil = Math.floor(pulls / GACHA_RULES.STAR2.NORMAL_CEILING_INTERVAL);
-                for (let i = 0; i < ceil; i++) {
-                    dpN = ProbabilityEngine.runGuaranteedPull(dpN);
+                const normalSelectRewardCount = Math.floor(
+                    pulls / GACHA_RULES.STAR2.NORMAL_SELECT_REWARD_INTERVAL
+                );
+                for (let reward = 0; reward < normalSelectRewardCount; reward++) {
+                    normalOnlyCollectionDp = ProbabilityEngine.runGuaranteedPull(normalOnlyCollectionDp);
                 }
             }
-            normalData.push({ best: dpN[M_group] * 100, worst: dpN[0] * 100 });
+            normalOnlyData.push({
+                best: normalOnlyCollectionDp[groupTargetCount] * 100,
+                worst: normalOnlyCollectionDp[0] * 100
+            });
 
-            // 스탭업 가챠 시뮬레이션
-            let dpS = new Array(M_group + 1).fill(0);
-            dpS[0] = 1.0;
-            for (let i = 1; i <= pulls; i++) {
-                const isGuar = (i === GACHA_RULES.STAR2.STEPUP_GUARANTEE_FIRST ||
-                               (i > GACHA_RULES.STAR2.STEPUP_GUARANTEE_FIRST &&
-                                (i - GACHA_RULES.STAR2.STEPUP_GUARANTEE_FIRST) % GACHA_RULES.STAR2.STEPUP_GUARANTEE_INTERVAL === 0));
-                dpS = ProbabilityEngine.runSinglePull(dpS, isGuar ? (1.0 / N_group) : (rateTotal / N_group));
+            let stepupOnlyCollectionDp = new Array(groupTargetCount + 1).fill(0);
+            stepupOnlyCollectionDp[0] = 1.0;
+            for (let pull = 1; pull <= pulls; pull++) {
+                const isGuaranteedPickupPull = pull === GACHA_RULES.STAR2.FIRST_GUARANTEED_PICKUP_PULL
+                    || (pull > GACHA_RULES.STAR2.FIRST_GUARANTEED_PICKUP_PULL
+                        && (pull - GACHA_RULES.STAR2.FIRST_GUARANTEED_PICKUP_PULL)
+                            % GACHA_RULES.STAR2.GUARANTEED_PICKUP_INTERVAL === 0);
+                stepupOnlyCollectionDp = ProbabilityEngine.runSinglePull(
+                    stepupOnlyCollectionDp,
+                    isGuaranteedPickupPull ? 1.0 / groupPickupCount : totalPickupRate / groupPickupCount
+                );
             }
             if (ceilingMode === 'included') {
-                const ceil = Math.floor(pulls / GACHA_RULES.STAR2.STEPUP_CEILING_INTERVAL);
-                for (let i = 0; i < ceil; i++) {
-                    dpS = ProbabilityEngine.runGuaranteedPull(dpS);
+                const stepupSelectRewardCount = Math.floor(
+                    pulls / GACHA_RULES.STAR2.STEPUP_SELECT_REWARD_INTERVAL
+                );
+                for (let reward = 0; reward < stepupSelectRewardCount; reward++) {
+                    stepupOnlyCollectionDp = ProbabilityEngine.runGuaranteedPull(stepupOnlyCollectionDp);
                 }
             }
-            stepupData.push({ best: dpS[M_group] * 100, worst: dpS[0] * 100 });
+            comparedStrategyData.push({
+                best: stepupOnlyCollectionDp[groupTargetCount] * 100,
+                worst: stepupOnlyCollectionDp[0] * 100
+            });
         }
 
-        return { labels, normalData, stepupData };
+        return {
+            labels,
+            normalOnlyData,
+            comparedStrategyData,
+            comparedStrategyKind: STEPUP_STRATEGY_KIND.STEPUP_ONLY
+        };
     }
 
     /**
-     * 3성 가챠 CDF(누적분포함수) 데이터 계산
-     * @returns {Object} { labels, cdfDataStepup, cdfDataNormal, stepupRequired, normalRequired }
+     * 3성 전략별 목표 수집 완료 확률 곡선과 최초 목표 달성 Pull 수.
      */
-    static calculate3StarCDF({ N, M, p_indiv, p_step4_total, maxLoops, loopRewards, ceilingMode, step4Mode, randomMode, targetProb = 0.9, targetMode = 'snipe' }) {
+    static calculate3StarCompletionCdf({
+        pickupCount,
+        targetCount,
+        individualPickupRate,
+        step4PickupTotalRate,
+        maxLoops,
+        loopRewards,
+        ceilingMode,
+        step4Mode,
+        randomTicketMode,
+        targetProbability = 0.9,
+        targetMode = 'snipe'
+    }) {
         const labels = [];
-        const cdfDataStepup = [];
-        const cdfDataNormal = [];
-        const maxPulls = CHART_RANGE.EFFICIENCY_MAX_PULLS;
-        const stepupLimit = maxLoops * GACHA_RULES.STAR3.STEPUP_CYCLE;
-        const simParams = { N, M, p_indiv, p_step4_total, stepupLimit, loopRewards, ceilingMode, step4Mode, randomMode, targetMode };
+        const normalOnlyCompletionCdf = [];
+        const comparedStrategyCompletionCdf = [];
+        const maxStepupPulls = maxLoops * GACHA_RULES.STAR3.STEPUP_CYCLE;
+        const simulationOptions = {
+            pickupCount,
+            targetCount,
+            individualPickupRate,
+            step4PickupTotalRate,
+            maxStepupPulls,
+            loopRewards,
+            ceilingMode,
+            step4Mode,
+            randomTicketMode,
+            targetMode
+        };
 
-        let stepupRequired = null;
-        let normalRequired = null;
-
-        for (let pulls = 0; pulls <= maxPulls; pulls++) {
-            labels.push(pulls);
-
-            const { dpN, dpS } = this._simulate3Star(pulls, simParams);
-
-            const stepupProb = dpS[M] * 100;
-            cdfDataStepup.push(stepupProb);
-            if (stepupRequired === null && stepupProb >= targetProb * 100) {
-                stepupRequired = pulls;
-            }
-
-            const normalProb = dpN[M] * 100;
-            cdfDataNormal.push(normalProb);
-            if (normalRequired === null && normalProb >= targetProb * 100) {
-                normalRequired = pulls;
-            }
-        }
-
-        return { labels, cdfDataStepup, cdfDataNormal, stepupRequired, normalRequired };
-    }
-
-    /**
-     * 단순 스탭업 가챠 효율 데이터 계산 (생일/콜라보 타입)
-     * @returns {Object} { labels, normalData, stepupData }
-     */
-    static calculateSimpleStepup({ normalRate, stepRate, ceilingMode, step3Mode, N, M, stepupLimit = 9999 }) {
-        const labels = [];
-        const normalData = [];
-        const stepupData = [];
-        const simParams = { M, normalRate, stepRate, stepupLimit, ceilingMode, step3Mode };
+        let normalOnlyRequiredPulls = null;
+        let comparedStrategyRequiredPulls = null;
 
         for (let pulls = 0; pulls <= CHART_RANGE.EFFICIENCY_MAX_PULLS; pulls++) {
             labels.push(pulls);
-            const { dpN, dpS } = this._simulateSimpleStepup(pulls, simParams);
-            normalData.push({ best: dpN[M] * 100, worst: dpN[0] * 100 });
-            stepupData.push({ best: dpS[M] * 100, worst: dpS[0] * 100 });
+            const { normalOnlyCollectionDp, stepupFirstCollectionDp } =
+                this._simulate3StarStrategies(pulls, simulationOptions);
+
+            const comparedStrategyProbability = stepupFirstCollectionDp[targetCount] * 100;
+            comparedStrategyCompletionCdf.push(comparedStrategyProbability);
+            if (comparedStrategyRequiredPulls === null
+                && comparedStrategyProbability >= targetProbability * 100) {
+                comparedStrategyRequiredPulls = pulls;
+            }
+
+            const normalOnlyProbability = normalOnlyCollectionDp[targetCount] * 100;
+            normalOnlyCompletionCdf.push(normalOnlyProbability);
+            if (normalOnlyRequiredPulls === null && normalOnlyProbability >= targetProbability * 100) {
+                normalOnlyRequiredPulls = pulls;
+            }
         }
 
-        return { labels, normalData, stepupData };
+        return {
+            labels,
+            normalOnlyCompletionCdf,
+            comparedStrategyCompletionCdf,
+            normalOnlyRequiredPulls,
+            comparedStrategyRequiredPulls,
+            comparedStrategyKind: STEPUP_STRATEGY_KIND.STEPUP_FIRST
+        };
     }
 
     /**
-     * 단순 스탭업 가챠 CDF(누적분포함수) 데이터 계산 (생일/콜라보 타입)
-     * @returns {Object} { labels, cdfDataStepup, cdfDataNormal, stepupRequired, normalRequired }
+     * 생일/콜라보 타입의 Normal-only와 해당 Step-up 전략 비교 데이터.
      */
-    static calculateSimpleStepupCDF({ normalRate, stepRate, ceilingMode, step3Mode, M, targetProb, stepupLimit }) {
+    static calculateRateBoostStepupComparison({
+        normalPickupRate,
+        stepupPickupRate,
+        ceilingMode,
+        guaranteedTargetMode,
+        guaranteedTargetPullInterval,
+        sharedSelectRewardInterval,
+        targetCount,
+        maxStepupPulls,
+        comparedStrategyKind
+    }) {
         const labels = [];
-        const cdfDataStepup = [];
-        const cdfDataNormal = [];
-        const maxPulls = CHART_RANGE.EFFICIENCY_MAX_PULLS;
-        const simParams = { M, normalRate, stepRate, stepupLimit, ceilingMode, step3Mode };
+        const normalOnlyData = [];
+        const comparedStrategyData = [];
+        const simulationOptions = {
+            targetCount,
+            normalPickupRate,
+            stepupPickupRate,
+            maxStepupPulls,
+            sharedSelectRewardInterval,
+            guaranteedTargetPullInterval,
+            guaranteedTargetMode,
+            ceilingMode
+        };
 
-        let stepupRequired = null;
-        let normalRequired = null;
-
-        for (let pulls = 0; pulls <= maxPulls; pulls++) {
+        for (let pulls = 0; pulls <= CHART_RANGE.EFFICIENCY_MAX_PULLS; pulls++) {
             labels.push(pulls);
+            const { normalOnlyCollectionDp, comparedStrategyCollectionDp } =
+                this._simulateRateBoostStepupStrategies(pulls, simulationOptions);
+            normalOnlyData.push({
+                best: normalOnlyCollectionDp[targetCount] * 100,
+                worst: normalOnlyCollectionDp[0] * 100
+            });
+            comparedStrategyData.push({
+                best: comparedStrategyCollectionDp[targetCount] * 100,
+                worst: comparedStrategyCollectionDp[0] * 100
+            });
+        }
 
-            const { dpN, dpS } = this._simulateSimpleStepup(pulls, simParams);
+        return { labels, normalOnlyData, comparedStrategyData, comparedStrategyKind };
+    }
 
-            const stepupProb = dpS[M] * 100;
-            cdfDataStepup.push(stepupProb);
-            if (stepupRequired === null && stepupProb >= targetProb * 100) {
-                stepupRequired = pulls;
+    /**
+     * 생일/콜라보 타입의 전략별 목표 수집 완료 확률 곡선과 최초 목표 달성 Pull 수.
+     */
+    static calculateRateBoostStepupCompletionCdf({
+        normalPickupRate,
+        stepupPickupRate,
+        ceilingMode,
+        guaranteedTargetMode,
+        guaranteedTargetPullInterval,
+        sharedSelectRewardInterval,
+        targetCount,
+        targetProbability,
+        maxStepupPulls,
+        comparedStrategyKind
+    }) {
+        const labels = [];
+        const normalOnlyCompletionCdf = [];
+        const comparedStrategyCompletionCdf = [];
+        const simulationOptions = {
+            targetCount,
+            normalPickupRate,
+            stepupPickupRate,
+            maxStepupPulls,
+            sharedSelectRewardInterval,
+            guaranteedTargetPullInterval,
+            guaranteedTargetMode,
+            ceilingMode
+        };
+
+        let normalOnlyRequiredPulls = null;
+        let comparedStrategyRequiredPulls = null;
+
+        for (let pulls = 0; pulls <= CHART_RANGE.EFFICIENCY_MAX_PULLS; pulls++) {
+            labels.push(pulls);
+            const { normalOnlyCollectionDp, comparedStrategyCollectionDp } =
+                this._simulateRateBoostStepupStrategies(pulls, simulationOptions);
+
+            const comparedStrategyProbability = comparedStrategyCollectionDp[targetCount] * 100;
+            comparedStrategyCompletionCdf.push(comparedStrategyProbability);
+            if (comparedStrategyRequiredPulls === null
+                && comparedStrategyProbability >= targetProbability * 100) {
+                comparedStrategyRequiredPulls = pulls;
             }
 
-            const normalProb = dpN[M] * 100;
-            cdfDataNormal.push(normalProb);
-            if (normalRequired === null && normalProb >= targetProb * 100) {
-                normalRequired = pulls;
+            const normalOnlyProbability = normalOnlyCollectionDp[targetCount] * 100;
+            normalOnlyCompletionCdf.push(normalOnlyProbability);
+            if (normalOnlyRequiredPulls === null && normalOnlyProbability >= targetProbability * 100) {
+                normalOnlyRequiredPulls = pulls;
             }
         }
 
-        return { labels, cdfDataStepup, cdfDataNormal, stepupRequired, normalRequired };
+        return {
+            labels,
+            normalOnlyCompletionCdf,
+            comparedStrategyCompletionCdf,
+            normalOnlyRequiredPulls,
+            comparedStrategyRequiredPulls,
+            comparedStrategyKind
+        };
     }
 }

@@ -44,25 +44,24 @@ export const VERSION_CONFIG = {
 export const GACHA_RULES = {
     STAR3: {
         STEPUP_CYCLE: 40,              // Step4가 나오는 주기 (40회마다)
-        CEILING_INTERVAL: 200,         // 천장 발동 횟수 (일반+스탭업 합산)
-        STEPUP_CEILING_INTERVAL: 200   // 스탭업 천장 (통합)
+        SHARED_SELECT_REWARD_INTERVAL: 200 // Normal+Step-up 공유 선택 보상
     },
     STAR2: {
         HIGH_RATE_INTERVAL: 10,        // 95% 보정 주기 (일반 가챠)
         HIGH_RATE_PROBABILITY: 0.95,   // 보정 시 적용 확률 (95%)
-        STEPUP_GUARANTEE_FIRST: 5,     // 첫 확정 (5회)
-        STEPUP_GUARANTEE_INTERVAL: 10, // 확정 간격 (이후 10회마다)
-        NORMAL_CEILING_INTERVAL: 100,  // 일반 천장 (100회당)
-        STEPUP_CEILING_INTERVAL: 50    // 스탭업 천장 (50회당)
+        FIRST_GUARANTEED_PICKUP_PULL: 5,
+        GUARANTEED_PICKUP_INTERVAL: 10,
+        NORMAL_SELECT_REWARD_INTERVAL: 100,
+        STEPUP_SELECT_REWARD_INTERVAL: 50
     },
     BIRTHDAY: {
-        STEPUP_MAX: 30,                // 스탭업 최대 횟수
-        STEPUP_GUARANTEE: 30,          // 30회째 확정 획득
-        CEILING_INTERVAL: 200          // 천장 (일반+스탭업 합산)
+        MAX_STEPUP_PULLS: 30,
+        GUARANTEED_TARGET_PULL: 30,
+        SHARED_SELECT_REWARD_INTERVAL: 200
     },
     COLLAB: {
-        STEPUP_LIMIT: 9999,            // 스탭업 횟수 제한 없음 (사실상 무제한)
-        CEILING_INTERVAL: 200          // 천장 (일반+스탭업 합산)
+        PRACTICAL_STEPUP_PULL_LIMIT: 9999,
+        SHARED_SELECT_REWARD_INTERVAL: 200
     }
 };
 

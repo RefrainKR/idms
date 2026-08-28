@@ -184,121 +184,196 @@ export class Star3GachaViewModel extends BaseGachaViewModel {
             return;
         }
 
-        const N = Number(this.model.pickupCount.value);
-        let targetVal = this.model.targetCount.value;
-        let M = (targetVal === 0 || !targetVal) ? N : Number(targetVal);
-        if (M > N) M = N;
+        const pickupCount = Number(this.model.pickupCount.value);
+        const targetCount = this.resolveTargetCount(pickupCount, this.model.targetCount.value);
 
         const targetMode = this.model.targetMode.value;
-        // 아무나 모드: dp 전이 시 capacity=N (N-k개 잔여), 저격 모드: capacity=null (M-k 기본값)
-        const cap = targetMode === 'any' ? N : null;
+        // 아무나: 전체 픽업 풀이 수집 후보, 저격: 지정한 목표만 수집 후보
+        const collectionCapacity = targetMode === 'any' ? pickupCount : null;
 
-        const p_indiv = Number(this.model.pickupRate.value) / 100;  // 개별 1명 확률
-        const p_step4_total = Number(this.model.step4Rate.value) / 100;
+        const individualPickupRate = Number(this.model.pickupRate.value) / 100;
+        const step4PickupTotalRate = Number(this.model.step4Rate.value) / 100;
         const normalPulls = Number(this.model.normalPulls.value);
         const stepPulls = Number(this.model.stepPulls.value);
         const loopRewards = this.model.loopRewards.value;
 
-        const p_step4_indiv = (p_step4_total / N);  // Step4 개별 1명 확률
+        const step4IndividualPickupRate = step4PickupTotalRate / pickupCount;
 
-        let dp = new Array(M + 1).fill(0); dp[0] = 1.0;
-        let dpTotal = [1.0];
+        let collectionDp = new Array(targetCount + 1).fill(0);
+        collectionDp[0] = 1.0;
+        let totalAcquisitionDp = [1.0];
 
         // --- 일반 가챠 ---
-        // 아무나 모드: getTotalProb(p, N) — N명 중 1명 이상 획득 확률
-        // 저격 모드:   getTotalProb(p, M) — M명 중 1명 이상 획득 확률
-        const effectiveCount = targetMode === 'any' ? N : M;
-        const p_any_normal = ProbabilityValidator.getTotalProb(p_indiv, effectiveCount);
+        // 아무나 모드: 전체 픽업 중 하나 이상, 저격 모드: 지정 타겟 중 하나 이상 확률
+        const eligiblePickupCount = targetMode === 'any' ? pickupCount : targetCount;
+        const anyNormalTargetRate = ProbabilityValidator.getTotalProb(
+            individualPickupRate,
+            eligiblePickupCount
+        );
 
         for (let i = 0; i < normalPulls; i++) {
-            dp = ProbabilityEngine.runSinglePull(dp, p_indiv, cap);
-            dpTotal = ProbabilityEngine.accumulateCountProb(dpTotal, p_any_normal);
+            collectionDp = ProbabilityEngine.runSinglePull(
+                collectionDp,
+                individualPickupRate,
+                collectionCapacity
+            );
+            totalAcquisitionDp = ProbabilityEngine.accumulateCountProb(
+                totalAcquisitionDp,
+                anyNormalTargetRate
+            );
         }
 
         // --- 스탭업 가챠 ---
-        let countStep4 = 0, countNormal = 0, randomCnt = 0, selectCnt = 0;
+        let step4PullCount = 0;
+        let regularStepupPullCount = 0;
+        let randomTicketCount = 0;
+        let loopSelectTicketCount = 0;
 
         for (let i = 1; i <= stepPulls; i++) {
             const isStep4 = (i % GACHA_RULES.STAR3.STEPUP_CYCLE === 0);
             const curLoop = Math.ceil(i / GACHA_RULES.STAR3.STEPUP_CYCLE);
             const useStep4 = (isStep4 && this.model.step4Mode.value === 'included');
 
-            if (isStep4) countStep4++; else countNormal++;
+            if (isStep4) step4PullCount++;
+            else regularStepupPullCount++;
 
-            const p = useStep4 ? p_step4_indiv : p_indiv;
-            const p_any = ProbabilityValidator.getTotalProb(p, effectiveCount);
+            const appliedIndividualPickupRate = useStep4
+                ? step4IndividualPickupRate
+                : individualPickupRate;
+            const anyEligiblePickupRate = ProbabilityValidator.getTotalProb(
+                appliedIndividualPickupRate,
+                eligiblePickupCount
+            );
 
-            dp = ProbabilityEngine.runSinglePull(dp, p, cap);
-            dpTotal = ProbabilityEngine.accumulateCountProb(dpTotal, p_any);
+            collectionDp = ProbabilityEngine.runSinglePull(
+                collectionDp,
+                appliedIndividualPickupRate,
+                collectionCapacity
+            );
+            totalAcquisitionDp = ProbabilityEngine.accumulateCountProb(
+                totalAcquisitionDp,
+                anyEligiblePickupRate
+            );
 
             if (isStep4) {
                 const reward = loopRewards[curLoop];
                 if (reward === 'random') {
-                    randomCnt++;
+                    randomTicketCount++;
                     if (this.model.randomMode.value === 'included') {
-                        dp = ProbabilityEngine.runRandomTicket(dp, N, cap);
-                        dpTotal = ProbabilityEngine.accumulateCountProb(dpTotal, effectiveCount / N);
+                        collectionDp = ProbabilityEngine.runRandomTicket(
+                            collectionDp,
+                            pickupCount,
+                            collectionCapacity
+                        );
+                        totalAcquisitionDp = ProbabilityEngine.accumulateCountProb(
+                            totalAcquisitionDp,
+                            eligiblePickupCount / pickupCount
+                        );
                     }
                 } else if (reward === 'select') {
-                    selectCnt++;
+                    loopSelectTicketCount++;
                 }
             }
         }
 
-        // --- 천장 처리 ---
-        const normalCeil = Math.floor((normalPulls + stepPulls) / GACHA_RULES.STAR3.CEILING_INTERVAL);
-        const totalCeil = selectCnt + normalCeil;
+        // 공유 200스택 선택 보상과 Step-up 주회 셀렉 티켓은 서로 다른 출처다.
+        // 현재 분석 토글은 두 종류를 함께 포함/제외한다(동작 보존).
+        const sharedCeilingSelectCount = Math.floor(
+            (normalPulls + stepPulls) / GACHA_RULES.STAR3.SHARED_SELECT_REWARD_INTERVAL
+        );
+        const totalGuaranteedSelectCount = loopSelectTicketCount + sharedCeilingSelectCount;
 
-        if (this.model.ceilingMode.value === 'included' && totalCeil > 0) {
-            for (let i = 0; i < totalCeil; i++) {
-                dp = ProbabilityEngine.runGuaranteedPull(dp);
-                dpTotal = ProbabilityEngine.accumulateCountGuaranteed(dpTotal);
+        if (this.model.ceilingMode.value === 'included' && totalGuaranteedSelectCount > 0) {
+            for (let i = 0; i < totalGuaranteedSelectCount; i++) {
+                collectionDp = ProbabilityEngine.runGuaranteedPull(collectionDp);
+                totalAcquisitionDp = ProbabilityEngine.accumulateCountGuaranteed(totalAcquisitionDp);
             }
         }
 
-        const efficiencyData = this._calculateEfficiencyData(N, M, p_indiv, p_step4_total, targetMode);
-        const cdfData = this._calculateCDFData(N, M, p_indiv, p_step4_total, targetMode);
+        const strategyComparison = this._calculateStrategyComparison(
+            pickupCount,
+            targetCount,
+            individualPickupRate,
+            step4PickupTotalRate,
+            targetMode
+        );
+        const completionCdf = this._calculateCompletionCdf(
+            pickupCount,
+            targetCount,
+            individualPickupRate,
+            step4PickupTotalRate,
+            targetMode
+        );
 
         const context = {
-            N, M, p_indiv: p_indiv * 100, p_step4_total: p_step4_total * 100,
-            countNormal, countStep4, totalPulls: normalPulls + stepPulls,
-            normalPulls, stepPulls, randomRewardCount: randomCnt,
-            totalCeilingCount: totalCeil, selectRewardCount: selectCnt,
-            normalCeiling: normalCeil, maxLoops: this.model.maxLoops.value,
-            loopRewards, efficiencyData, efficiencyLimit: this.model.maxLoops.value * GACHA_RULES.STAR3.STEPUP_CYCLE,
-            cdfData, targetMode
+            pickupCount,
+            targetCount,
+            individualPickupRatePercent: individualPickupRate * 100,
+            step4PickupTotalRatePercent: step4PickupTotalRate * 100,
+            regularStepupPullCount,
+            step4PullCount,
+            totalPulls: normalPulls + stepPulls,
+            normalPulls,
+            stepPulls,
+            randomTicketCount,
+            totalGuaranteedSelectCount,
+            loopSelectTicketCount,
+            sharedCeilingSelectCount,
+            maxLoops: this.model.maxLoops.value,
+            loopRewards,
+            strategyComparison,
+            strategyComparisonLimit: this.model.maxLoops.value * GACHA_RULES.STAR3.STEPUP_CYCLE,
+            completionCdf,
+            targetMode
         };
 
-        GachaResultView.render('star3', { N, M, dp, dpTotal }, context, this.model, this.chartRefs);
+        GachaResultView.render('star3', {
+            pickupCount,
+            targetCount,
+            collectionDp,
+            totalAcquisitionDp
+        }, context, this.model, this.chartRefs);
     }
 
-    _calculateEfficiencyData(N, M, p_indiv, p_step4_total, targetMode = 'snipe') {
-        return EfficiencyCalculator.calculate3Star({
-            N,
-            M,
-            p_indiv,
-            p_step4_total,
+    _calculateStrategyComparison(
+        pickupCount,
+        targetCount,
+        individualPickupRate,
+        step4PickupTotalRate,
+        targetMode = 'snipe'
+    ) {
+        return EfficiencyCalculator.calculate3StarComparison({
+            pickupCount,
+            targetCount,
+            individualPickupRate,
+            step4PickupTotalRate,
             maxLoops: this.model.maxLoops.value,
             loopRewards: this.model.loopRewards.value,
             ceilingMode: this.model.ceilingMode.value,
             step4Mode: this.model.step4Mode.value,
-            randomMode: this.model.randomMode.value,
+            randomTicketMode: this.model.randomMode.value,
             targetMode
         });
     }
 
-    _calculateCDFData(N, M, p_indiv, p_step4_total, targetMode = 'snipe') {
-        return EfficiencyCalculator.calculate3StarCDF({
-            N,
-            M,
-            p_indiv,
-            p_step4_total,
+    _calculateCompletionCdf(
+        pickupCount,
+        targetCount,
+        individualPickupRate,
+        step4PickupTotalRate,
+        targetMode = 'snipe'
+    ) {
+        return EfficiencyCalculator.calculate3StarCompletionCdf({
+            pickupCount,
+            targetCount,
+            individualPickupRate,
+            step4PickupTotalRate,
             maxLoops: this.model.maxLoops.value,
             loopRewards: this.model.loopRewards.value,
             ceilingMode: this.model.ceilingMode.value,
             step4Mode: this.model.step4Mode.value,
-            randomMode: this.model.randomMode.value,
-            targetProb: this.model.targetProbability.value / 100,
+            randomTicketMode: this.model.randomMode.value,
+            targetProbability: this.model.targetProbability.value / 100,
             targetMode
         });
     }

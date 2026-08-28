@@ -18,7 +18,7 @@ export class BirthdayGachaModel {
 
         // 옵션
         this.ceilingMode = new Observable('included');
-        this.step3Mode = new Observable('included');
+        this.guaranteedTargetMode = new Observable('included');
         this.viewMode = new Observable('individual');
         this.efficiencyMode = new Observable('best');
 
@@ -35,7 +35,7 @@ export class BirthdayGachaModel {
             stepRate: this.stepRate.value,
             targetCount: this.targetCount.value,
             ceilingMode: this.ceilingMode.value,
-            step3Mode: this.step3Mode.value,
+            guaranteedTargetMode: this.guaranteedTargetMode.value,
             viewMode: this.viewMode.value,
             efficiencyMode: this.efficiencyMode.value
         };
@@ -52,7 +52,12 @@ export class BirthdayGachaModel {
 
         // 옵션
         if (data.ceilingMode !== undefined) this.ceilingMode.value = data.ceilingMode;
-        if (data.step3Mode !== undefined) this.step3Mode.value = data.step3Mode;
+        if (data.guaranteedTargetMode !== undefined) {
+            this.guaranteedTargetMode.value = data.guaranteedTargetMode;
+        } else if (data.step3Mode !== undefined) {
+            // 이전 LocalStorage 키와 호환
+            this.guaranteedTargetMode.value = data.step3Mode;
+        }
         if (data.viewMode !== undefined) this.viewMode.value = data.viewMode;
         if (data.efficiencyMode !== undefined) this.efficiencyMode.value = data.efficiencyMode;
     }

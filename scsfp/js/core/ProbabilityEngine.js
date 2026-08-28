@@ -112,37 +112,37 @@ export class ProbabilityEngine {
 
     /**
      * 2성 스탭업 그룹 계산
-     * @param {number} N - 그룹 내 픽업 수
-     * @param {number} M - 목표 수집 수
+     * @param {number} groupPickupCount - 그룹 내 픽업 수
+     * @param {number} groupTargetCount - 목표 수집 수
      * @param {number} pulls - 가챠 횟수
      * @param {number} rate - 총 픽업 확률 (0~1)
-     * @returns {Object} { dp, dpTotal }
+     * @returns {{ collectionDp: Array, totalAcquisitionDp: Array }}
      */
-    static calcStepupGroup(N, M, pulls, rate) {
-        let dp = new Array(M + 1).fill(0);
-        dp[0] = 1.0;
-        let dpTotal = [1.0];
+    static calcStepupGroup(groupPickupCount, groupTargetCount, pulls, rate) {
+        let collectionDp = new Array(groupTargetCount + 1).fill(0);
+        collectionDp[0] = 1.0;
+        let totalAcquisitionDp = [1.0];
 
-        if (pulls <= 0) return { dp, dpTotal };
+        if (pulls <= 0) return { collectionDp, totalAcquisitionDp };
 
-        const p_normal_one = rate / N;
-        const p_guar_one = 1.0 / N;
+        const p_normal_one = rate / groupPickupCount;
+        const p_guar_one = 1.0 / groupPickupCount;
 
-        const p_normal_any = ProbabilityValidator.getTotalProb(p_normal_one, M);
-        const p_guar_any = ProbabilityValidator.getTotalProb(p_guar_one, M);
+        const p_normal_any = ProbabilityValidator.getTotalProb(p_normal_one, groupTargetCount);
+        const p_guar_any = ProbabilityValidator.getTotalProb(p_guar_one, groupTargetCount);
 
         for (let i = 1; i <= pulls; i++) {
-            const isGuar = (i === GACHA_RULES.STAR2.STEPUP_GUARANTEE_FIRST ||
-                           (i > GACHA_RULES.STAR2.STEPUP_GUARANTEE_FIRST &&
-                            (i - GACHA_RULES.STAR2.STEPUP_GUARANTEE_FIRST) % GACHA_RULES.STAR2.STEPUP_GUARANTEE_INTERVAL === 0));
+            const isGuar = (i === GACHA_RULES.STAR2.FIRST_GUARANTEED_PICKUP_PULL ||
+                           (i > GACHA_RULES.STAR2.FIRST_GUARANTEED_PICKUP_PULL &&
+                            (i - GACHA_RULES.STAR2.FIRST_GUARANTEED_PICKUP_PULL) % GACHA_RULES.STAR2.GUARANTEED_PICKUP_INTERVAL === 0));
             const p_one = isGuar ? p_guar_one : p_normal_one;
             const p_any = isGuar ? p_guar_any : p_normal_any;
 
-            dp = ProbabilityEngine.runSinglePull(dp, p_one);
-            dpTotal = ProbabilityEngine.accumulateCountProb(dpTotal, p_any);
+            collectionDp = ProbabilityEngine.runSinglePull(collectionDp, p_one);
+            totalAcquisitionDp = ProbabilityEngine.accumulateCountProb(totalAcquisitionDp, p_any);
         }
 
-        return { dp, dpTotal };
+        return { collectionDp, totalAcquisitionDp };
     }
 
     static transformData(dp, mode) {

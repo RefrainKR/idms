@@ -4,6 +4,7 @@ import { GachaResultView } from '../../view/gacha/GachaResultView.js';
 import { ToggleButton } from '../../component/ToggleButton.js';
 import { CONFIG, TOGGLE_STATES, GACHA_RULES } from '../../config/GachaConfig.js';
 import { getGachaConfig, applyTabVisibility } from '../../view/gacha/GachaViewConfig.js';
+import { STEPUP_STRATEGY_KIND } from '../../core/EfficiencyCalculator.js';
 
 export class BirthdayGachaViewModel extends BaseGachaViewModel {
     constructor() {
@@ -92,9 +93,14 @@ export class BirthdayGachaViewModel extends BaseGachaViewModel {
             this.model.ceilingMode.value = s.name;
         }, this.model.ceilingMode.value);
 
-        this.toggleButtons.step3 = new ToggleButton('birthday-toggle-step3', TOGGLE_STATES.STEP3, (s) => {
-            this.model.step3Mode.value = s.name;
-        }, this.model.step3Mode.value);
+        this.toggleButtons.guaranteedTarget = new ToggleButton(
+            'birthday-toggle-step3',
+            TOGGLE_STATES.GUARANTEED_TARGET,
+            (state) => {
+                this.model.guaranteedTargetMode.value = state.name;
+            },
+            this.model.guaranteedTargetMode.value
+        );
 
         this.toggleButtons.view = new ToggleButton('birthday-toggle-view', TOGGLE_STATES.VIEW, (s) => {
             this.model.viewMode.value = s.name;
@@ -115,31 +121,43 @@ export class BirthdayGachaViewModel extends BaseGachaViewModel {
     calculate() {
         if (this.isInitializing) return;
 
-        const step3Mode = this.model.step3Mode.value;
-        const result = this._runSimpleStepupCalculation({
+        const guaranteedTargetMode = this.model.guaranteedTargetMode.value;
+        const result = this._runRateBoostStepupCalculation({
             rules: GACHA_RULES.BIRTHDAY,
-            step3Mode,
-            stepupLimit: GACHA_RULES.BIRTHDAY.STEPUP_MAX,
-            stepupGuarantee: GACHA_RULES.BIRTHDAY.STEPUP_GUARANTEE
+            guaranteedTargetMode,
+            guaranteedTargetPullInterval: GACHA_RULES.BIRTHDAY.GUARANTEED_TARGET_PULL
         });
 
-        const params = { step3Mode, stepupLimit: GACHA_RULES.BIRTHDAY.STEPUP_MAX };
+        const strategyOptions = {
+            rules: GACHA_RULES.BIRTHDAY,
+            guaranteedTargetMode,
+            guaranteedTargetPullInterval: GACHA_RULES.BIRTHDAY.GUARANTEED_TARGET_PULL,
+            maxStepupPulls: GACHA_RULES.BIRTHDAY.MAX_STEPUP_PULLS,
+            comparedStrategyKind: STEPUP_STRATEGY_KIND.STEPUP_FIRST
+        };
 
         const context = {
-            N: result.N, M: result.M,
+            pickupCount: result.pickupCount,
+            targetCount: result.targetCount,
             normalRate: this.model.normalRate.value,
             stepRate: this.model.stepRate.value,
             normalPulls: result.normalPulls,
             stepPulls: result.stepPulls,
             totalPulls: result.totalPulls,
-            ceilingCount: result.ceilingCount,
-            stepGuaranteed: result.stepGuaranteed,
-            efficiencyData: this._getSimpleStepupEfficiency(params),
-            cdfData: this._getSimpleStepupCDF(params)
+            ceilingMode: this.model.ceilingMode.value,
+            sharedSelectRewardCount: result.sharedSelectRewardCount,
+            guaranteedTargetCount: result.guaranteedTargetCount,
+            strategyComparison: this._calculateRateBoostStepupComparison(strategyOptions),
+            completionCdf: this._calculateRateBoostStepupCompletionCdf(strategyOptions)
         };
 
         GachaResultView.render('birthday',
-            { N: result.N, M: result.M, dp: result.dp, dpTotal: result.dpTotal },
+            {
+                pickupCount: result.pickupCount,
+                targetCount: result.targetCount,
+                collectionDp: result.collectionDp,
+                totalAcquisitionDp: result.totalAcquisitionDp
+            },
             context, this.model, this.chartRefs
         );
     }
