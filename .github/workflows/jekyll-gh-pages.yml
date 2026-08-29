@@ -30,17 +30,17 @@ jobs:
         uses: actions/checkout@v4
       - name: Setup Pages
         uses: actions/configure-pages@v5
+      - name: Verify deployment cache-key script
+        run: node --test scripts/apply-deployment-cache-key.test.mjs
+      - name: Verify clean source asset URLs
+        run: node scripts/apply-deployment-cache-key.mjs --check-source scsfp
+      - name: Add commit SHA to deployment source URLs
+        run: node scripts/apply-deployment-cache-key.mjs --write scsfp "$GITHUB_SHA"
       - name: Build with Jekyll
         uses: actions/jekyll-build-pages@v1
         with:
           source: ./
           destination: ./_site
-      - name: Verify deployment cache-key script
-        run: node --test scripts/apply-deployment-cache-key.test.mjs
-      - name: Verify clean source asset URLs
-        run: node scripts/apply-deployment-cache-key.mjs --check-source scsfp
-      - name: Add commit SHA to deployed JS and CSS URLs
-        run: node scripts/apply-deployment-cache-key.mjs --write _site "$GITHUB_SHA"
       - name: Verify deployed asset URLs
         run: node scripts/apply-deployment-cache-key.mjs --check _site "$GITHUB_SHA"
       - name: Upload artifact

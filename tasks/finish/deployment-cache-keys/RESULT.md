@@ -7,7 +7,7 @@
 - 기존 쿼리와 fragment는 보존하며 `v` 값만 교체합니다.
 - 외부 URL과 특수 scheme은 변환하지 않습니다.
 - 원본 청결 검사와 배포 산출물 일치 검사가 누락·불일치 시 실패합니다.
-- GitHub Pages workflow는 Jekyll 빌드 후 변환하고, 다시 검사한 산출물만 업로드합니다.
+- GitHub Pages workflow는 runner의 임시 배포 소스를 변환한 뒤 Jekyll로 빌드하고, 다시 검사한 산출물만 업로드합니다.
 
 ## 개발자에게 보이는 상태
 
@@ -36,7 +36,13 @@ import { StorageManager } from './utils/StorageManager.js?v=64e232a851b1';
 
 ## 현재 결론
 
-로컬 시뮬레이션에서는 의도대로 동작합니다. 아직 커밋·푸시·main 병합·공개 배포는 하지 않았으며 사용자 검토를 기다립니다.
+로컬 시뮬레이션 검증과 사용자 승인을 마치고 실제 `main` 배포 검증 단계로 전환했습니다.
+
+### 실제 Actions 보완
+
+- 최초 `main` 실행에서는 Jekyll Docker action이 생성한 `_site`를 이후 단계에서 수정하는 작업이 실패해 배포가 안전하게 중단됐습니다.
+- 변환 단계를 Jekyll 빌드 전 runner의 임시 checkout 소스에 적용하도록 옮겼습니다.
+- Jekyll이 만든 `_site`는 수정하지 않고 동일 SHA가 보존됐는지만 검사합니다.
 
 ## 커밋 전 공개 범위 점검
 

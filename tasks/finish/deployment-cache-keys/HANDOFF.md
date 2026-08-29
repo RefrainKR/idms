@@ -52,7 +52,13 @@
 - 개인 게임 참고 자료 14개(11,707,923바이트)를 `scsfp/docs/game/img/`에서 `scsfp/docs/game/primary/img/`로 손실 없이 이동함
 - `AGENTS.md`, `tasks/`, `scripts/`가 ignore되지 않아 의도대로 추적 가능한 상태임을 확인함
 
-## 미검증 경계
+## 검증 경계
 
-- 변경된 GitHub Actions workflow는 아직 `main`에 올라가지 않았으므로 실제 Actions runner 실행과 공개 Pages 배포는 수행하지 않았습니다.
+- Jekyll 빌드 전 변환으로 순서를 고친 2차 workflow의 실제 Actions runner 실행과 공개 Pages 결과를 확인해야 합니다.
 - 현재 저장소의 정적 import는 한 줄 문자열 리터럴 형식입니다. 향후 여러 줄 또는 계산식 기반 import를 도입하면 변환 스크립트 지원 여부를 함께 확인해야 합니다.
+
+## 실제 Actions 1차 실행
+
+- `main` 병합 `c66a513`의 Actions run `33252189926`에서 스크립트 단위 테스트와 원본 청결 검사는 통과했습니다.
+- Jekyll Docker action이 생성한 `_site`를 다음 host 단계에서 수정하는 작업은 실패했고 artifact 업로드와 배포는 실행되지 않았습니다. 기존 공개 사이트는 유지됐습니다.
+- 후속 수정에서는 checkout된 임시 `scsfp` 소스에 SHA를 먼저 삽입하고 Jekyll을 실행한 뒤, `_site`는 읽기 전용 검사만 수행하도록 순서를 변경했습니다.
