@@ -8,6 +8,15 @@
 
 ---
 
+## v1.12.2 (2026-08-29) - GitHub Pages 모듈 캐시 오류 수정
+
+- 새 `main.js`와 이전 `StorageManager.js`가 혼합되어 전체 초기화에서 `clearAll is not a function`이 발생하던 배포 오류 수정
+- GitHub Pages에서 변경된 ES module 그래프가 같은 버전 URL로 갱신되도록 import 캐시 키 연결
+- 이전 모듈이 일시적으로 혼재해도 전체 초기화가 동작하도록 방어 경로 추가
+- 앱 버전과 정적 CSS·JavaScript 자산 키를 `1.12.2`로 갱신
+
+---
+
 ## v1.12.1 (2026-08-29) - 가챠 설정·결과 UI 개선
 
 ### UI와 조작 흐름

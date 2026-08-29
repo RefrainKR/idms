@@ -1,11 +1,13 @@
-﻿import { Star3GachaViewModel } from './viewmodel/gacha/Star3GachaViewModel.js';
-import { Star2GachaViewModel } from './viewmodel/gacha/Star2GachaViewModel.js';
-import { BirthdayGachaViewModel } from './viewmodel/gacha/BirthdayGachaViewModel.js';
-import { CollabGachaViewModel } from './viewmodel/gacha/CollabGachaViewModel.js';
-import { PaymentViewModel } from './viewmodel/payment/PaymentViewModel.js';
+﻿// GitHub Pages의 ES module 캐시는 상위 main.js의 쿼리를 하위 import에 전파하지 않는다.
+// 배포에서 변경된 모듈 그래프는 같은 버전 쿼리로 함께 갱신한다.
+import { Star3GachaViewModel } from './viewmodel/gacha/Star3GachaViewModel.js?v=1.12.2';
+import { Star2GachaViewModel } from './viewmodel/gacha/Star2GachaViewModel.js?v=1.12.2';
+import { BirthdayGachaViewModel } from './viewmodel/gacha/BirthdayGachaViewModel.js?v=1.12.2';
+import { CollabGachaViewModel } from './viewmodel/gacha/CollabGachaViewModel.js?v=1.12.2';
+import { PaymentViewModel } from './viewmodel/payment/PaymentViewModel.js?v=1.12.2';
 import { TabManager } from './component/TabManager.js';
 import { CollapsibleSection } from './component/CollapsibleSection.js';
-import { StorageManager } from './utils/StorageManager.js';
+import { StorageManager } from './utils/StorageManager.js?v=1.12.2';
 import { SectionManager } from './component/SectionManager.js';
 
 // Chart.js and ChartDataLabels are loaded as global variables via CDN (see index.html)
@@ -23,7 +25,9 @@ window.onload = function() {
             const confirmed = confirm('저장된 모든 가챠·과금 설정을 초기화하시겠습니까?');
             if (!confirmed) return;
 
-            StorageManager.clearAll();
+            // 배포 직후 이전 StorageManager 모듈 캐시와 혼재해도 전체 초기화는 동작한다.
+            if (typeof StorageManager.clearAll === 'function') StorageManager.clearAll();
+            else localStorage.clear();
             location.reload();
         });
     }
