@@ -1,7 +1,7 @@
 ---
 status: planning
 planning_role: Sol
-implementation_role: Terra
+implementation_role: undecided
 review_role: Sol
 branch: null
 version: null
@@ -11,6 +11,13 @@ next_role: Sol
 # 작업명
 
 ## 목적
+
+## 구현 담당 판단
+
+- 담당 역할: Sol 직접 수행 / Terra 인계
+- 복잡성·불확실성:
+- 인계 비용 대비 이점:
+- 판단 근거:
 
 ## 버전 및 브랜치
 

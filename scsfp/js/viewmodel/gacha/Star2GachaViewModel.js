@@ -31,11 +31,25 @@ export class Star2GachaViewModel extends BaseGachaViewModel {
         super.init(); // fromJSON → applyDependencies → bindInputs 순서로 실행됨
 
         this.bindToggles();
+        this.initSettingsUI();
+        this.bindMobileCollectionViewToggle('star2-collection-view-toggle', 'res-2s-collection');
+    }
 
-        const resetBtn = document.getElementById('star2-reset-btn');
-        if (resetBtn) {
-            resetBtn.addEventListener('click', () => this.reset());
-        }
+    initSettingsUI() {
+        const summary = document.getElementById('star2-banner-summary-text');
+        if (!summary) return;
+
+        const updateSummary = () => {
+            const groups = ['A', 'B', 'C', 'D']
+                .map((group) => `${group}:${this.model[`countStep${group}`].value}`)
+                .join(', ');
+            summary.textContent = `${this.model.pickupCount.value}명, 전체 ${this.model.pickupRate.value}% / ${groups}`;
+        };
+        ['pickupCount', 'pickupRate', 'countStepA', 'countStepB', 'countStepC', 'countStepD'].forEach((key) => {
+            this._subscriptions.push(this.model[key].subscribe(updateSummary));
+        });
+        updateSummary();
+        this.bindSettingsDialog('star2-settings-dialog', 'star2-settings-open');
     }
 
     bindToggles() {

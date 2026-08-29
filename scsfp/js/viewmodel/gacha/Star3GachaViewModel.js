@@ -39,13 +39,10 @@ export class Star3GachaViewModel extends BaseGachaViewModel {
         super.init(); // fromJSON → applyDependencies → bindInputs 순서로 실행됨
 
         this.bindToggles();
+        this.initBannerSettingsUI();
+        this.bindMobileCollectionViewToggle('star3-collection-view-toggle', 'res-3s-collection');
         this.renderPresetButtons();
         this.updateLoopUI(this.model.loopRewards.value);
-
-        const resetBtn = document.getElementById('star3-reset-btn');
-        if (resetBtn) {
-            resetBtn.addEventListener('click', () => this.reset());
-        }
     }
 
     bindToggles() {
@@ -74,6 +71,29 @@ export class Star3GachaViewModel extends BaseGachaViewModel {
             targetModeBtn.textContent = this.model.targetMode.value === 'snipe' ? '저격' : '아무나';
             targetModeBtn.dataset.mode = this.model.targetMode.value;
         }
+    }
+
+    /**
+     * 한 줄 배너 요약과 가챠 설정 대화 상자를 현재 Observable 값에 연결한다.
+     * 원본 입력은 대화 상자 안에 한 번만 존재하므로 InputBinder 계약은 그대로다.
+     */
+    initBannerSettingsUI() {
+        const summary = document.getElementById('star3-banner-summary-text');
+        if (!summary) return;
+
+        const updateSummary = () => {
+            const rewards = Object.entries(this.model.loopRewards.value || {})
+                .filter(([loop, reward]) => Number(loop) <= this.model.maxLoops.value && reward !== 'none')
+                .map(([loop, reward]) => `${loop}주:${reward === 'select' ? '셀렉' : '랜덤'}`);
+            const rewardText = rewards.length > 0 ? `, ${rewards.join(', ')}` : '';
+            summary.textContent = `${this.model.pickupCount.value}명, ${this.model.pickupRate.value}% / ${this.model.maxLoops.value}주, ${this.model.step4Rate.value}%${rewardText}`;
+        };
+
+        ['pickupCount', 'pickupRate', 'maxLoops', 'step4Rate', 'loopRewards'].forEach((key) => {
+            this._subscriptions.push(this.model[key].subscribe(updateSummary));
+        });
+        updateSummary();
+        this.bindSettingsDialog('star3-settings-dialog', 'star3-settings-open');
     }
 
     onTabChange(tabId) {

@@ -43,11 +43,22 @@ export class BirthdayGachaViewModel extends BaseGachaViewModel {
         this.disableFixedInputs();
 
         this.bindToggles();
+        this.initSettingsUI();
+        this.bindMobileCollectionViewToggle('birthday-collection-view-toggle', 'res-bd-collection');
+    }
 
-        const resetBtn = document.getElementById('birthday-reset-btn');
-        if (resetBtn) {
-            resetBtn.addEventListener('click', () => this.reset());
-        }
+    initSettingsUI() {
+        const summary = document.getElementById('birthday-banner-summary-text');
+        if (!summary) return;
+
+        const updateSummary = () => {
+            summary.textContent = `${this.model.pickupCount.value}명 / 일반 ${this.model.normalRate.value}%, 스탭업 ${this.model.stepRate.value}% / 스탭업 30회`;
+        };
+        ['pickupCount', 'normalRate', 'stepRate'].forEach((key) => {
+            this._subscriptions.push(this.model[key].subscribe(updateSummary));
+        });
+        updateSummary();
+        this.bindSettingsDialog('birthday-settings-dialog', 'birthday-settings-open');
     }
 
     /**

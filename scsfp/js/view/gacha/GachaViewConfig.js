@@ -28,9 +28,16 @@ export const GACHA_TYPE_CONFIG = {
         // 천장/랜덤/Step4는 픽업 계산 탭에서만 표시 (rainbow 탭 제외)
         buttonVisibility: {
             efficiency: ['star3-efficiency-toggle', 'star3-toggle-ceiling', 'star3-toggle-random', 'star3-toggle-step4'],
-            collection: ['star3-toggle-view', 'star3-toggle-ceiling', 'star3-toggle-random', 'star3-toggle-step4'],
+            collection: ['star3-toggle-view', 'star3-toggle-ceiling', 'star3-toggle-random', 'star3-toggle-step4', 'star3-collection-view-toggle'],
             total: ['star3-toggle-view', 'star3-toggle-ceiling', 'star3-toggle-random', 'star3-toggle-step4'],
             rainbow: ['star3-rainbow-10th']
+        },
+        // 빠른 설정은 기존 입력 요소를 이동한 wrapper만 탭별로 표시한다.
+        controlVisibility: {
+            collection: ['star3-quick-targetMode', 'star3-quick-targetCount', 'star3-quick-normalPulls', 'star3-quick-stepPulls'],
+            total: ['star3-quick-targetMode', 'star3-quick-targetCount', 'star3-quick-normalPulls', 'star3-quick-stepPulls'],
+            efficiency: ['star3-quick-targetMode', 'star3-quick-targetCount', 'star3-quick-targetProbability'],
+            rainbow: ['star3-quick-normalPulls', 'star3-quick-stepPulls']
         }
     },
 
@@ -56,8 +63,13 @@ export const GACHA_TYPE_CONFIG = {
         // 탭별 버튼 visibility 규칙
         buttonVisibility: {
             efficiency: ['birthday-efficiency-toggle'],
-            collection: ['birthday-toggle-view'],
+            collection: ['birthday-toggle-view', 'birthday-collection-view-toggle'],
             total: ['birthday-toggle-view']
+        },
+        controlVisibility: {
+            collection: ['birthday-quick-normalPulls', 'birthday-quick-stepPulls'],
+            total: ['birthday-quick-normalPulls', 'birthday-quick-stepPulls'],
+            efficiency: ['birthday-quick-targetProbability']
         }
     },
 
@@ -83,8 +95,13 @@ export const GACHA_TYPE_CONFIG = {
         // 탭별 버튼 visibility 규칙
         buttonVisibility: {
             efficiency: ['collab-efficiency-toggle'],
-            collection: ['collab-toggle-view'],
+            collection: ['collab-toggle-view', 'collab-collection-view-toggle'],
             total: ['collab-toggle-view']
+        },
+        controlVisibility: {
+            collection: ['collab-quick-targetCount', 'collab-quick-normalPulls', 'collab-quick-stepPulls'],
+            total: ['collab-quick-targetCount', 'collab-quick-normalPulls', 'collab-quick-stepPulls'],
+            efficiency: ['collab-quick-targetCount', 'collab-quick-targetProbability']
         }
     },
 
@@ -111,8 +128,13 @@ export const GACHA_TYPE_CONFIG = {
         // 탭별 버튼 visibility 규칙
         buttonVisibility: {
             efficiency: ['star2-efficiency-toggle', 'star2-group-efficiency-mode'],
-            collection: ['star2-toggle-view', 'star2-group-view-mode'],
+            collection: ['star2-toggle-view', 'star2-group-view-mode', 'star2-collection-view-toggle'],
             total: ['star2-toggle-view', 'star2-group-view-mode']
+        },
+        controlVisibility: {
+            collection: ['star2-quick-normalPulls', 'star2-quick-stepPulls', 'star2-quick-targetCounts'],
+            total: ['star2-quick-normalPulls', 'star2-quick-stepPulls', 'star2-quick-targetCounts'],
+            efficiency: ['star2-quick-targetCounts']
         }
     }
 };
@@ -148,7 +170,7 @@ export function getActiveSubTab(config) {
  * @param {string} activeSubTab - 활성 서브탭 ID (예: 'res-3s-efficiency')
  */
 export function applyTabVisibility(config, activeSubTab) {
-    if (!config || !config.buttonVisibility) return;
+    if (!config) return;
 
     // 현재 탭 타입 판별 (subTabs의 키 찾기)
     let currentTabType = null;
@@ -161,20 +183,30 @@ export function applyTabVisibility(config, activeSubTab) {
 
     if (!currentTabType) return;
 
-    // 모든 버튼을 숨김 처리
-    const allButtons = new Set();
-    Object.values(config.buttonVisibility).forEach(buttons => {
-        buttons.forEach(id => allButtons.add(id));
+    applyVisibilityRules(config.buttonVisibility, currentTabType);
+    applyVisibilityRules(config.controlVisibility, currentTabType);
+}
+
+/**
+ * 탭별 표시 목록을 적용한다. 버튼과 빠른 설정 wrapper가 같은 규칙을 공유한다.
+ * @param {Object<string, string[]>|undefined} visibilityRules - 탭 종류별 요소 ID
+ * @param {string} currentTabType - 현재 서브탭 종류
+ */
+function applyVisibilityRules(visibilityRules, currentTabType) {
+    if (!visibilityRules) return;
+
+    const allElementIds = new Set();
+    Object.values(visibilityRules).forEach(elementIds => {
+        elementIds.forEach(id => allElementIds.add(id));
     });
 
-    allButtons.forEach(id => {
+    allElementIds.forEach(id => {
         const el = document.getElementById(id);
         if (el) el.style.display = 'none';
     });
 
-    // 현재 탭에 해당하는 버튼만 표시
-    const visibleButtons = config.buttonVisibility[currentTabType] || [];
-    visibleButtons.forEach(id => {
+    const visibleElementIds = visibilityRules[currentTabType] || [];
+    visibleElementIds.forEach(id => {
         const el = document.getElementById(id);
         if (el) el.style.display = '';
     });
