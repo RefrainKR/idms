@@ -42,7 +42,13 @@ jobs:
           source: ./
           destination: ./_site
       - name: Verify deployed asset URLs
-        run: node scripts/apply-deployment-cache-key.mjs --check _site/scsfp "$GITHUB_SHA"
+        run: |
+          node scripts/apply-deployment-cache-key.mjs --check _site/scsfp/js "$GITHUB_SHA"
+          cache_key="${GITHUB_SHA:0:12}"
+          grep -Fq "css/common.css?v=$cache_key" _site/scsfp/index.html
+          grep -Fq "css/gacha.css?v=$cache_key" _site/scsfp/index.html
+          grep -Fq "css/payment.css?v=$cache_key" _site/scsfp/index.html
+          grep -Fq "js/main.js?v=$cache_key" _site/scsfp/index.html
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
 
