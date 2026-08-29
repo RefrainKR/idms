@@ -42,7 +42,7 @@ jobs:
           source: ./
           destination: ./_site
       - name: Verify deployed asset URLs
-        run: node scripts/apply-deployment-cache-key.mjs --check _site "$GITHUB_SHA"
+        run: node scripts/apply-deployment-cache-key.mjs --check _site/scsfp "$GITHUB_SHA"
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
 
