@@ -87,5 +87,10 @@ export const StorageManager = {
 
     remove(key) {
         localStorage.removeItem(key);
+    },
+
+    /** 앱이 이 출처(origin)에 저장한 모든 LocalStorage 값을 제거한다. */
+    clearAll() {
+        localStorage.clear();
     }
 };

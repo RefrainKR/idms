@@ -17,6 +17,17 @@ window.onload = function() {
     // 0. 버전 체크 및 마이그레이션
     StorageManager.init();
 
+    const resetAllButton = document.getElementById('app-reset-all-btn');
+    if (resetAllButton) {
+        resetAllButton.addEventListener('click', () => {
+            const confirmed = confirm('저장된 모든 가챠·과금 설정을 초기화하시겠습니까?');
+            if (!confirmed) return;
+
+            StorageManager.clearAll();
+            location.reload();
+        });
+    }
+
     // 1. 섹션 관리자 초기화
     const sectionManager = new SectionManager();
 

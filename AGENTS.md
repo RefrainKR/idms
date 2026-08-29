@@ -10,16 +10,18 @@ This is an established application, not a greenfield project. Major features alr
 
 ## Current phase and work order
 
-The behavior-preserving semantic cleanup was completed for the v1.11.0 release. The current phase is discussion in repository-root `NEXTROAD.md`; there is no active implementation task until the user explicitly approves one.
+The behavior-preserving semantic cleanup was completed for v1.11.0, and the gacha quick-controls redesign was completed for v1.12.1 under `tasks/finish/gacha-quick-controls/`. The next discussion target is the Step-up checkpoint analysis indexed as item 2 in repository-root `NEXTROAD.md`; its detail document remains a proposal and does not authorize implementation.
 
 1. Inspect the current Git state and preserve unrelated or in-progress user changes.
-2. Read `NEXTROAD.md` for shared discussion or root `tasks/BOARD.md` for an approved active task.
+2. Read `NEXTROAD.md` and its linked active detail document for shared discussion, or root `tasks/BOARD.md` for an approved active task.
 3. Verify each candidate against the current source and game rules.
 4. Do not create an implementation packet until discussion is complete and the user explicitly starts development.
-5. At implementation start, preserve the agreed discussion in `tasks/<task>/SOURCE.md`, define Sol decisions and acceptance criteria, and only then move the task to Terra.
+5. At implementation start, preserve the selected detail document in `tasks/<task>/SOURCE.md`, define decisions and acceptance criteria, and then choose Sol direct implementation or Terra delegation using the complexity rules below.
 6. Keep behavior-changing work separate from completed v1.11.0 cleanup history.
 
-Do not implement ideas merely because they appear in `NEXTROAD.md`. Keep behavior-changing work separate from naming/documentation-only work.
+For an explicitly iterative prototype, keep the corresponding root `NEXTROAD_*.md` discussion document and active task packet together. Do not move the task to `tasks/finish/` or delete the root discussion document until the user explicitly accepts the direction and declares the task complete.
+
+Do not implement ideas merely because they appear in `NEXTROAD.md` or a linked `NEXTROAD_*.md`. Keep behavior-changing work separate from naming/documentation-only work.
 
 ## Architecture to preserve
 
@@ -55,7 +57,7 @@ Read these before substantial work, selecting only the references relevant to th
 
 1. repository-root `AGENTS.md`;
 2. current conversation/task and Git diff;
-3. `NEXTROAD.md` for discussion, or `tasks/BOARD.md` and the relevant active task directory after implementation has begun;
+3. `NEXTROAD.md` and its linked active detail document for discussion, or `tasks/BOARD.md` and the relevant active task directory after implementation has begun;
 4. `scsfp/docs/game/GACHA_SYSTEM.md` and `scsfp/docs/game/GAME_RULES.md`;
 5. relevant current source files;
 6. repository-root `DEVLOG.md` only when historical context is needed.
@@ -72,7 +74,8 @@ The former `scsfp/CLAUDE.md`, `scsfp/REFACTORING.md`, and `scsfp/README.md` were
 
 Document responsibilities are intentionally separated:
 
-- `NEXTROAD.md`: shared discussion for the next development direction. The sole developer and Sol may edit it freely. Its contents are proposals, not implementation approval.
+- `NEXTROAD.md`: shared index and short backlog for future development directions. The sole developer and Sol may edit it freely.
+- `NEXTROAD_*.md`: one detailed idea under active review at a time. Its decisions and unresolved questions are kept separate from the master index. Neither the index nor a detail document authorizes implementation.
 - `scsfp/docs/`: current shared project and game knowledge. The sole developer may freely correct or extend it when game specifications change; agents must treat such edits as important input and verify them against code before changing behavior.
 - `DEVLOG.md`: long-term completed-change and design-context record maintained by the coding agent. The developer normally reads it or asks the agent to correct it rather than editing it as an informal note. Historical dated entries must not be rewritten merely to match current paths.
 - `tasks/`: agent operational workspace for approved implementation, Sol/Terra handoff, verification, and completed task packets. It is not the developer's idea notebook and does not belong under `scsfp/docs/`.
@@ -80,28 +83,44 @@ Document responsibilities are intentionally separated:
 
 The repository is public. “Agent operational workspace” describes editing responsibility, not privacy; never place credentials, private tokens, or other secrets in `tasks/` or any tracked document.
 
-Use root `tasks/` only after a substantial task enters implementation. A task document does not authorize implementation by itself. After work is completed, verified, and reflected in current code or durable documentation, move it to `tasks/finish/` rather than deleting it. Finished task documents are historical context and are not part of the default authoritative reading set. Put obsolete or superseded shared Markdown under `scsfp/docs/old/` only when preservation is useful; do not mix `DEVLOG.md`, `NEXTROAD.md`, or agent task packets into that directory.
+Use root `tasks/` only after a substantial task enters implementation. A task document does not authorize implementation by itself. After work is completed, verified, and reflected in current code or durable documentation, move it to `tasks/finish/` rather than deleting it. Finished task documents are historical context and are not part of the default authoritative reading set. Put obsolete or superseded shared Markdown under `scsfp/docs/old/` only when preservation is useful; do not mix `DEVLOG.md`, `NEXTROAD.md`, active `NEXTROAD_*.md`, or agent task packets into that directory.
 
 ## Sol-Terra task protocol
 
 Treat Sol and Terra as repository workflow roles rather than permanent model-version assumptions:
 
-- Sol role: idea analysis, domain-rule interpretation, scope and acceptance decisions, and final review;
-- Terra role: implementation, mechanical refactoring, targeted tests, and implementation reporting within an approved task specification;
+- Sol role: idea analysis, domain-rule interpretation, scope and acceptance decisions, complex or exploratory implementation, and final review;
+- Terra role: simple, bounded implementation, mechanical refactoring, targeted tests, and implementation reporting within a stable approved specification;
 - Sol review remains responsible for comparing the actual diff and verification evidence against the task decisions;
 - Terra must record an unresolved question and return the task to Sol rather than guessing about game rules, probability behavior, or material scope changes.
 
+Choose the execution role by uncertainty and coordination cost, not merely by whether code will be edited:
+
+- Sol implements directly when the work is complex, cross-layer, architecture-sensitive, domain-ambiguous, likely to change direction, or intentionally exploratory/iterative, including UI prototypes being compared through user feedback.
+- Terra receives work only when the desired outcome, affected scope, constraints, and acceptance checks are stable enough to express as a short bounded implementation task with little judgment required.
+- Do not delegate a task when explaining, transferring, and independently repeating its setup or verification is likely to cost as much as doing it directly.
+- If Terra discovers design ambiguity or a material tradeoff, stop the delegated implementation and return the decision to Sol instead of expanding the handoff cycle.
+- Coding work is not automatically Terra work. Sol may implement, test, and revise a complex task end to end.
+
+For exploratory work, minimize process overhead:
+
+- keep the task in `planning` or Sol-owned `implementing` while alternatives are being tried;
+- update task documents at meaningful decision points, not after every small experimental change;
+- batch a coherent prototype before browser verification and normally perform one full verification pass per user-visible iteration;
+- do not create artificial Sol→Terra→Sol state cycles solely to follow a role template.
+
 Planning and implementation are separated as follows:
 
-1. Discuss the next direction in `NEXTROAD.md`; no task packet or code change follows from a proposal alone.
+1. Select a candidate in `NEXTROAD.md`, extract it into one sibling `NEXTROAD_*.md`, and conduct detailed review there; no task packet or code change follows from a proposal alone.
 2. When the user explicitly approves implementation, confirm the version and non-`main` branch before editing application files.
-3. Copy the complete agreed discussion into `tasks/<task>/SOURCE.md` before resetting `NEXTROAD.md` from `tasks/_template/NEXTROAD.md`.
+3. Copy the complete selected `NEXTROAD_*.md` into `tasks/<task>/SOURCE.md` and verify preservation. For a finalized implementation, replace its detail link in `NEXTROAD.md` with the task link and current status and remove the transferred root detail document. For an iterative prototype, keep the root detail document active until the user accepts the direction. Do not reset or discard unrelated backlog items.
 4. Create `TASK.md`, `DECISIONS.md`, `HANDOFF.md`, and `RESULT.md`; derive scope and acceptance criteria from `SOURCE.md` without silently dropping decisions.
-5. Set the task to `ready-for-terra` only after Sol has verified the packet and unresolved domain questions are recorded.
+5. Set the task to `ready-for-terra` only when the work satisfies the Terra delegation criteria. Otherwise set Sol as the implementation role and proceed directly.
 
-Track each substantial implementation under root `tasks/` and its current phase in `tasks/BOARD.md` with one of these states:
+Track each substantial implementation under root `tasks/` and its current phase in `tasks/BOARD.md`. Use the applicable path rather than forcing every task through Terra:
 
-`planning` → `ready-for-terra` → `implementing` → `ready-for-sol-review` → `changes-requested` → `done`
+- Sol direct: `planning` → `implementing` → `planning` for another user-feedback iteration, or `done` after explicit acceptance and verification;
+- Terra delegated: `planning` → `ready-for-terra` → `implementing` → `ready-for-sol-review` → `changes-requested` as needed → `done`.
 
 Update `HANDOFF.md` before switching roles. It must state the completed work, exact remaining work, changed files, verification already run, unresolved questions, current branch, and next role. Do not rely on private reasoning state surviving a model switch.
 
@@ -127,6 +146,8 @@ These are distinct probability problems and must remain distinct.
 - A Step-up cycle is 40 pulls. The configured Step4 pickup-total probability is divided by the pickup count for per-pickup collection transitions.
 - Step-up loops are limited by `maxLoops`; the Step-up input is clamped through `stepMax`.
 - Loop rewards distinguish random pickup tickets from select tickets. Random tickets retain duplicate risk; select tickets use a guaranteed-useful collection transition while an uncollected target remains.
+- A Step-up loop select ticket and the shared 200-stack selectable reward are different acquisition sources but belong to the same ceiling concept because both grant a selected target. It is intentional that `ceilingMode` includes or excludes both together.
+- `randomTicketMode` controls only random tickets, while `step4Mode` controls only the Step4 pickup-rate increase. Keep these effects independently attributable in analysis.
 - Current presets model ordinary two-loop banners with a loop-2 random ticket and PJ with loop-2 random plus loop-3 select.
 
 For 3-star efficiency and required-pull curves, `comparedStrategyKind: stepupFirst` means Step-up through `maxLoops * 40`, then Normal while retaining the shared 200-pull stack. Strategy results use `normalOnlyData` and `comparedStrategyData` so the shared renderer never infers the strategy from an ambiguous field name.
@@ -170,7 +191,6 @@ In particular, verify these points before behavior changes:
 - exact 3-star/S-card guaranteed-slot probability tables, ordinary versus PJ Step4 behavior, and banner-specific exceptions;
 - exact collaboration Step-up rules for the banner in question;
 - whether the 2-star 50 stack is shared across all A-D group selections exactly as the current summed implementation assumes;
-- whether the `ceilingMode` analytical toggle should also disable loop select tickets. Current 3-star code counts loop select rewards separately but applies them inside the ceiling-enabled branch;
 - whether applying accumulated select/ceiling guarantees after all pull transitions, while random tickets are applied at loop completion, is the intended ordering for every analysis;
 - duplicate-resource/무돌 assumptions. Current supporting analysis includes counterfactual/duplicate assumptions that must be explicit in UI and docs.
 
@@ -200,8 +220,9 @@ Use concise Korean game terminology in the user interface. Internal identifiers 
 - `일반` for the Normal comparison series;
 - `스탭업` for the compared Step-up series, while documenting fallback behavior outside the short UI label;
 - `일반 vs 스탭업` for comparison tabs;
-- `천장` for stack-based selectable rewards;
-- `셀렉 티켓` for a separate Step-up loop reward so it is not confused with the stack ceiling;
+- `천장` for the toggle and umbrella concept covering both Step-up loop select tickets and shared-stack selectable rewards;
+- `랜덤 티켓` for the random pickup-ticket reward, which is not a ceiling and remains controlled separately;
+- `셀렉 티켓` for the game-labelled Step-up loop reward and `200스택 천장` for the shared-stack source when a table or explanation must distinguish them. Both selectable sources remain controlled by the `천장` toggle;
 - `Best (성공)` and `Worst (폭사)` for the efficiency-mode toggle.
 
 Current conceptual priority is:
@@ -219,9 +240,10 @@ Clearly distinguish actual game configuration from analytical on/off counterfact
 - `main` is the public GitHub Pages deployment branch; `.github/workflows/jekyll-gh-pages.yml` deploys on pushes to `main`. A commit applied to `main` can immediately change the live utility used by other players. Never perform ordinary development directly on `main`.
 - Before any file modification, inspect the current branch. If it is `main`, switch to the latest applicable version branch first. For maintenance of the current v1.11 release, use `v.1.11.X`; do not fall back to an unrelated stale branch merely because it exists.
 - Project versions use `1.<major>.<minor>` and version-line branches use `v.1.<major>.X`. The leading `1` remains fixed unless the user personally decides that a rewrite-scale change warrants version 2.
-- When the user ends `NEXTROAD.md` discussion and explicitly starts a new feature, behavior replacement, or other planned development, branch from the current released `main` into the next line such as `v.1.12.X`, and set the application version from `1.11.0` to `1.12.0` as part of that approved implementation.
+- When the user ends a `NEXTROAD_*.md` discussion and explicitly starts a new feature, behavior replacement, or other planned development, branch from the current released `main` into the next line such as `v.1.12.X`, and set the application version from `1.11.0` to `1.12.0` as part of that approved implementation.
 - Increment `<minor>` for bug fixes, correction of an unintended result after review, and small wording or detail changes that do not materially add or replace functionality, for example `1.11.0` to `1.11.1`. Keep those changes on the same `v.1.11.X` branch; do not create one branch per patch release.
 - Increment `<major>` for new functionality or intentional material replacement of existing behavior, for example `1.11.0` to `1.12.0`. Changing the leading `1` is not an agent decision.
+- `v.1.<major>.X` remains the durable version-line branch. When the user explicitly requests an isolated experiment or implementation branch, an exact-version branch such as `v.1.12.1` may branch from it and must return through review rather than bypassing the version-line branch.
 - The sole developer controls commits, pushes, merges into `main`, and releases. Agents leave reviewed changes in the working tree and must not commit, push, merge, or publish unless the user explicitly requests that exact Git action.
 - There is currently no package/build/test harness in the repository. Use a local static server and browser checks when runtime verification is needed, plus targeted deterministic calculation comparisons for probability refactors.
 - Preserve user changes. Documentation moves among `scsfp/docs/`, root `tasks/`, and `scsfp/docs/old/` may appear in Git as deleted tracked files plus untracked replacements until the user stages them; do not revert or duplicate them.
@@ -232,7 +254,7 @@ Clearly distinguish actual game configuration from analytical on/off counterfact
 After a model switch, do not assume private reasoning state was transferred and do not restart a full audit automatically. Recover in this order:
 
 1. read `AGENTS.md`;
-2. read `NEXTROAD.md` if the work is still being discussed, otherwise read `tasks/BOARD.md` and the relevant task's `SOURCE.md`, `TASK.md`, `DECISIONS.md`, and `HANDOFF.md`;
+2. read `NEXTROAD.md` and its linked active detail document if the work is still being discussed, otherwise read `tasks/BOARD.md` and the relevant task's `SOURCE.md`, `TASK.md`, `DECISIONS.md`, and `HANDOFF.md`;
 3. inspect the current conversation/task;
 4. inspect Git status/diff and modified files;
 5. read the relevant game docs and source files;

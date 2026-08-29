@@ -35,11 +35,22 @@ export class CollabGachaViewModel extends BaseGachaViewModel {
 
         this.renderPresetButtons();
         this.bindToggles();
+        this.initSettingsUI();
+        this.bindMobileCollectionViewToggle('collab-collection-view-toggle', 'res-cb-collection');
+    }
 
-        const resetBtn = document.getElementById('collab-reset-btn');
-        if (resetBtn) {
-            resetBtn.addEventListener('click', () => this.reset());
-        }
+    initSettingsUI() {
+        const summary = document.getElementById('collab-banner-summary-text');
+        if (!summary) return;
+
+        const updateSummary = () => {
+            summary.textContent = `${this.model.pickupCount.value}명 / 일반 ${this.model.normalRate.value}%, 스탭업 ${this.model.stepRate.value}%`;
+        };
+        ['pickupCount', 'normalRate', 'stepRate'].forEach((key) => {
+            this._subscriptions.push(this.model[key].subscribe(updateSummary));
+        });
+        updateSummary();
+        this.bindSettingsDialog('collab-settings-dialog', 'collab-settings-open');
     }
 
     getCustomBinderOptions(id) {

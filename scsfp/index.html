@@ -10,9 +10,9 @@
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
 
     <!-- CSS -->
-    <link rel="stylesheet" href="css/common.css?v=1.11.0">
-    <link rel="stylesheet" href="css/gacha.css?v=1.11.0">
-    <link rel="stylesheet" href="css/payment.css?v=1.11.0">
+    <link rel="stylesheet" href="css/common.css?v=1.12.1">
+    <link rel="stylesheet" href="css/gacha.css?v=1.12.1">
+    <link rel="stylesheet" href="css/payment.css?v=1.12.1">
 </head>
 <body>
 
@@ -32,6 +32,7 @@
             <span class="sidebar-text">과금 효율</span>
         </button>
     </nav>
+    <button id="app-reset-all-btn" class="reset-btn sidebar-reset-btn" type="button" title="전체 설정 초기화" aria-label="전체 설정 초기화">↻</button>
 </aside>
 
 <!-- Main Content Container -->
@@ -55,81 +56,84 @@
         <!-- ========== [Tab 1] 3성 가챠 ========== -->
         <section id="tab-3star" class="tab-content active">
 
-            <!-- 상단 컨트롤 -->
-            <div class="reset-area">
-                <div class="preset-group" id="star3-preset-container"></div>
-                <button id="star3-reset-btn" class="reset-btn" title="설정 초기화">↻</button>
+            <!-- 현재 배너 규칙 요약. 원본 설정 입력은 가챠 설정 대화 상자에서 유지한다. -->
+            <div id="star3-banner-summary" class="banner-summary" aria-live="polite">
+                <span id="star3-banner-summary-text" class="banner-summary__text"></span>
+                <button id="star3-settings-open" class="banner-summary__open" type="button" aria-haspopup="dialog" aria-controls="star3-settings-dialog">가챠 설정</button>
             </div>
 
-            <!-- 입력: 가챠 정보 -->
-            <div class="collapsible-container" data-collapsible="true">
-                <div class="section-header">
-                    <h3 class="section-title">가챠 정보</h3>
-                    <button class="toggle-btn" data-toggle-section>▼</button>
-                </div>
-                <div class="section-content">
-                    <div class="subsection-group">
-                        <h4 class="subsection-title">기본 정보</h4>
-                        <div class="input-item">
-                            <label for="star3-pickupCount">픽업 개수</label>
-                            <input type="number" id="star3-pickupCount">
-                        </div>
-                        <div class="input-item">
-                            <label for="star3-pickupRate">픽업 확률: 개별 (%)</label>
-                            <input type="number" id="star3-pickupRate">
-                        </div>
+            <dialog id="star3-settings-dialog" class="settings-dialog" aria-labelledby="star3-settings-dialog-title">
+                <div class="settings-dialog__container">
+                    <div class="settings-dialog__header">
+                        <h3 id="star3-settings-dialog-title" class="section-title">가챠 설정</h3>
+                        <button class="settings-dialog__close" type="button" data-dialog-close aria-label="가챠 설정 닫기">×</button>
                     </div>
+                    <div class="settings-dialog__body">
+                        <div class="preset-area" aria-label="가챠 프리셋">
+                            <div class="preset-group" id="star3-preset-container"></div>
+                        </div>
+                        <div class="subsection-group">
+                            <h4 class="subsection-title">기본 정보</h4>
+                            <div class="input-item">
+                                <label for="star3-pickupCount">픽업 개수</label>
+                                <input type="number" id="star3-pickupCount">
+                            </div>
+                            <div class="input-item">
+                                <label for="star3-pickupRate">픽업 확률: 개별 (%)</label>
+                                <input type="number" id="star3-pickupRate">
+                            </div>
+                        </div>
 
-                    <div class="subsection-group">
-                        <h4 class="subsection-title">스탭업 정보</h4>
-                        <div class="input-item">
-                            <label for="star3-maxLoops">주회(周回): 최대 수</label>
-                            <input type="number" id="star3-maxLoops">
-                        </div>
-                        <div class="input-item">
-                            <label for="star3-step4Rate">픽업 확률: Step4 (%)</label>
-                            <input type="number" id="star3-step4Rate">
-                        </div>
-                        <div class="loop-rewards-container" id="loopRewardsArea"></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 입력: 사용자 설정 -->
-            <div class="collapsible-container" data-collapsible="true">
-                <div class="section-header">
-                    <h3 class="section-title">사용자 설정</h3>
-                    <button class="toggle-btn" data-toggle-section>▼</button>
-                </div>
-                <div class="section-content">
-                    <div class="subsection-group subsection-group--untitled">
-                        <div class="input-item">
-                            <label for="star3-normalPulls">횟수: 일반</label>
-                            <input type="number" id="star3-normalPulls">
-                        </div>
-                        <div class="input-item">
-                            <label for="star3-stepPulls">횟수: 스탭업</label>
-                            <input type="number" id="star3-stepPulls">
-                        </div>
-                        <div class="input-item">
-                            <span class="label-with-btn">
-                                <button id="star3-targetMode-btn" class="mode-tag-btn" data-mode="snipe">저격</button>
-                                <label for="star3-targetCount">픽업 수</label>
-                            </span>
-                            <span class="input-hint">0 = 전체 </span>
-                            <input type="number" id="star3-targetCount">
+                        <div class="subsection-group">
+                            <h4 class="subsection-title">스탭업 정보</h4>
+                            <div class="input-item">
+                                <label for="star3-maxLoops">주회(周回): 최대 수</label>
+                                <input type="number" id="star3-maxLoops">
+                            </div>
+                            <div class="input-item">
+                                <label for="star3-step4Rate">픽업 확률: Step4 (%)</label>
+                                <input type="number" id="star3-step4Rate">
+                            </div>
+                            <div class="loop-rewards-container" id="loopRewardsArea"></div>
                         </div>
                     </div>
                 </div>
-            </div>
+            </dialog>
 
-            <!-- 3성 결과 영역 -->
+            <!-- 결과를 보며 반복 조정하는 3성 사용자 설정 (입력 ID/바인딩 유지) -->
             <div id="sub-tab-system-3star" class="sub-tab-container">
                 <div class="tab-buttons sub-tab-nav">
                     <button class="tab-button sub-tab-btn active" data-tab="res-3s-collection">픽업 획득(중복X)</button>
                     <button class="tab-button sub-tab-btn" data-tab="res-3s-total">총 획득(중복O)</button>
                     <button class="tab-button sub-tab-btn" data-tab="res-3s-efficiency">일반 vs 스탭업</button>
-                    <button class="tab-button sub-tab-btn" data-tab="res-3s-rainbow">무돌</button>
+                    <button class="tab-button sub-tab-btn" data-tab="res-3s-rainbow" hidden>무돌</button>
+                </div>
+
+                <div class="gacha-quick-controls" aria-label="3성 결과 제어">
+                    <div id="star3-quick-controls" class="quick-controls">
+                        <div class="quick-controls__grid">
+                            <div id="star3-quick-targetMode" class="quick-control">
+                                <span class="quick-control__label">대상</span>
+                                <button id="star3-targetMode-btn" class="mode-tag-btn" data-mode="snipe" aria-label="대상 선택">저격</button>
+                            </div>
+                            <div id="star3-quick-targetCount" class="quick-control">
+                                <label class="quick-control__label" for="star3-targetCount">픽업 수 <span class="quick-control__hint">0=전체</span></label>
+                                <input type="number" id="star3-targetCount">
+                            </div>
+                            <div id="star3-quick-normalPulls" class="quick-control">
+                                <label class="quick-control__label" for="star3-normalPulls">일반</label>
+                                <input type="number" id="star3-normalPulls">
+                            </div>
+                            <div id="star3-quick-stepPulls" class="quick-control">
+                                <label class="quick-control__label" for="star3-stepPulls">스탭업</label>
+                                <input type="number" id="star3-stepPulls">
+                            </div>
+                            <div id="star3-quick-targetProbability" class="quick-control" style="display: none;">
+                                <label class="quick-control__label" for="star3-targetProbability">목표 확률 (%)</label>
+                                <input type="number" id="star3-targetProbability">
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="option-button-container">
@@ -142,33 +146,29 @@
                         <button id="star3-efficiency-toggle" class="view-toggle-btn" data-role="eff-mode" style="display:none;">Best (성공)</button>
                         <button id="star3-rainbow-10th" class="view-toggle-btn" style="display:none;">2/SR확정</button>
                         <button id="star3-toggle-view" class="view-toggle-btn" data-role="view-mode">개별</button>
+                        <button id="star3-collection-view-toggle" class="view-toggle-btn collection-view-toggle" style="display:none;" type="button" aria-controls="res-3s-collection" aria-pressed="false">확률표</button>
                     </div>
                 </div>
 
-                <!-- 서브탭 콘텐츠 -->
-                <div id="res-3s-collection" class="tab-content active">
-                    <div class="chart-row">
-                        <div class="chart-container"><canvas id="resultChart"></canvas></div>
-                        <div class="legend-container" id="legendList"></div>
-                    </div>
-                </div>
-                <div id="res-3s-total" class="tab-content">
-                    <div class="chart-row">
-                        <div class="chart-container chart-container--full"><canvas id="resultChartTotal3"></canvas></div>
-                    </div>
-                </div>
-                <div id="res-3s-efficiency" class="tab-content">
-                    <div class="chart-scroll-wrapper">
-                        <div class="chart-scroll-inner"><canvas id="efficiencyChart"></canvas></div>
-                        <div class="sub-input-area">
-                            <div class="input-item">
-                                <label for="star3-targetProbability">목표 확률 (%)</label>
-                                <input type="number" id="star3-targetProbability">
-                            </div>
+                <!-- 고정 외부 높이: 긴 결과만 이 영역에서 스크롤한다. -->
+                <div id="star3-result-stage" class="result-stage" tabindex="0" aria-label="3성 결과">
+                    <div id="res-3s-collection" class="tab-content active" data-mobile-view="chart">
+                        <div class="chart-row">
+                            <div class="chart-container"><canvas id="resultChart"></canvas></div>
+                            <div class="legend-container" id="legendList"></div>
                         </div>
                     </div>
-                </div>
-                <div id="res-3s-rainbow" class="tab-content">
+                    <div id="res-3s-total" class="tab-content">
+                        <div class="chart-row">
+                            <div class="chart-container chart-container--full"><canvas id="resultChartTotal3"></canvas></div>
+                        </div>
+                    </div>
+                    <div id="res-3s-efficiency" class="tab-content">
+                        <div class="chart-scroll-wrapper">
+                            <div class="chart-scroll-inner"><canvas id="efficiencyChart"></canvas></div>
+                        </div>
+                    </div>
+                    <div id="res-3s-rainbow" class="tab-content">
                     <div class="rainbow-tab-layout">
                         <!-- 입력 영역 -->
                         <div class="rainbow-input-panel">
@@ -207,24 +207,25 @@
                         <div id="rainbow-result-area"></div>
                     </div>
                 </div>
+                </div>
             </div>
         </section>
 
         <!-- ========== [Tab 2] 생일 가챠 ========== -->
         <section id="tab-birthday" class="tab-content">
 
-            <div class="reset-area">
-                <div class="preset-group"></div>
-                <button id="birthday-reset-btn" class="reset-btn" title="설정 초기화">↻</button>
+            <div class="banner-summary" aria-live="polite">
+                <span id="birthday-banner-summary-text" class="banner-summary__text"></span>
+                <button id="birthday-settings-open" class="banner-summary__open" type="button" aria-haspopup="dialog" aria-controls="birthday-settings-dialog">가챠 설정</button>
             </div>
 
-            <!-- 입력: 가챠 정보 -->
-            <div class="collapsible-container" data-collapsible="true">
-                <div class="section-header">
-                    <h3 class="section-title">가챠 정보</h3>
-                    <button class="toggle-btn" data-toggle-section>▼</button>
-                </div>
-                <div class="section-content">
+            <dialog id="birthday-settings-dialog" class="settings-dialog" aria-labelledby="birthday-settings-dialog-title">
+                <div class="settings-dialog__container">
+                    <div class="settings-dialog__header">
+                        <h3 id="birthday-settings-dialog-title" class="section-title">가챠 설정</h3>
+                        <button class="settings-dialog__close" type="button" data-dialog-close aria-label="가챠 설정 닫기">×</button>
+                    </div>
+                    <div class="settings-dialog__body">
                     <div class="subsection-group">
                         <h4 class="subsection-title">기본 정보</h4>
                         <div class="input-item">
@@ -244,25 +245,6 @@
                             <input type="number" id="birthday-stepRate" value="2.0" min="0.001" max="100" step="0.001">
                         </div>
                     </div>
-                </div>
-            </div>
-
-            <!-- 입력: 사용자 설정 -->
-            <div class="collapsible-container" data-collapsible="true">
-                <div class="section-header">
-                    <h3 class="section-title">사용자 설정</h3>
-                    <button class="toggle-btn" data-toggle-section>▼</button>
-                </div>
-                <div class="section-content">
-                    <div class="subsection-group subsection-group--untitled">
-                        <div class="input-item">
-                            <label for="birthday-normalPulls">횟수: 일반</label>
-                            <input type="number" id="birthday-normalPulls">
-                        </div>
-                        <div class="input-item">
-                            <label for="birthday-stepPulls">횟수: 스탭업</label>
-                            <input type="number" id="birthday-stepPulls">
-                        </div>
                         <div class="input-item is-hidden">
                             <label for="birthday-targetCount">저격 픽업 수</label>
                             <span class="input-hint">0 = 전체</span>
@@ -270,7 +252,7 @@
                         </div>
                     </div>
                 </div>
-            </div>
+            </dialog>
 
             <!-- 생일 결과 영역 -->
             <div id="sub-tab-system-birthday" class="sub-tab-container">
@@ -278,6 +260,25 @@
                     <button class="tab-button sub-tab-btn active" data-tab="res-bd-collection">픽업 획득(중복X)</button>
                     <button class="tab-button sub-tab-btn" data-tab="res-bd-total">총 획득(중복O)</button>
                     <button class="tab-button sub-tab-btn" data-tab="res-bd-efficiency">일반 vs 스탭업</button>
+                </div>
+
+                <div class="gacha-quick-controls" aria-label="생일 결과 제어">
+                    <div class="quick-controls">
+                        <div class="quick-controls__grid">
+                            <div id="birthday-quick-normalPulls" class="quick-control">
+                                <label class="quick-control__label" for="birthday-normalPulls">일반</label>
+                                <input type="number" id="birthday-normalPulls">
+                            </div>
+                            <div id="birthday-quick-stepPulls" class="quick-control">
+                                <label class="quick-control__label" for="birthday-stepPulls">스탭업</label>
+                                <input type="number" id="birthday-stepPulls">
+                            </div>
+                            <div id="birthday-quick-targetProbability" class="quick-control" style="display:none;">
+                                <label class="quick-control__label" for="birthday-targetProbability">목표 확률 (%)</label>
+                                <input type="number" id="birthday-targetProbability">
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="option-button-container">
@@ -288,29 +289,25 @@
                     <div class="btn-group option-button-group--end">
                         <button id="birthday-efficiency-toggle" class="view-toggle-btn" data-role="eff-mode" style="display:none;">Best (성공)</button>
                         <button id="birthday-toggle-view" class="view-toggle-btn" data-role="view-mode">개별</button>
+                        <button id="birthday-collection-view-toggle" class="view-toggle-btn collection-view-toggle" style="display:none;" type="button" aria-controls="res-bd-collection" aria-pressed="false">확률표</button>
                     </div>
                 </div>
 
-                <!-- 서브탭 콘텐츠 -->
-                <div id="res-bd-collection" class="tab-content active">
-                    <div class="chart-row">
-                        <div class="chart-container"><canvas id="resultChartBirthday"></canvas></div>
-                        <div class="legend-container" id="legendListBirthday"></div>
+                <div class="result-stage" tabindex="0" aria-label="생일 결과">
+                    <div id="res-bd-collection" class="tab-content active" data-mobile-view="chart">
+                        <div class="chart-row">
+                            <div class="chart-container"><canvas id="resultChartBirthday"></canvas></div>
+                            <div class="legend-container" id="legendListBirthday"></div>
+                        </div>
                     </div>
-                </div>
-                <div id="res-bd-total" class="tab-content">
-                    <div class="chart-row">
-                        <div class="chart-container chart-container--full"><canvas id="resultChartTotalBirthday"></canvas></div>
+                    <div id="res-bd-total" class="tab-content">
+                        <div class="chart-row">
+                            <div class="chart-container chart-container--full"><canvas id="resultChartTotalBirthday"></canvas></div>
+                        </div>
                     </div>
-                </div>
-                <div id="res-bd-efficiency" class="tab-content">
-                    <div class="chart-scroll-wrapper">
-                        <div class="chart-scroll-inner"><canvas id="efficiencyChartBirthday"></canvas></div>
-                        <div class="sub-input-area">
-                            <div class="input-item">
-                                <label for="birthday-targetProbability">목표 확률 (%)</label>
-                                <input type="number" id="birthday-targetProbability">
-                            </div>
+                    <div id="res-bd-efficiency" class="tab-content">
+                        <div class="chart-scroll-wrapper">
+                            <div class="chart-scroll-inner"><canvas id="efficiencyChartBirthday"></canvas></div>
                         </div>
                     </div>
                 </div>
@@ -320,18 +317,21 @@
         <!-- ========== [Tab 3] 본가(2탄) 콜라보 가챠 ========== -->
         <section id="tab-collab" class="tab-content">
 
-            <div class="reset-area">
-                <div class="preset-group" id="collab-preset-container"></div>
-                <button id="collab-reset-btn" class="reset-btn" title="설정 초기화">↻</button>
+            <div class="banner-summary" aria-live="polite">
+                <span id="collab-banner-summary-text" class="banner-summary__text"></span>
+                <button id="collab-settings-open" class="banner-summary__open" type="button" aria-haspopup="dialog" aria-controls="collab-settings-dialog">가챠 설정</button>
             </div>
 
-            <!-- 입력: 가챠 정보 -->
-            <div class="collapsible-container" data-collapsible="true">
-                <div class="section-header">
-                    <h3 class="section-title">가챠 정보</h3>
-                    <button class="toggle-btn" data-toggle-section>▼</button>
-                </div>
-                <div class="section-content">
+            <dialog id="collab-settings-dialog" class="settings-dialog" aria-labelledby="collab-settings-dialog-title">
+                <div class="settings-dialog__container">
+                    <div class="settings-dialog__header">
+                        <h3 id="collab-settings-dialog-title" class="section-title">가챠 설정</h3>
+                        <button class="settings-dialog__close" type="button" data-dialog-close aria-label="가챠 설정 닫기">×</button>
+                    </div>
+                    <div class="settings-dialog__body">
+                    <div class="preset-area" aria-label="가챠 프리셋">
+                        <div class="preset-group" id="collab-preset-container"></div>
+                    </div>
                     <div class="subsection-group">
                         <h4 class="subsection-title">기본 정보</h4>
                         <div class="input-item">
@@ -352,32 +352,8 @@
                         </div>
                     </div>
                 </div>
-            </div>
-
-            <!-- 입력: 사용자 설정 -->
-            <div class="collapsible-container" data-collapsible="true">
-                <div class="section-header">
-                    <h3 class="section-title">사용자 설정</h3>
-                    <button class="toggle-btn" data-toggle-section>▼</button>
                 </div>
-                <div class="section-content">
-                    <div class="subsection-group subsection-group--untitled">
-                        <div class="input-item">
-                            <label for="collab-normalPulls">횟수: 일반</label>
-                            <input type="number" id="collab-normalPulls">
-                        </div>
-                        <div class="input-item">
-                            <label for="collab-stepPulls">횟수: 스탭업</label>
-                            <input type="number" id="collab-stepPulls">
-                        </div>
-                        <div class="input-item">
-                            <label for="collab-targetCount">저격 픽업 수</label>
-                            <span class="input-hint">0 = 전체</span>
-                            <input type="number" id="collab-targetCount">
-                        </div>
-                    </div>
-                </div>
-            </div>
+            </dialog>
 
             <!-- 콜라보 결과 영역 -->
             <div id="sub-tab-system-collab" class="sub-tab-container">
@@ -387,6 +363,29 @@
                     <button class="tab-button sub-tab-btn" data-tab="res-cb-efficiency">일반 vs 스탭업</button>
                 </div>
 
+                <div class="gacha-quick-controls" aria-label="콜라보 결과 제어">
+                    <div class="quick-controls">
+                        <div class="quick-controls__grid">
+                            <div id="collab-quick-targetCount" class="quick-control">
+                                <label class="quick-control__label" for="collab-targetCount">픽업 수 <span class="quick-control__hint">0=전체</span></label>
+                                <input type="number" id="collab-targetCount">
+                            </div>
+                            <div id="collab-quick-normalPulls" class="quick-control">
+                                <label class="quick-control__label" for="collab-normalPulls">일반</label>
+                                <input type="number" id="collab-normalPulls">
+                            </div>
+                            <div id="collab-quick-stepPulls" class="quick-control">
+                                <label class="quick-control__label" for="collab-stepPulls">스탭업</label>
+                                <input type="number" id="collab-stepPulls">
+                            </div>
+                            <div id="collab-quick-targetProbability" class="quick-control" style="display:none;">
+                                <label class="quick-control__label" for="collab-targetProbability">목표 확률 (%)</label>
+                                <input type="number" id="collab-targetProbability">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="option-button-container">
                     <div class="btn-group option-button-group--start">
                         <button id="collab-toggle-ceiling" class="view-toggle-btn">천장</button>
@@ -394,29 +393,25 @@
                     <div class="btn-group option-button-group--end">
                         <button id="collab-efficiency-toggle" class="view-toggle-btn" data-role="eff-mode" style="display:none;">Best (성공)</button>
                         <button id="collab-toggle-view" class="view-toggle-btn" data-role="view-mode">개별</button>
+                        <button id="collab-collection-view-toggle" class="view-toggle-btn collection-view-toggle" style="display:none;" type="button" aria-controls="res-cb-collection" aria-pressed="false">확률표</button>
                     </div>
                 </div>
 
-                <!-- 서브탭 콘텐츠 -->
-                <div id="res-cb-collection" class="tab-content active">
-                    <div class="chart-row">
-                        <div class="chart-container"><canvas id="resultChartCollab"></canvas></div>
-                        <div class="legend-container" id="legendListCollab"></div>
+                <div class="result-stage" tabindex="0" aria-label="콜라보 결과">
+                    <div id="res-cb-collection" class="tab-content active" data-mobile-view="chart">
+                        <div class="chart-row">
+                            <div class="chart-container"><canvas id="resultChartCollab"></canvas></div>
+                            <div class="legend-container" id="legendListCollab"></div>
+                        </div>
                     </div>
-                </div>
-                <div id="res-cb-total" class="tab-content">
-                    <div class="chart-row">
-                        <div class="chart-container chart-container--full"><canvas id="resultChartTotalCollab"></canvas></div>
+                    <div id="res-cb-total" class="tab-content">
+                        <div class="chart-row">
+                            <div class="chart-container chart-container--full"><canvas id="resultChartTotalCollab"></canvas></div>
+                        </div>
                     </div>
-                </div>
-                <div id="res-cb-efficiency" class="tab-content">
-                    <div class="chart-scroll-wrapper">
-                        <div class="chart-scroll-inner"><canvas id="efficiencyChartCollab"></canvas></div>
-                        <div class="sub-input-area">
-                            <div class="input-item">
-                                <label for="collab-targetProbability">목표 확률 (%)</label>
-                                <input type="number" id="collab-targetProbability">
-                            </div>
+                    <div id="res-cb-efficiency" class="tab-content">
+                        <div class="chart-scroll-wrapper">
+                            <div class="chart-scroll-inner"><canvas id="efficiencyChartCollab"></canvas></div>
                         </div>
                     </div>
                 </div>
@@ -426,19 +421,18 @@
         <!-- ========== [Tab 4] 2성 가챠 ========== -->
         <section id="tab-2star" class="tab-content">
 
-            <div class="reset-area">
-                <div class="preset-group"></div>
-                <button id="star2-reset-btn" class="reset-btn" title="설정 초기화">↻</button>
+            <div class="banner-summary" aria-live="polite">
+                <span id="star2-banner-summary-text" class="banner-summary__text"></span>
+                <button id="star2-settings-open" class="banner-summary__open" type="button" aria-haspopup="dialog" aria-controls="star2-settings-dialog">가챠 설정</button>
             </div>
 
-            <!-- 입력: 기본 정보 -->
-            <!-- 입력: 가챠 정보 -->
-            <div class="collapsible-container" data-collapsible="true">
-                <div class="section-header">
-                    <h3 class="section-title">가챠 정보</h3>
-                    <button class="toggle-btn" data-toggle-section>▼</button>
-                </div>
-                <div class="section-content">
+            <dialog id="star2-settings-dialog" class="settings-dialog" aria-labelledby="star2-settings-dialog-title">
+                <div class="settings-dialog__container">
+                    <div class="settings-dialog__header">
+                        <h3 id="star2-settings-dialog-title" class="section-title">가챠 설정</h3>
+                        <button class="settings-dialog__close" type="button" data-dialog-close aria-label="가챠 설정 닫기">×</button>
+                    </div>
+                    <div class="settings-dialog__body">
                     <div class="subsection-group">
                         <h4 class="subsection-title">기본 정보</h4>
                         <div class="input-item">
@@ -464,43 +458,8 @@
                         </div>
                     </div>
                 </div>
-            </div>
-
-            <!-- 입력: 사용자 설정 -->
-            <div class="collapsible-container" data-collapsible="true">
-                <div class="section-header">
-                    <h3 class="section-title">사용자 설정</h3>
-                    <button class="toggle-btn" data-toggle-section>▼</button>
                 </div>
-                <div class="section-content">
-                    <div class="subsection-group subsection-group--block subsection-group--untitled">
-                        <div class="input-grid--two-columns">
-                            <div class="input-item">
-                                <label for="star2-normalPulls">일반 횟수</label>
-                                <input type="number" id="star2-normalPulls">
-                            </div>
-                        </div>
-                        <div class="stepup-group-row">
-                            <div class="group-label">스탭업 횟수</div>
-                            <div class="group-inputs-container">
-                                <div class="group-input-block"><span class="group-name">A</span><input type="number" id="star2-pullsStepA"></div>
-                                <div class="group-input-block"><span class="group-name">B</span><input type="number" id="star2-pullsStepB"></div>
-                                <div class="group-input-block"><span class="group-name">C</span><input type="number" id="star2-pullsStepC"></div>
-                                <div class="group-input-block"><span class="group-name">D</span><input type="number" id="star2-pullsStepD"></div>
-                            </div>
-                        </div>
-                        <div class="stepup-group-row">
-                            <div class="group-label">저격 픽업 수</div>
-                            <div class="group-inputs-container">
-                                <div class="group-input-block"><span class="group-name">A</span><input type="number" id="star2-targetCountA"></div>
-                                <div class="group-input-block"><span class="group-name">B</span><input type="number" id="star2-targetCountB"></div>
-                                <div class="group-input-block"><span class="group-name">C</span><input type="number" id="star2-targetCountC"></div>
-                                <div class="group-input-block"><span class="group-name">D</span><input type="number" id="star2-targetCountD"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            </dialog>
 
             <!-- 2성 결과 영역 -->
             <div id="sub-tab-system-2star" class="sub-tab-container">
@@ -508,6 +467,35 @@
                     <button class="tab-button sub-tab-btn active" data-tab="res-2s-collection">픽업 획득(중복X)</button>
                     <button class="tab-button sub-tab-btn" data-tab="res-2s-total">총 획득(중복O)</button>
                     <button class="tab-button sub-tab-btn" data-tab="res-2s-efficiency">일반 vs 스탭업</button>
+                </div>
+
+                <div class="gacha-quick-controls gacha-quick-controls--grouped" aria-label="2성 결과 제어">
+                    <div class="quick-controls">
+                        <div class="quick-controls__grid">
+                            <div id="star2-quick-normalPulls" class="quick-control quick-control--normal">
+                                <label class="quick-control__label" for="star2-normalPulls">일반</label>
+                                <input type="number" id="star2-normalPulls">
+                            </div>
+                            <div id="star2-quick-stepPulls" class="stepup-group-row quick-control-group-row">
+                                <div class="group-label">스탭업</div>
+                                <div class="group-inputs-container">
+                                    <div class="group-input-block"><span class="group-name">A</span><input type="number" id="star2-pullsStepA"></div>
+                                    <div class="group-input-block"><span class="group-name">B</span><input type="number" id="star2-pullsStepB"></div>
+                                    <div class="group-input-block"><span class="group-name">C</span><input type="number" id="star2-pullsStepC"></div>
+                                    <div class="group-input-block"><span class="group-name">D</span><input type="number" id="star2-pullsStepD"></div>
+                                </div>
+                            </div>
+                            <div id="star2-quick-targetCounts" class="stepup-group-row quick-control-group-row">
+                                <div class="group-label">저격 수</div>
+                                <div class="group-inputs-container">
+                                    <div class="group-input-block"><span class="group-name">A</span><input type="number" id="star2-targetCountA"></div>
+                                    <div class="group-input-block"><span class="group-name">B</span><input type="number" id="star2-targetCountB"></div>
+                                    <div class="group-input-block"><span class="group-name">C</span><input type="number" id="star2-targetCountC"></div>
+                                    <div class="group-input-block"><span class="group-name">D</span><input type="number" id="star2-targetCountD"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="option-button-container">
@@ -519,24 +507,26 @@
                         <button id="star2-group-view-mode" class="view-toggle-btn" data-role="group-view" style="display:none;">All</button>
                         <button id="star2-efficiency-toggle" class="view-toggle-btn" data-role="eff-mode" style="display:none;">Best (성공)</button>
                         <button id="star2-toggle-view" class="view-toggle-btn" data-role="view-mode">개별</button>
+                        <button id="star2-collection-view-toggle" class="view-toggle-btn collection-view-toggle" style="display:none;" type="button" aria-controls="res-2s-collection" aria-pressed="false">확률표</button>
                     </div>
                 </div>
 
-                <!-- 서브탭 콘텐츠 -->
-                <div id="res-2s-collection" class="tab-content active">
-                    <div class="chart-row">
-                        <div class="chart-container"><canvas id="resultChart2"></canvas></div>
-                        <div class="legend-container" id="legendList2"></div>
+                <div class="result-stage" tabindex="0" aria-label="2성 결과">
+                    <div id="res-2s-collection" class="tab-content active" data-mobile-view="chart">
+                        <div class="chart-row">
+                            <div class="chart-container"><canvas id="resultChart2"></canvas></div>
+                            <div class="legend-container" id="legendList2"></div>
+                        </div>
                     </div>
-                </div>
-                <div id="res-2s-total" class="tab-content">
-                    <div class="chart-row">
-                        <div class="chart-container chart-container--full"><canvas id="resultChartTotal2"></canvas></div>
+                    <div id="res-2s-total" class="tab-content">
+                        <div class="chart-row">
+                            <div class="chart-container chart-container--full"><canvas id="resultChartTotal2"></canvas></div>
+                        </div>
                     </div>
-                </div>
-                <div id="res-2s-efficiency" class="tab-content">
-                    <div class="chart-scroll-wrapper">
-                        <div class="chart-scroll-inner"><canvas id="efficiencyChart2"></canvas></div>
+                    <div id="res-2s-efficiency" class="tab-content">
+                        <div class="chart-scroll-wrapper">
+                            <div class="chart-scroll-inner"><canvas id="efficiencyChart2"></canvas></div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -725,7 +715,7 @@
     <!-- 향후 저작권, 링크 등 추가 예정 -->
 </footer>
 
-<script type="module" src="js/main.js?v=1.11.0"></script>
+<script type="module" src="js/main.js?v=1.12.1"></script>
 
 </body>
 </html>

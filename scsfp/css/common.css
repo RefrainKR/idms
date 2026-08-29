@@ -340,6 +340,8 @@ footer {
 
 /* Desktop: 고정 사이드바 */
 #main-sidebar {
+    display: flex;
+    flex-direction: column;
     position: fixed;
     left: 0;
     top: 0;
@@ -354,6 +356,11 @@ footer {
     display: flex;
     flex-direction: column;
     padding: 16px 0;
+}
+
+.sidebar-reset-btn {
+    align-self: flex-end;
+    margin: auto 16px 16px;
 }
 
 .sidebar-item {
@@ -521,7 +528,7 @@ footer {
    ======================================== */
 
 .sub-tab-container {
-    margin-top: 20px;
+    margin-top: 15px;
 }
 
 .sub-tab-nav {
@@ -728,6 +735,8 @@ body {
     }
 
     #main-sidebar {
+        flex-direction: row;
+        align-items: stretch;
         position: static;
         width: 100%;
         background: var(--bg-card);
@@ -737,8 +746,15 @@ body {
     }
 
     .sidebar-nav {
+        flex: 1;
         flex-direction: row;
         padding: 0;
+    }
+
+    .sidebar-reset-btn {
+        align-self: center;
+        flex: 0 0 auto;
+        margin: 0 8px 0 0;
     }
 
     .sidebar-item {

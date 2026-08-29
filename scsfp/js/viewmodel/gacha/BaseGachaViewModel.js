@@ -120,6 +120,55 @@ export class BaseGachaViewModel extends BaseViewModel {
     }
 
     /**
+     * 가챠 설정 dialog의 열기, 닫기와 backdrop 클릭을 공통 연결한다.
+     */
+    bindSettingsDialog(dialogId, openButtonId) {
+        const dialog = document.getElementById(dialogId);
+        const openButton = document.getElementById(openButtonId);
+        if (!dialog || !openButton) return;
+
+        openButton.addEventListener('click', () => {
+            if (typeof dialog.showModal === 'function') dialog.showModal();
+            else dialog.setAttribute('open', '');
+        });
+
+        const closeDialog = () => {
+            if (typeof dialog.close === 'function') dialog.close();
+            else {
+                dialog.removeAttribute('open');
+                openButton.focus();
+            }
+        };
+
+        dialog.querySelectorAll('[data-dialog-close]').forEach((button) => {
+            button.addEventListener('click', closeDialog);
+        });
+        dialog.addEventListener('click', (event) => {
+            if (event.target === dialog) closeDialog();
+        });
+        dialog.addEventListener('close', () => openButton.focus());
+    }
+
+    /** 모바일에서 수집 차트와 확률표를 같은 결과 영역 안에서 교체한다. */
+    bindMobileCollectionViewToggle(buttonId, contentId) {
+        const button = document.getElementById(buttonId);
+        const content = document.getElementById(contentId);
+        if (!button || !content) return;
+
+        const setView = (view) => {
+            content.dataset.mobileView = view;
+            const isLegend = view === 'legend';
+            button.textContent = isLegend ? '차트' : '확률표';
+            button.setAttribute('aria-pressed', String(isLegend));
+        };
+
+        setView(content.dataset.mobileView || 'chart');
+        button.addEventListener('click', () => {
+            setView(content.dataset.mobileView === 'chart' ? 'legend' : 'chart');
+        });
+    }
+
+    /**
      * 사용자 입력을 유효한 목표 수집 수로 변환한다. 0은 전체 수집을 뜻한다.
      */
     resolveTargetCount(pickupCount, targetCountInput) {

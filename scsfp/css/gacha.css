@@ -141,6 +141,227 @@
     gap: 5px;
 }
 
+.preset-area {
+    display: flex;
+    align-items: center;
+    margin: 10px 0;
+}
+
+/* ========================================
+   3성 배너 요약 · 결과 제어
+   ======================================== */
+
+.banner-summary {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 46px;
+    padding: 7px 10px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-sm);
+    background: var(--surface-medium);
+}
+
+.banner-summary__text {
+    min-width: 0;
+    flex: 1;
+    overflow: hidden;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.banner-summary__open {
+    flex: 0 0 auto;
+    padding: 5px 8px;
+    border: 1px solid var(--primary);
+    border-radius: var(--border-radius-sm);
+    background: var(--bg-card);
+    color: var(--primary);
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: bold;
+}
+
+.settings-dialog {
+    width: min(680px, calc(100vw - 28px));
+    max-height: min(720px, calc(100dvh - 28px));
+    margin: auto;
+    padding: 0;
+    border: 0;
+    border-radius: 10px;
+    background: transparent;
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.24);
+}
+
+.settings-dialog::backdrop { background: rgba(20, 28, 53, 0.48); }
+
+.settings-dialog__container {
+    display: flex;
+    flex-direction: column;
+    max-height: inherit;
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+    border-radius: inherit;
+    background: var(--bg-card);
+}
+
+.settings-dialog__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.settings-dialog .section-title { font-size: 1rem; }
+
+.settings-dialog__close {
+    width: 32px;
+    height: 32px;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 1.5rem;
+    line-height: 1;
+}
+
+.settings-dialog__close:hover { background: var(--bg-hover); }
+
+.settings-dialog__body {
+    display: grid;
+    gap: 10px;
+    max-height: calc(min(720px, 100dvh - 28px) - 58px);
+    overflow-y: auto;
+    padding: 0 16px 16px;
+}
+
+.settings-dialog__body .subsection-group { margin-top: 16px; }
+
+.settings-dialog__body .preset-area + .subsection-group { margin-top: 0; }
+
+.gacha-quick-controls {
+    display: grid;
+    gap: 7px;
+    margin: 8px 0 10px;
+    padding: 8px 10px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-sm);
+    background: var(--surface-medium);
+}
+
+.gacha-quick-controls--grouped {
+    height: 133px;
+}
+
+.gacha-quick-controls--grouped .quick-controls__grid {
+    grid-template-columns: minmax(150px, 0.35fr) minmax(0, 1fr);
+}
+
+.quick-control-group-row {
+    grid-column: 2;
+    gap: 8px;
+    padding: 5px 7px;
+    border-radius: var(--border-radius-sm);
+}
+
+.quick-control-group-row .group-label {
+    min-width: 58px;
+    font-size: 0.8rem;
+}
+
+.quick-control-group-row .group-input-block {
+    gap: 4px;
+    padding: 3px 5px;
+}
+
+.quick-control-group-row .group-name { font-size: 0.8rem; }
+
+.quick-control-group-row input { font-size: 0.8rem; }
+
+.gacha-quick-controls--grouped .quick-control--normal {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+    align-self: center;
+}
+
+.quick-controls { min-width: 0; }
+
+.quick-controls__grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 7px 10px;
+    min-width: 0;
+}
+
+.quick-control {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 6px;
+    align-items: center;
+    min-width: 0;
+}
+
+.quick-control__label {
+    min-width: 0;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    font-weight: bold;
+    line-height: 1.25;
+    white-space: nowrap;
+}
+
+.quick-control__hint {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    font-weight: normal;
+}
+
+.quick-control input[type="number"] {
+    width: 76px;
+    min-width: 0;
+    padding: 5px 4px;
+    font-size: 0.85rem;
+}
+
+.quick-control .mode-tag-btn {
+    justify-self: end;
+    min-width: 48px;
+    padding: 4px 7px;
+    font-size: 0.85rem;
+}
+
+.gacha-tab-nav .tab-button { font-size: 0.85rem; }
+
+.collection-view-toggle { display: none; }
+
+/* ========================================
+   고정 결과 스테이지
+   ======================================== */
+
+.result-stage {
+    height: 420px;
+    overflow: auto;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+}
+
+.result-stage > .tab-content.active { min-height: 100%; }
+
+/* 공용 요약은 탭별 결과 길이에 따라 문서 전체를 늘리지 않는다. */
+#gacha-section #gacha-result-area {
+    height: 148px;
+    min-height: 0;
+    max-height: 148px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+}
+
 /* ========================================
    Charts & Results
    ======================================== */
@@ -364,6 +585,82 @@
    ======================================== */
 
 @media (max-width: 650px) {
+    .banner-summary {
+        min-height: 42px;
+        gap: 7px;
+        padding: 6px 8px;
+    }
+
+    .banner-summary__text { font-size: 0.76rem; }
+
+    .settings-dialog {
+        width: calc(100vw - 20px);
+        max-height: calc(100dvh - 20px);
+    }
+
+    .settings-dialog__header { padding: 10px 12px; }
+
+    .settings-dialog__body {
+        max-height: calc(100dvh - 70px);
+        padding: 0 12px 12px;
+    }
+
+    .gacha-quick-controls {
+        gap: 6px;
+        height: 76px;
+        margin: 6px 0 8px;
+        padding: 7px 8px;
+    }
+
+    .quick-controls {
+        min-height: 54px;
+    }
+
+    .quick-controls__grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 5px 10px;
+    }
+
+    .quick-control__label {
+        font-size: 0.76rem;
+    }
+
+    .quick-control input[type="number"] {
+        width: 72px;
+    }
+
+    .sub-tab-container > .option-button-container {
+        flex-direction: row;
+        align-items: center;
+        flex-wrap: nowrap;
+        gap: 5px;
+    }
+
+    .sub-tab-container > .option-button-container .btn-group {
+        flex-wrap: nowrap;
+        gap: 4px;
+    }
+
+    .sub-tab-container > .option-button-container .option-button-group--end {
+        width: auto;
+        margin-left: auto;
+    }
+
+    .sub-tab-container > .option-button-container .view-toggle-btn {
+        min-width: 0;
+        padding: 6px 7px;
+        font-size: 0.8rem;
+    }
+
+    .result-stage { height: 430px; }
+
+    .collection-view-toggle { display: inline-block; }
+
+    [data-mobile-view="chart"] .legend-container,
+    [data-mobile-view="legend"] .chart-container {
+        display: none;
+    }
+
     .loop-reward-item label {
         font-size: 0.8rem;
     }
@@ -400,6 +697,50 @@
     .group-inputs-container {
         width: 100%;
         gap: 8px;
+    }
+
+    .gacha-quick-controls--grouped {
+        height: 162px;
+        min-height: 0;
+    }
+
+    .gacha-quick-controls--grouped .quick-controls {
+        min-height: 0;
+    }
+
+    .gacha-quick-controls--grouped .quick-controls__grid {
+        grid-template-columns: 1fr;
+    }
+
+    .gacha-quick-controls--grouped .quick-control--normal,
+    .gacha-quick-controls--grouped .quick-control-group-row {
+        grid-column: 1;
+        grid-row: auto;
+    }
+
+    .gacha-quick-controls--grouped .quick-control--normal {
+        justify-self: stretch;
+    }
+
+    .gacha-quick-controls--grouped .quick-control-group-row {
+        flex-direction: row;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .gacha-quick-controls--grouped .group-inputs-container {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 4px;
+    }
+
+    .gacha-quick-controls--grouped .group-input-block {
+        min-width: 0;
+        padding: 3px;
+    }
+
+    .gacha-quick-controls--grouped .group-input-block input {
+        min-width: 0;
+        width: 100%;
     }
 
     .input-grid--two-columns {
