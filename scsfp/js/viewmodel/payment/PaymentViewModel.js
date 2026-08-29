@@ -1,7 +1,7 @@
 ﻿import { PaymentModel } from '../../model/payment/PaymentModel.js';
 import { PaymentView } from '../../view/payment/PaymentView.js';
 import { PAYMENT_CONFIG, PACKAGES, FES_PACKAGES } from '../../config/PaymentConfig.js';
-import { StorageManager } from '../../utils/StorageManager.js';
+import { StorageManager } from '../../utils/StorageManager.js?v=1.12.2';
 import { InputBinder } from '../../component/InputBinder.js';
 import { BaseViewModel } from '../BaseViewModel.js';
 

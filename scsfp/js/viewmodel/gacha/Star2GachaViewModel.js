@@ -1,4 +1,4 @@
-﻿import { BaseGachaViewModel } from './BaseGachaViewModel.js';
+﻿import { BaseGachaViewModel } from './BaseGachaViewModel.js?v=1.12.2';
 import { Star2GachaModel } from '../../model/gacha/Star2GachaModel.js';
 import { ProbabilityEngine } from '../../core/ProbabilityEngine.js';
 import { EfficiencyCalculator } from '../../core/EfficiencyCalculator.js';
@@ -6,7 +6,7 @@ import { GachaResultView } from '../../view/gacha/GachaResultView.js';
 import { ToggleButton } from '../../component/ToggleButton.js';
 import { CONFIG, TOGGLE_STATES, GACHA_RULES } from '../../config/GachaConfig.js';
 import { ProbabilityValidator } from '../../utils/ProbabilityValidator.js';
-import { getGachaConfig, applyTabVisibility } from '../../view/gacha/GachaViewConfig.js';
+import { getGachaConfig, applyTabVisibility } from '../../view/gacha/GachaViewConfig.js?v=1.12.2';
 
 export class Star2GachaViewModel extends BaseGachaViewModel {
     constructor() {

@@ -1,9 +1,9 @@
-﻿import { BaseGachaViewModel } from './BaseGachaViewModel.js';
+﻿import { BaseGachaViewModel } from './BaseGachaViewModel.js?v=1.12.2';
 import { CollabGachaModel } from '../../model/gacha/CollabGachaModel.js';
 import { GachaResultView } from '../../view/gacha/GachaResultView.js';
 import { ToggleButton } from '../../component/ToggleButton.js';
 import { CONFIG, TOGGLE_STATES, GACHA_RULES } from '../../config/GachaConfig.js';
-import { getGachaConfig, applyTabVisibility } from '../../view/gacha/GachaViewConfig.js';
+import { getGachaConfig, applyTabVisibility } from '../../view/gacha/GachaViewConfig.js?v=1.12.2';
 import { STEPUP_STRATEGY_KIND } from '../../core/EfficiencyCalculator.js';
 
 export class CollabGachaViewModel extends BaseGachaViewModel {
