@@ -10,16 +10,16 @@ This is an established application, not a greenfield project. Major features alr
 
 ## Current phase and work order
 
-The behavior-preserving semantic cleanup was completed for the v1.11.0 release. The current active phase is planning and selecting any future gacha-analysis work.
+The behavior-preserving semantic cleanup was completed for the v1.11.0 release. The current phase is discussion in repository-root `NEXTROAD.md`; there is no active implementation task until the user explicitly approves one.
 
 1. Inspect the current Git state and preserve unrelated or in-progress user changes.
-2. Read `scsfp/docs/tasks/BOARD.md` and the relevant active task documents.
-3. For gacha-analysis planning, verify each candidate against the current source and game rules.
-4. Record Sol decisions and acceptance criteria before implementation.
-5. Move to Terra implementation only after the user selects an idea and the task reaches `ready-for-terra`.
+2. Read `NEXTROAD.md` for shared discussion or root `tasks/BOARD.md` for an approved active task.
+3. Verify each candidate against the current source and game rules.
+4. Do not create an implementation packet until discussion is complete and the user explicitly starts development.
+5. At implementation start, preserve the agreed discussion in `tasks/<task>/SOURCE.md`, define Sol decisions and acceptance criteria, and only then move the task to Terra.
 6. Keep behavior-changing work separate from completed v1.11.0 cleanup history.
 
-Do not implement ideas merely because they appear in the ideas document. Keep behavior-changing work separate from naming/documentation-only work.
+Do not implement ideas merely because they appear in `NEXTROAD.md`. Keep behavior-changing work separate from naming/documentation-only work.
 
 ## Architecture to preserve
 
@@ -55,23 +55,32 @@ Read these before substantial work, selecting only the references relevant to th
 
 1. repository-root `AGENTS.md`;
 2. current conversation/task and Git diff;
-3. `scsfp/docs/tasks/BOARD.md` and the relevant active task directory;
+3. `NEXTROAD.md` for discussion, or `tasks/BOARD.md` and the relevant active task directory after implementation has begun;
 4. `scsfp/docs/game/GACHA_SYSTEM.md` and `scsfp/docs/game/GAME_RULES.md`;
-5. relevant current source files.
+5. relevant current source files;
+6. repository-root `DEVLOG.md` only when historical context is needed.
 
 The game/payment documents currently live under `scsfp/docs/game/`, not directly under `scsfp/docs/`.
 
 The former `scsfp/CLAUDE.md`, `scsfp/REFACTORING.md`, and `scsfp/README.md` were removed because they were stale historical material. Do not recreate or rely on them. Useful legacy-path cautions retained from that review include:
 
-- `docs/UPDATE.md` is the maintained developer- and AI-facing historical changelog, while current game rules live under `docs/game/`;
-- `js/core/SharedSettings.js` instead of `js/model/SharedSettings.js`;
-- `js/utils/ChartAdapter.js` instead of `js/view/ChartAdapter.js`;
-- `js/view/component/InputBinder.js` instead of `js/component/InputBinder.js`;
+- the former `docs/UPDATE.md` is now the agent-maintained repository-root `DEVLOG.md`, while current game rules live under `scsfp/docs/game/`;
+- old references to `js/core/SharedSettings.js` are stale; the current file is `js/model/SharedSettings.js`;
+- old references to `js/utils/ChartAdapter.js` are stale; the current file is `js/view/ChartAdapter.js`;
+- old references to `js/view/component/InputBinder.js` are stale; the current file is `js/component/InputBinder.js`;
 - old names including `GachaConstants.js`, `GachaTypeConfig.js`, `PaymentConstants.js`, and `css/style.css` instead of the current files.
 
-Preserve `scsfp/docs/UPDATE.md` as a long-term record of completed project changes and the context behind earlier decisions. Old paths, names, and implementation descriptions inside dated entries are historical evidence, not documentation drift to rewrite. Consult it when the reason for an existing design is unclear, but verify the current state against source and active documents. Add concise entries for material completed changes when maintaining release/change history; do not use it as a transient task log or as authority over current code.
+Document responsibilities are intentionally separated:
 
-Use `scsfp/docs/tasks/` for active, substantial task documents. A task document does not authorize implementation by itself. After its work is completed, verified, and reflected in current code or durable documentation, move it to `scsfp/docs/tasks/finish/` rather than deleting it. Finished task documents are historical context and are not part of the default authoritative reading set. Put other obsolete or superseded Markdown documents under `scsfp/docs/old/` when that directory is needed; do not mix the maintained `UPDATE.md` or active task documents into `old/`.
+- `NEXTROAD.md`: shared discussion for the next development direction. The sole developer and Sol may edit it freely. Its contents are proposals, not implementation approval.
+- `scsfp/docs/`: current shared project and game knowledge. The sole developer may freely correct or extend it when game specifications change; agents must treat such edits as important input and verify them against code before changing behavior.
+- `DEVLOG.md`: long-term completed-change and design-context record maintained by the coding agent. The developer normally reads it or asks the agent to correct it rather than editing it as an informal note. Historical dated entries must not be rewritten merely to match current paths.
+- `tasks/`: agent operational workspace for approved implementation, Sol/Terra handoff, verification, and completed task packets. It is not the developer's idea notebook and does not belong under `scsfp/docs/`.
+- `AGENTS.md`: durable repository and agent rules, not a running task log.
+
+The repository is public. “Agent operational workspace” describes editing responsibility, not privacy; never place credentials, private tokens, or other secrets in `tasks/` or any tracked document.
+
+Use root `tasks/` only after a substantial task enters implementation. A task document does not authorize implementation by itself. After work is completed, verified, and reflected in current code or durable documentation, move it to `tasks/finish/` rather than deleting it. Finished task documents are historical context and are not part of the default authoritative reading set. Put obsolete or superseded shared Markdown under `scsfp/docs/old/` only when preservation is useful; do not mix `DEVLOG.md`, `NEXTROAD.md`, or agent task packets into that directory.
 
 ## Sol-Terra task protocol
 
@@ -82,13 +91,21 @@ Treat Sol and Terra as repository workflow roles rather than permanent model-ver
 - Sol review remains responsible for comparing the actual diff and verification evidence against the task decisions;
 - Terra must record an unresolved question and return the task to Sol rather than guessing about game rules, probability behavior, or material scope changes.
 
-For substantial work, use one directory under `scsfp/docs/tasks/` containing `TASK.md`, `DECISIONS.md`, `HANDOFF.md`, and `RESULT.md`. Track its current phase in `BOARD.md` with one of these states:
+Planning and implementation are separated as follows:
+
+1. Discuss the next direction in `NEXTROAD.md`; no task packet or code change follows from a proposal alone.
+2. When the user explicitly approves implementation, confirm the version and non-`main` branch before editing application files.
+3. Copy the complete agreed discussion into `tasks/<task>/SOURCE.md` before resetting `NEXTROAD.md` from `tasks/_template/NEXTROAD.md`.
+4. Create `TASK.md`, `DECISIONS.md`, `HANDOFF.md`, and `RESULT.md`; derive scope and acceptance criteria from `SOURCE.md` without silently dropping decisions.
+5. Set the task to `ready-for-terra` only after Sol has verified the packet and unresolved domain questions are recorded.
+
+Track each substantial implementation under root `tasks/` and its current phase in `tasks/BOARD.md` with one of these states:
 
 `planning` → `ready-for-terra` → `implementing` → `ready-for-sol-review` → `changes-requested` → `done`
 
 Update `HANDOFF.md` before switching roles. It must state the completed work, exact remaining work, changed files, verification already run, unresolved questions, current branch, and next role. Do not rely on private reasoning state surviving a model switch.
 
-Sol and Terra must not modify the same files concurrently in one working tree. Prefer sequential ownership on one task branch. If the user explicitly requests truly concurrent implementation, use separate branches and separate Git worktrees, define non-overlapping file ownership first, and merge only after review. Do not create branches, worktrees, commits, or merges unless the user authorizes those Git operations.
+Sol and Terra must not modify the same files concurrently in one working tree. Prefer sequential ownership on one task branch. If the user explicitly requests truly concurrent implementation, use separate branches and separate Git worktrees, define non-overlapping file ownership first, and merge only after review.
 
 ## Verified calculation model
 
@@ -170,7 +187,7 @@ The first semantic naming pass is complete. Current cross-layer contracts use:
 - separate names for shared stack rewards, Step-up loop select tickets, and random tickets;
 - `pickupCount` and `targetCount` in public APIs and context objects.
 
-Future cleanup should focus only on verified residual drift outside designated historical locations such as `docs/tasks/finish/` and `docs/old/`, unclear analytical toggle wording, and banner-specific rule evidence. Do not churn tight mathematical variables merely for stylistic uniformity.
+Future cleanup should focus only on verified residual drift outside designated historical locations such as `tasks/finish/` and `scsfp/docs/old/`, unclear analytical toggle wording, and banner-specific rule evidence. Do not churn tight mathematical variables merely for stylistic uniformity.
 
 Short mathematical `N`/`M` variables are acceptable inside tight DP routines. Public APIs, context objects, view rendering, and cross-file boundaries should prefer `pickupCount`, `targetCount`, and similarly semantic names.
 
@@ -199,9 +216,15 @@ Clearly distinguish actual game configuration from analytical on/off counterfact
 
 ## Verification and Git discipline
 
+- `main` is the public GitHub Pages deployment branch; `.github/workflows/jekyll-gh-pages.yml` deploys on pushes to `main`. A commit applied to `main` can immediately change the live utility used by other players. Never perform ordinary development directly on `main`.
+- Before any file modification, inspect the current branch. If it is `main`, switch to the latest applicable version branch first. For maintenance of the current v1.11 release, use `v.1.11.X`; do not fall back to an unrelated stale branch merely because it exists.
+- Project versions use `1.<major>.<minor>` and version-line branches use `v.1.<major>.X`. The leading `1` remains fixed unless the user personally decides that a rewrite-scale change warrants version 2.
+- When the user ends `NEXTROAD.md` discussion and explicitly starts a new feature, behavior replacement, or other planned development, branch from the current released `main` into the next line such as `v.1.12.X`, and set the application version from `1.11.0` to `1.12.0` as part of that approved implementation.
+- Increment `<minor>` for bug fixes, correction of an unintended result after review, and small wording or detail changes that do not materially add or replace functionality, for example `1.11.0` to `1.11.1`. Keep those changes on the same `v.1.11.X` branch; do not create one branch per patch release.
+- Increment `<major>` for new functionality or intentional material replacement of existing behavior, for example `1.11.0` to `1.12.0`. Changing the leading `1` is not an agent decision.
+- The sole developer controls commits, pushes, merges into `main`, and releases. Agents leave reviewed changes in the working tree and must not commit, push, merge, or publish unless the user explicitly requests that exact Git action.
 - There is currently no package/build/test harness in the repository. Use a local static server and browser checks when runtime verification is needed, plus targeted deterministic calculation comparisons for probability refactors.
-- Do not create commits, push, or open pull requests unless the user explicitly requests it.
-- Preserve user changes. Documentation moves among `scsfp/docs/game/`, `scsfp/docs/tasks/`, `scsfp/docs/tasks/finish/`, and `scsfp/docs/old/` may appear in Git as deleted tracked files plus untracked replacements until the user stages them; do not revert or duplicate them.
+- Preserve user changes. Documentation moves among `scsfp/docs/`, root `tasks/`, and `scsfp/docs/old/` may appear in Git as deleted tracked files plus untracked replacements until the user stages them; do not revert or duplicate them.
 - Do not use `AGENTS.md` as a running task log. Put durable project/domain rules here and temporary progress in the conversation or a task-specific note requested by the user.
 
 ## Model-switch recovery
@@ -209,7 +232,7 @@ Clearly distinguish actual game configuration from analytical on/off counterfact
 After a model switch, do not assume private reasoning state was transferred and do not restart a full audit automatically. Recover in this order:
 
 1. read `AGENTS.md`;
-2. read `scsfp/docs/tasks/BOARD.md` and the relevant task's `TASK.md`, `DECISIONS.md`, and `HANDOFF.md`;
+2. read `NEXTROAD.md` if the work is still being discussed, otherwise read `tasks/BOARD.md` and the relevant task's `SOURCE.md`, `TASK.md`, `DECISIONS.md`, and `HANDOFF.md`;
 3. inspect the current conversation/task;
 4. inspect Git status/diff and modified files;
 5. read the relevant game docs and source files;
