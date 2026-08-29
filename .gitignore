@@ -1,2 +1,31 @@
+# 로컬 테스트 및 배포 산출물
 test/
-**/docs/game/**/*.png
+_site/
+dist/
+coverage/
+node_modules/
+.tmp-*/
+*.log
+
+# 개발 환경 및 운영체제 파일
+.vscode/
+.idea/
+*.code-workspace
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# 로컬 환경값 및 인증 자료
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+
+# 경로와 무관하게 개발자 개인 자료 전체 제외
+primary/

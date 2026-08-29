@@ -35,6 +35,14 @@ jobs:
         with:
           source: ./
           destination: ./_site
+      - name: Verify deployment cache-key script
+        run: node --test scripts/apply-deployment-cache-key.test.mjs
+      - name: Verify clean source asset URLs
+        run: node scripts/apply-deployment-cache-key.mjs --check-source scsfp
+      - name: Add commit SHA to deployed JS and CSS URLs
+        run: node scripts/apply-deployment-cache-key.mjs --write _site "$GITHUB_SHA"
+      - name: Verify deployed asset URLs
+        run: node scripts/apply-deployment-cache-key.mjs --check _site "$GITHUB_SHA"
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
 

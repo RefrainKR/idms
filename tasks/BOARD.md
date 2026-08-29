@@ -6,7 +6,8 @@
 |---|---|---|---|---|---|---|
 | `naming-documentation-cleanup` | `done` | Sol | Terra | Sol | `v.1.11.X` | `finish/`에서 완료 이력으로 보존 |
 | `gacha-quick-controls` | `done` | Sol | Sol | Sol | `v.1.12.1` | `finish/`에서 완료 이력으로 보존 |
+| `deployment-cache-keys` | `done` | Sol | Sol | Sol | `v.1.12.X` | `finish/`에서 완료 이력으로 보존 |
 
-현재 활성 구현 작업은 없습니다. 다음 후보는 루트 `NEXTROAD.md`의 2번 항목에서 논의하며, 별도 구현 승인 전에는 task나 코드를 만들지 않습니다.
+현재 활성 구현 작업은 없습니다. 다음 후보는 루트 `NEXTROAD.md`에서 별도 승인 후 시작합니다.
 
 상태 변경 전에는 해당 작업의 `HANDOFF.md`를 먼저 갱신합니다. 이 표는 진행 상황을 찾기 위한 색인이며 세부 범위와 결정은 각 작업 디렉터리의 문서를 따릅니다.

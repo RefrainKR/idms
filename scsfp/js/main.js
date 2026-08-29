@@ -1,13 +1,13 @@
 ﻿// GitHub Pages의 ES module 캐시는 상위 main.js의 쿼리를 하위 import에 전파하지 않는다.
-// 배포에서 변경된 모듈 그래프는 같은 버전 쿼리로 함께 갱신한다.
-import { Star3GachaViewModel } from './viewmodel/gacha/Star3GachaViewModel.js?v=1.12.2';
-import { Star2GachaViewModel } from './viewmodel/gacha/Star2GachaViewModel.js?v=1.12.2';
-import { BirthdayGachaViewModel } from './viewmodel/gacha/BirthdayGachaViewModel.js?v=1.12.2';
-import { CollabGachaViewModel } from './viewmodel/gacha/CollabGachaViewModel.js?v=1.12.2';
-import { PaymentViewModel } from './viewmodel/payment/PaymentViewModel.js?v=1.12.2';
+// 배포 workflow가 생성 산출물의 모든 로컬 JS/CSS 참조에 같은 커밋 SHA를 붙인다.
+import { Star3GachaViewModel } from './viewmodel/gacha/Star3GachaViewModel.js';
+import { Star2GachaViewModel } from './viewmodel/gacha/Star2GachaViewModel.js';
+import { BirthdayGachaViewModel } from './viewmodel/gacha/BirthdayGachaViewModel.js';
+import { CollabGachaViewModel } from './viewmodel/gacha/CollabGachaViewModel.js';
+import { PaymentViewModel } from './viewmodel/payment/PaymentViewModel.js';
 import { TabManager } from './component/TabManager.js';
 import { CollapsibleSection } from './component/CollapsibleSection.js';
-import { StorageManager } from './utils/StorageManager.js?v=1.12.2';
+import { StorageManager } from './utils/StorageManager.js';
 import { SectionManager } from './component/SectionManager.js';
 
 // Chart.js and ChartDataLabels are loaded as global variables via CDN (see index.html)
