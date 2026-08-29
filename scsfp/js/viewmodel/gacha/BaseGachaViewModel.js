@@ -1,4 +1,4 @@
-﻿import { StorageManager } from '../../utils/StorageManager.js?v=1.12.2';
+﻿import { StorageManager } from '../../utils/StorageManager.js';
 import { InputBinder } from '../../component/InputBinder.js';
 import { ProbabilityEngine } from '../../core/ProbabilityEngine.js';
 import { EfficiencyCalculator } from '../../core/EfficiencyCalculator.js';

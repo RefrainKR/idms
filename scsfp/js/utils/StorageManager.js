@@ -1,4 +1,4 @@
-﻿import { APP_VERSION, VERSION_CONFIG } from '../core/Constants.js?v=1.12.2';
+﻿import { APP_VERSION, VERSION_CONFIG } from '../core/Constants.js';
 import { CONFIG } from '../config/GachaConfig.js';
 import { SharedSettings } from '../model/SharedSettings.js';
 

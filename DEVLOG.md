@@ -11,9 +11,13 @@
 ## v1.12.2 (2026-08-29) - GitHub Pages 모듈 캐시 오류 수정
 
 - 새 `main.js`와 이전 `StorageManager.js`가 혼합되어 전체 초기화에서 `clearAll is not a function`이 발생하던 배포 오류 수정
-- GitHub Pages에서 변경된 ES module 그래프가 같은 버전 URL로 갱신되도록 import 캐시 키 연결
+- 긴급 수정에서는 GitHub Pages의 변경된 ES module 그래프가 같은 버전 URL로 갱신되도록 import 캐시 키 연결
 - 이전 모듈이 일시적으로 혼재해도 전체 초기화가 동작하도록 방어 경로 추가
 - 앱 버전과 정적 CSS·JavaScript 자산 키를 `1.12.2`로 갱신
+- 후속 배포 자동화에서 소스의 수동 `?v=`를 제거하고, Pages 산출물의 모든 로컬 JS/CSS 참조에 배포 커밋 SHA를 자동 삽입하도록 변경
+- 캐시 키 변환 단위 테스트, 원본 청결 검사와 산출물 일치 검사를 통과한 경우에만 Pages artifact를 게시하도록 workflow 보강
+- `.vscode/`와 모든 `primary/` 디렉터리를 공개 저장소 대상에서 제외하고, 개인 게임 참고 자료를 `scsfp/docs/game/primary/img/`로 이동
+- 완료 작업 기록: `tasks/finish/deployment-cache-keys/`
 
 ---
 

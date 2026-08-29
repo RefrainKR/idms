@@ -1,9 +1,9 @@
-﻿import { BaseGachaViewModel } from './BaseGachaViewModel.js?v=1.12.2';
+﻿import { BaseGachaViewModel } from './BaseGachaViewModel.js';
 import { BirthdayGachaModel } from '../../model/gacha/BirthdayGachaModel.js';
 import { GachaResultView } from '../../view/gacha/GachaResultView.js';
 import { ToggleButton } from '../../component/ToggleButton.js';
 import { CONFIG, TOGGLE_STATES, GACHA_RULES } from '../../config/GachaConfig.js';
-import { getGachaConfig, applyTabVisibility } from '../../view/gacha/GachaViewConfig.js?v=1.12.2';
+import { getGachaConfig, applyTabVisibility } from '../../view/gacha/GachaViewConfig.js';
 import { STEPUP_STRATEGY_KIND } from '../../core/EfficiencyCalculator.js';
 
 export class BirthdayGachaViewModel extends BaseGachaViewModel {
